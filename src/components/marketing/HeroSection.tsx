@@ -16,10 +16,22 @@ export function HeroSection() {
         </p>
       </div>
       <div className="flex flex-wrap gap-3">
-        <a className={buttonVariants({ size: 'lg' })} href="/marketplace">
+        <a
+          className={cn(
+            buttonVariants({ size: 'lg' }),
+            'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+          )}
+          href="/marketplace"
+        >
           Explore Marketplace
         </a>
-        <a className={cn(buttonVariants({ size: 'lg', variant: 'secondary' }))} href="/login">
+        <a
+          className={cn(
+            buttonVariants({ size: 'lg', variant: 'secondary' }),
+            'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+          )}
+          href="/login"
+        >
           Sign In
         </a>
       </div>
