@@ -1,0 +1,95 @@
+---
+import MainLayout from "@/layouts/MainLayout.astro";
+const categories = [
+  "All products",
+  "Home & living",
+  "Beauty",
+  "Food & drink",
+  "Fashion",
+];
+const products = [
+  {
+    name: "Hand-thrown ceramic set",
+    supplier: "Atelier North",
+    price: "$24.00",
+    category: "Home & living",
+  },
+  {
+    name: "Botanical skincare kit",
+    supplier: "Verde Goods",
+    price: "$18.50",
+    category: "Beauty",
+  },
+  {
+    name: "Small-batch coffee beans",
+    supplier: "Roast & Co.",
+    price: "$12.00",
+    category: "Food & drink",
+  },
+];
+---
+
+<MainLayout title="Marketplace">
+  <section class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+    <div class="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+      <div>
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-brand-600">
+          Discover
+        </p><h1 class="mt-3 text-4xl font-bold text-slate-900">
+          Marketplace
+        </h1><p class="mt-3 text-slate-600">
+          Curated products from independent suppliers.
+        </p>
+      </div>
+      <input
+        type="search"
+        placeholder="Search products..."
+        class="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+      />
+    </div>
+    <div class="mt-10 flex gap-2 overflow-x-auto pb-2">
+      {
+        categories.map((category, index) => (
+          <button
+            class:list={[
+              "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium",
+              index === 0
+                ? "bg-brand-600 text-white"
+                : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50",
+            ]}
+          >
+            {category}
+          </button>
+        ))
+      }
+    </div>
+    <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        products.map((product) => (
+          <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <>
+              <div class="flex h-48 items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 text-5xl">
+                ✦
+              </div>
+              <div class="p-5">
+                <>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-brand-600">
+                    {product.category}
+                  </p>
+                  <h2 class="mt-2 font-bold text-slate-900">{product.name}</h2>
+                  <p class="mt-1 text-sm text-slate-500">{product.supplier}</p>
+                  <p class="mt-5 font-semibold text-slate-900">
+                    {product.price}{" "}
+                    <span class="text-sm font-normal text-slate-500">
+                      / unit
+                    </span>
+                  </p>
+                </>
+              </div>
+            </>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+</MainLayout>
