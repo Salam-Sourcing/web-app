@@ -1,141 +1,79 @@
 # Agent framework
 
-This repository uses a human-directed, issue-backed multi-agent workflow. The
-framework is intentionally provider-agnostic: agents may run in an IDE, a CI
-worker, or an external orchestrator, while GitHub issues, branches, and pull
-requests remain the durable source of truth.
+This repository uses a prompt-first, human-directed multi-agent workflow.
+The operator starts work by giving an agent a prompt. The agent owns the
+implementation, its verification, and a local log that makes the work
+resumable without adding process overhead to every task.
 
 ## Goals and boundaries
 
-### Goals
-
-- Let one operator safely coordinate many agents in parallel.
-- Make agent work resumable after a context window, model, or machine changes.
-- Keep changes reviewable, testable, and attributable.
-- Support fast "vibe coded" iteration without making correctness optional.
-- Scale from a solo developer to independent feature teams.
-
-### Boundaries
+- Start work from a direct prompt instead of a required work-item form.
+- Keep progress, decisions, changed files, and verification in one local log.
+- Make handoff possible when a task outlives an agent session.
+- Keep the human operator responsible for priorities, approvals, merges,
+  production access, and release decisions.
 
 The framework does not prescribe a model vendor, agent runtime, database, or
-dashboard. Those can be added later without changing the work contract.
-GitHub is the default control plane because it supplies identity, discussion,
-labels, branch protection, CI, and an audit trail.
+dashboard. Logs are local execution state and are intentionally ignored by Git.
+Use GitHub issues and pull requests when a durable, shared record is needed.
 
 ## Roles
 
-| Role        | Human responsibility                                         | Agent responsibility                                             |
-| ----------- | ------------------------------------------------------------ | ---------------------------------------------------------------- |
-| Operator    | Prioritize, decompose, assign, approve risk, merge, release  | Never delegate these decisions implicitly                        |
-| Planner     | Define outcome, acceptance criteria, dependencies, risk tier | Ask clarifying questions and split work into independent slices  |
-| Implementer | Approve scope and sensitive access                           | Make the smallest coherent code change                           |
-| Reviewer    | Approve the diff and behavior                                | Find correctness, security, accessibility, and regression issues |
-| Verifier    | Decide release gates                                         | Run existing checks and report reproducible evidence             |
+| Role | Human responsibility | Agent responsibility |
+| --- | --- | --- |
+| Operator | Provide the prompt, set priorities, approve risk, merge, release | Clarify ambiguity and coordinate agents |
+| Implementer | Approve sensitive access and meaningful scope changes | Execute the prompt and keep the log current |
+| Reviewer | Approve the diff and behavior | Find correctness, security, accessibility, and regression issues |
+| Verifier | Decide release gates | Run existing checks and report reproducible evidence |
 
 One agent can hold multiple roles for low-risk work, but the operator should
-keep planning, implementation, and final approval conceptually separate.
+keep implementation and final approval conceptually separate.
 
-## Control-plane objects
-
-Every piece of work must have a durable record. Use the GitHub issue template
-in `.github/ISSUE_TEMPLATE/agent-work.yml` or copy
-`.agents/templates/work-item.md`.
-
-Required fields:
-
-- **Outcome:** user or business result, not an implementation wish
-- **Acceptance criteria:** observable pass/fail statements
-- **Scope:** included and explicitly excluded areas
-- **Risk tier:** `low`, `medium`, or `high`
-- **Owner:** one agent at a time; the operator can reassign
-- **Files / surfaces:** intended ownership boundary
-- **Dependencies:** issue IDs, decisions, or external access
-- **Verification plan:** checks to run before handoff
-
-Recommended labels:
-
-`agent:ready`, `agent:claimed`, `agent:blocked`, `agent:review`,
-`agent:verified`, `risk:low`, `risk:medium`, `risk:high`, and an area label
-such as `area:ui` or `area:content`.
-
-The issue is the queue. The branch and pull request are the execution record.
-Chat messages are useful context but are not durable state.
-
-## Lifecycle
+## Task flow
 
 ```text
-Draft -> Ready -> Claimed -> Implementing -> Review -> Verified -> Merged
-                    |             |             |
-                    +---------- Blocked <-------+
+Prompt -> Log -> Implement -> Verify -> Complete
+                         \-> Handoff when needed
 ```
 
-1. **Draft:** operator or planner writes the outcome and acceptance criteria.
-2. **Ready:** dependencies are known and the work can be assigned safely.
-3. **Claimed:** one agent, branch, and file ownership boundary are recorded.
-4. **Implementing:** the agent edits only the agreed scope and records decisions.
-5. **Review:** a pull request links the issue and includes the handoff checklist.
-6. **Verified:** checks and acceptance criteria have evidence; reviewer comments
-   are resolved or explicitly accepted by the operator.
-7. **Merged:** only the operator or an explicitly authorized release agent merges.
-8. **Blocked:** missing requirements, access, dependency, or a conflicting owner
-   is recorded with the exact unblock action.
+1. **Prompt:** the operator describes the desired outcome directly to an
+   agent. The agent asks a clarifying question when a safe implementation
+   cannot be inferred.
+2. **Log:** the agent creates a file with a relevant name in
+   `.agents/logs/`, using [the log template](../.agents/templates/agent-log.md).
+3. **Implement:** the agent records a short plan, makes scoped changes, and
+   updates the log with decisions, progress, and changed files.
+4. **Verify:** the agent runs the smallest relevant existing checks and records
+   exact commands and outcomes.
+5. **Complete:** the agent marks the log status and reports the result. If more
+   work is needed, the log's handoff section states the next smallest action.
 
-An agent must not silently move a work item backwards or declare another agent's
-work complete.
-
-## Parallelism and ownership
-
-Use one branch and one pull request per work item:
+Use a descriptive filename, for example:
 
 ```text
-agent/<issue-number>-<short-slug>
+.agents/logs/2026-09-13-improve-search-filter.md
 ```
 
-Parallel work is safe when agents have disjoint ownership boundaries. Prefer
-vertical slices over multiple agents editing the same component. If overlap is
-unavoidable, the operator chooses a sequencing order and records it as a
-dependency.
+Logs are ignored by Git through `.agents/logs/`. Do not commit them. If a task
+needs a shared audit trail, link the pull request or issue from the final
+response instead.
 
-The operator may use a simple coordination table:
+## Log requirements
 
-| Issue | Agent   | Branch            | Owned surfaces          | State        | Last update |
-| ----- | ------- | ----------------- | ----------------------- | ------------ | ----------- |
-| #123  | agent-a | `agent/123-login` | `src/pages/login.astro` | implementing | 2026-09-13  |
+Each log should contain:
 
-An agent that has no update after the agreed heartbeat is not automatically
-cancelled. The operator should inspect its session, then reassign or resume it
-explicitly.
+- the prompt or a concise description of it;
+- the agent and start date;
+- current status: `in-progress`, `complete`, `blocked`, or `needs-review`;
+- the plan and meaningful progress updates;
+- files changed and why;
+- verification commands and results;
+- decisions, risks, and failed attempts;
+- a precise handoff action, or `None`.
 
-## Risk policy
-
-### Low
-
-Copy, styling, isolated UI, documentation, or tests with no data/auth/deploy
-impact. One implementer and normal review.
-
-### Medium
-
-Shared components, navigation, validation, state, or changes with meaningful
-regression risk. Require targeted checks and a second review where practical.
-
-### High
-
-Authentication, authorization, payments, personal data, secrets, migrations,
-dependency upgrades, deployment, or destructive operations. Require explicit
-human approval before implementation and before merge; use a security review
-when applicable. Agents must not invent production values or bypass controls.
-
-## Handoff and resumability
-
-Use `.agents/templates/handoff.md` in the issue or pull request. A handoff must
-be sufficient for a new agent with no access to the previous chat to continue.
-It should include current state, files touched, decisions, failed attempts,
-commands, test output summary, and the next smallest action.
-
-When context is running low, stop at a coherent checkpoint and hand off rather
-than widening scope or leaving a half-applied migration. When a check fails,
-preserve the failure, explain the likely cause, and either fix it or mark the
-work item blocked.
+The log is a working record, not a second approval system. Do not delay a
+small task waiting for a form, issue, or branch convention unless the operator
+explicitly requests one.
 
 ## Quality gates
 
@@ -147,46 +85,28 @@ npm run build
 ```
 
 Use `npm run format:check` when formatting is part of the change. The agent
-must also manually inspect the rendered behavior for UI work and consider
-keyboard access, focus states, responsive layouts, loading/error states, and
-user-facing text. CI should enforce these commands as the repository grows.
+must also manually inspect rendered behavior for UI work and consider keyboard
+access, focus states, responsive layouts, loading/error states, and
+user-facing text. Record checks that were not run and why.
 
-## Operator playbook
+## Handoff and resumability
 
-### Start a work cycle
+When context is running low or the task is blocked, stop at a coherent
+checkpoint. Update the log before handing off. The next agent should be able to
+continue from the log without access to the previous chat. Include the current
+status, files touched, decisions, failed attempts, command results, risks, and
+one precise next action.
 
-1. Triage incoming issues and split independent outcomes.
-2. Add acceptance criteria, risk, ownership surfaces, and dependencies.
-3. Mark only dependency-free work `agent:ready`.
-4. Assign one agent per ready issue and record the branch.
-5. Keep high-risk work in a separate lane requiring approval.
+## Scope and safety
 
-### During execution
-
-1. Prefer independent agents on disjoint surfaces.
-2. Ask agents for checkpoint updates at a consistent interval.
-3. Resolve ownership conflicts through the issue, never by overwriting files.
-4. Review small pull requests continuously instead of batching a large queue.
-
-### Close a cycle
-
-1. Confirm acceptance criteria and verification evidence.
-2. Review the diff and security-sensitive changes.
-3. Merge only after required checks and approvals pass.
-4. Close the issue with the release note, follow-up items, and lessons learned.
-
-## Scaling path
-
-Start with GitHub issues, branches, pull requests, and this document. Add
-automation only when a repeated human step is well understood:
-
-1. **Stage 1:** labels, templates, branch protection, and CI checks.
-2. **Stage 2:** a dispatcher that claims ready issues and starts isolated agents.
-3. **Stage 3:** an event store for agent heartbeats, tool calls, costs, and
-   artifacts; keep GitHub links as the human-facing projection.
-4. **Stage 4:** policy gates for risk, approvals, concurrency, and automatic
-   retries. Agents remain unable to merge or deploy without explicit policy.
-
-Useful metrics are lead time, review wait time, verification failure rate,
-reopened issues, ownership conflicts, and operator interventions. Do not
-optimize for number of agent turns or lines changed.
+- Keep changes scoped to the prompt. Do not opportunistically refactor.
+- Inspect the working tree first and never discard changes you did not create.
+- Prefer existing Astro, React, Tailwind, and TypeScript patterns.
+- Treat user input, external data, and environment variables as untrusted.
+- Surface uncertainty, blockers, and failed checks; never hide them with broad
+  catches or silent fallbacks.
+- Do not commit, merge, deploy, install dependencies, or change secrets unless
+  the operator explicitly authorizes it.
+- High-risk work involving authentication, authorization, payments, personal
+  data, secrets, migrations, dependency upgrades, deployment, or destructive
+  operations requires explicit human approval.

@@ -1,6 +1,6 @@
-## Work item
+## Prompt
 
-Closes #
+<!-- Summarize the prompt this change addresses. Link an issue when one exists. -->
 
 ## Outcome
 
@@ -9,7 +9,7 @@ Closes #
 ## Scope
 
 - [ ] I changed only the assigned surfaces.
-- [ ] I recorded any ownership conflict or scope change in the issue.
+- [ ] I recorded any scope change or ownership conflict in the agent log.
 
 ## Verification
 
@@ -22,5 +22,7 @@ Closes #
 
 - **Status:** complete | blocked | needs-review
 - **Implemented:**
+- **Files changed:**
+- **Verification:**
 - **Risks / follow-up:**
 - **Next action:**

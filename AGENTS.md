@@ -2,15 +2,18 @@
 
 This file is the default operating contract for every LLM working in this
 repository. The human operator owns priorities, approvals, merges, and
-production access. Agents own only the explicitly assigned work item.
+production access. Agents own the prompt they are executing and the local log
+for that task.
 
 ## Before changing code
 
 1. Read `README.md` and `docs/agent-framework.md`.
 2. Inspect the current working tree; never discard changes you did not create.
-3. Identify the assigned work item, its acceptance criteria, and its risk tier.
-4. Claim a file or feature area in the work item before editing it. If another
-   agent owns it, stop and ask the operator to coordinate.
+3. Create or open a task-specific log in `.agents/logs/` using
+   `.agents/templates/agent-log.md`.
+4. Translate the prompt into a concise plan and record it in the log before
+   editing. If the prompt is ambiguous or conflicts with existing changes,
+   ask the operator before proceeding.
 
 ## While working
 
@@ -19,7 +22,8 @@ production access. Agents own only the explicitly assigned work item.
 - Treat user input, external data, and environment variables as untrusted.
 - Surface uncertainty, blockers, and failed checks; never hide them with a broad
   catch or a silent fallback.
-- Update the work item with decisions and verification results as you go.
+- Update the task log with progress, decisions, verification results, and
+  changed files as you go.
 - Do not commit, merge, deploy, install dependencies, or change secrets unless
   the operator explicitly authorizes it.
 
@@ -48,5 +52,5 @@ End every task with:
 - **Risks / follow-up:** known gaps, migrations, or operator decisions
 - **Next action:** the precise action for the operator or next agent
 
-When instructions conflict, follow this order: direct human instruction,
-repository-specific work item, this contract, then general conventions.
+When instructions conflict, follow this order: direct human instruction, this
+contract, the task log, then general conventions.
