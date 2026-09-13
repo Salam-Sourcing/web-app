@@ -1,11 +1,15 @@
 # `.agents`
 
-This directory contains reusable artifacts for the repository's human-directed
-agent workflow. Durable project state belongs in GitHub issues and pull
-requests, not in local files that can be lost or diverge.
+This directory contains reusable guidance for the repository's prompt-first
+agent workflow. The operator provides the prompt directly to an agent. The
+agent keeps a local, resumable record of its work in `.agents/logs/`.
 
-- `templates/work-item.md` is a provider-neutral task brief.
-- `templates/handoff.md` is the minimum resumable handoff.
+- `templates/agent-log.md` is the log format to copy for each task.
+- `.agents/logs/` is intentionally ignored by Git because logs are local
+  execution state, not application source.
 
-Read [`AGENTS.md`](../AGENTS.md) and [`docs/agent-framework.md`](../docs/agent-framework.md)
-before using these templates.
+Create a log with a task-specific filename such as
+`.agents/logs/2026-09-13-update-agent-workflow.md`, update it as work
+progresses, and finish it with verification results and a handoff when another
+agent needs to continue. Read [`AGENTS.md`](../AGENTS.md) and
+[`docs/agent-framework.md`](../docs/agent-framework.md) before starting.
