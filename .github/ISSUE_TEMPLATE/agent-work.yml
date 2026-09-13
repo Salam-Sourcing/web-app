@@ -1,0 +1,60 @@
+name: Agent work item
+description: Define a human-directed task for an LLM agent
+title: "[Agent] "
+labels:
+  - agent:ready
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for work that an agent can execute on an isolated branch.
+        Read AGENTS.md and docs/agent-framework.md before assigning it.
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: State the user or business result, not the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use observable pass/fail statements.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk tier
+      options:
+        - low
+        - medium
+        - high
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and ownership boundary
+      description: List included, excluded, and intended files or surfaces.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and operator decisions
+      description: Link prerequisite issues and record approvals or open questions.
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification plan
+      description: List checks and manual validation required before handoff.
+      value: |
+        - [ ] npm run check
+        - [ ] npm run build
+    validations:
+      required: true

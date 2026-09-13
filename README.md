@@ -22,3 +22,12 @@ Open `http://localhost:4321` to view the app.
 
 Run `npm run check` for Astro and TypeScript diagnostics, or `npm run build` to
 create a production build.
+
+## Agent workflow
+
+This repository is designed for human-directed, multi-agent development. Read
+[`AGENTS.md`](AGENTS.md) for the agent operating contract and
+[`docs/agent-framework.md`](docs/agent-framework.md) for the lifecycle,
+ownership, risk policy, handoff format, and scaling path. Work items can be
+started from the GitHub issue template or
+[`.agents/templates/work-item.md`](.agents/templates/work-item.md).
