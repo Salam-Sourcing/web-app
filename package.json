@@ -12,9 +12,10 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^14.3.1",
     "@astrojs/react": "^4.3.0",
     "@tailwindcss/vite": "^4.1.0",
-    "astro": "^5.5.0",
+    "astro": "^7.3.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
@@ -26,6 +27,7 @@
     "@astrojs/check": "^0.9.10",
     "prettier": "^3.5.0",
     "prettier-plugin-astro": "^0.14.1",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "wrangler": "^4.131.1"
   }
 }
