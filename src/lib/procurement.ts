@@ -1,4 +1,5 @@
 import { AccessError, positiveId, textField } from "./security";
+import { createRequestId } from "./request-id";
 import type { Row } from "./catalog";
 export type Enquiry = Row<"enquiries">;
 export type Quote = Row<"quotes">;
@@ -257,7 +258,9 @@ export function mergeMessages(
   );
 }
 export function pendingText(content: string) {
-  return { content: content.trim(), client_message_id: crypto.randomUUID() };
+  const text = content.trim();
+  if (!text) throw new Error("Write a message before sending.");
+  return { content: text, client_message_id: createRequestId() };
 }
 
 export const quantityLabel = (e: Enquiry) =>

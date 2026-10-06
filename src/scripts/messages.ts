@@ -1,5 +1,6 @@
 import { messageImage } from "../lib/deals";
 import { post, ApiError } from "./forms";
+import { bindChatImageViewer } from "./chat-image-viewer";
 import {
   mergeMessages,
   pendingText,
@@ -16,6 +17,7 @@ export function bindThread() {
   const root = document.querySelector<HTMLElement>("[data-thread]");
   if (!root || root.dataset.bound) return;
   root.dataset.bound = "true";
+  bindChatImageViewer(root);
   const id = root.dataset.conversation!,
     company = root.dataset.company!,
     history = root.querySelector<HTMLElement>("[data-history]")!,
@@ -323,6 +325,7 @@ export function bindThread() {
       send.disabled = true;
       retry.disabled = true;
       note.hidden = false;
+      note.setAttribute("role", "status");
       note.textContent = "Sending…";
       const attempted = pending;
       try {
@@ -352,8 +355,14 @@ export function bindThread() {
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       if (pending || sending || !form.reportValidity()) return;
-      pending = pendingText(input.value);
-      void sendPending();
+      try {
+        pending = pendingText(input.value);
+        void sendPending();
+      } catch (error) {
+        note.hidden = false;
+        note.setAttribute("role", "alert");
+        note.textContent = (error as Error).message;
+      }
     });
     retry.addEventListener("click", () => void sendPending());
   }

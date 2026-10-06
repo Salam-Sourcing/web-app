@@ -112,3 +112,29 @@ documented in [concurrency_fixes.md](concurrency_fixes.md).
 Isolated fixture screenshots: [desktop deal](screenshots/phase-4-deal-desktop.png)
 and [mobile message image](screenshots/phase-4-message-image-mobile.png). The sample
 photo uses the local logo asset solely to exercise authenticated raster delivery.
+
+## Messaging follow-up: HTTP preview sending and photo viewer
+
+The reported silent Send failure was reproduced in an isolated browser fixture
+on a desktop browser using an HTTP LAN origin: `isSecureContext` was false, `crypto.randomUUID` was
+unavailable, and the old submit handler threw before displaying feedback. The
+web client now generates a cryptographically random v4 UUID using
+`crypto.getRandomValues` when the native UUID method is unavailable. Preparation
+errors and whitespace-only drafts display an alert and retain the draft.
+
+An in-page chat photo viewer now supports Close, Download, previous/next loaded
+photos, Escape and arrow keys. It handles server-rendered and refreshed messages
+through delegated clicks, wraps long filenames on mobile, and shows loading and
+unavailable-photo feedback. Downloads and images use the existing authenticated
+media endpoint. The viewer closes and clears its media when the private workspace
+locks, the page hides, the client goes offline, logout occurs, or the attachment
+is removed. No backend or Flutter source changes were needed for this web fix.
+
+Verification: **128 web tests**, Astro check **0 errors / 0 warnings** (six existing
+hints), production build, **327 production HTTP assertions** and **309 development HTTP assertions** passed. The restarted phone-test hostname returned HTTP 200. Browser
+fixtures reproduced the failure before the fix and confirmed sending afterward
+on the same HTTP origin and on secure localhost. A simulated lost acknowledgement followed by Retry
+created one message with the original UUID and preserved an edited draft. Viewer
+navigation, Escape, unavailable media, private-content locking and narrow
+320/390 px layouts were checked with fixture photos. These checks do not claim a
+live customer-account send or a deployed staging release.

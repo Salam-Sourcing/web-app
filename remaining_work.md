@@ -882,3 +882,8 @@ that spans phases must be rechecked as each dependent feature is introduced.
 Phase 6 evidence and the exact deferred rollout sequence are recorded in
 [phase_6.md](documentation/phase_6.md). Local checks and fixture layouts do not
 replace the cross-platform acceptance matrix above.
+
+Messaging follow-up: the silent HTTP phone-preview send failure is fixed locally,
+and an in-page chat photo viewer is implemented. Regression and browser fixture
+evidence is recorded in [Phase 4](documentation/phase_4.md#messaging-follow-up-http-preview-sending-and-photo-viewer).
+Staging deployment and the real web ↔ Flutter messaging acceptance remain open.
