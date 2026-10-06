@@ -1,0 +1,63 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+interface Props {
+  kind: "terms" | "privacy";
+}
+const { kind } = Astro.props;
+const title = kind === "terms" ? "Terms of Service" : "Privacy Policy";
+const sections =
+  kind === "terms"
+    ? [
+        [
+          "Marketplace use",
+          "You are responsible for accurate account, company, listing, enquiry and quote information. Fraudulent, prohibited or unlawful activity is not allowed.",
+        ],
+        [
+          "Business transactions",
+          "Salam Sourcing facilitates business introductions and sourcing workflows. Participating businesses remain responsible for their contracts, pricing, payment, delivery and regulatory obligations.",
+        ],
+        [
+          "Account access and safety",
+          "Account and company permissions limit access to records and actions. Content and accounts may be restricted while safety reports are reviewed. Contact support for assistance.",
+        ],
+      ]
+    : [
+        [
+          "Information used by the service",
+          "Account, company, marketplace, message, attachment and operational information is used to provide sourcing workflows, support, abuse prevention and security.",
+        ],
+        [
+          "Access to business records",
+          "Company membership, roles, effective permissions and workflow participation determine access to private records and files.",
+        ],
+        [
+          "Deletion and retention",
+          "Account deletion is scheduled with a 30-day recovery period. You may cancel while your request remains pending. Transaction, billing, audit or moderation records may require longer retention or anonymization.",
+        ],
+      ];
+---
+
+<MainLayout title={title} privatePage={true}
+  ><section class="container reading section">
+    <p class="eyebrow">Salam Sourcing</p><h1>{title}</h1><p
+      class="form-message mt-6"
+    >
+      Draft policy — awaiting production review. This summary follows the
+      current app guidance and is not the final legal policy.
+    </p><div class="stack mt-8">
+      {
+        sections.map(([heading, text]) => (
+          <article class="card">
+            <>
+              <h2>{heading}</h2>
+              <p>{text}</p>
+            </>
+          </article>
+        ))
+      }
+    </div><p class="mt-8">
+      Questions? <a class="text-link" href="mailto:support@salamsourcing.com"
+        >support@salamsourcing.com</a>
+    </p>
+  </section></MainLayout
+>

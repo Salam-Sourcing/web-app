@@ -1,0 +1,22 @@
+---
+interface Props {
+  id: number;
+  kind: "listing" | "company";
+  saved: boolean;
+  name: string;
+}
+const { id, kind, saved, name } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={["save-button", { "is-saved": saved }]}
+  data-save-id={id}
+  data-save-kind={kind}
+  data-item-name={name}
+  aria-pressed={saved}
+  aria-label={(saved ? "Remove saved " : "Save ") + name}
+  ><span aria-hidden="true">{saved ? "♥" : "♡"}</span><span data-save-label
+    >{saved ? "Saved" : "Save"}</span
+  ></button
+>

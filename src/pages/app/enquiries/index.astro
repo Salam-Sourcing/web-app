@@ -1,0 +1,149 @@
+---
+import AppLayout from "../../../layouts/AppLayout.astro";
+import EnquiryCard from "../../../components/EnquiryCard.astro";
+import { requireWorkspace } from "../../../lib/server/access";
+import { enquiryFeed } from "../../../lib/server/procurement";
+import { taxonomy } from "../../../lib/server/catalog";
+const state = await requireWorkspace(Astro),
+  feed = await enquiryFeed(state, Astro.url.searchParams),
+  categories = await taxonomy(state);
+const link = (page: number) => {
+  const p = new URLSearchParams(Astro.url.searchParams);
+  p.set("page", String(page));
+  return "/app/enquiries?" + p;
+};
+---
+
+<AppLayout
+  title="Enquiries"
+  active="enquiries"
+  state={state}
+  description="Find sourcing opportunities and manage your business enquiries."
+>
+  {
+    state.company?.verification_status === "verified" &&
+      state.permissions.includes("procurement") && (
+        <a slot="actions" class="button" href="/app/enquiries/new">
+          Create an RFQ
+        </a>
+      )
+  }
+  <nav class="tabs" aria-label="Enquiry views">
+    {
+      [
+        ["all", "All enquiries"],
+        ["mine", "My enquiries"],
+        ["saved", "Saved"],
+      ].map(([key, label]) => (
+        <a
+          href={"/app/enquiries?tab=" + key}
+          aria-current={feed.tab === key ? "page" : undefined}
+        >
+          {label}
+        </a>
+      ))
+    }
+  </nav>
+  <form class="card feed-filters" action="/app/enquiries" method="get">
+    <input type="hidden" name="tab" value={feed.tab} />
+    <label class="field"
+      >Search<input
+        name="q"
+        type="search"
+        maxlength="120"
+        value={Astro.url.searchParams.get("q") ?? ""}
+        placeholder="Search requirements"
+      /></label
+    >
+    <label class="field"
+      >Category<select name="category"
+        ><option value="">All categories</option>{
+          categories.map((c) => (
+            <optgroup label={c.name}>
+              {c.sub_categories.map((s) => (
+                <option
+                  value={s.id}
+                  selected={
+                    Astro.url.searchParams.get("category") === String(s.id)
+                  }
+                >
+                  {s.name}
+                </option>
+              ))}
+            </optgroup>
+          ))
+        }</select
+      ></label
+    >
+    <label class="field"
+      >Status<select name="status"
+        ><option value="">All statuses</option>{
+          [
+            "open",
+            "quoted",
+            "negotiating",
+            "accepted",
+            "closed",
+            "cancelled",
+          ].map((s) => (
+            <option
+              selected={Astro.url.searchParams.get("status") === s}
+              value={s}
+            >
+              {s}
+            </option>
+          ))
+        }</select
+      ></label
+    >
+    <label class="check"
+      ><input
+        type="checkbox"
+        name="urgency"
+        value="urgent"
+        checked={Astro.url.searchParams.get("urgency") === "urgent"}
+      />Urgent only</label
+    >
+    <button class="button secondary">Apply filters</button>
+  </form>
+  {
+    feed.rows.length ? (
+      <div class="enquiry-grid">
+        {feed.rows.map((e) => {
+          const c = feed.companies.find((c) => c.id === e.buyer_company_id);
+          return (
+            <EnquiryCard
+              enquiry={e}
+              buyerName={c?.display_name ?? "Buyer unavailable"}
+              verified={c?.verification_status === "verified"}
+              saved={feed.saved.has(e.id)}
+              companyId={state.company?.id}
+            />
+          );
+        })}
+      </div>
+    ) : (
+      <div class="card empty-workspace">
+        <>
+          <h2>No enquiries here yet</h2>
+          <p>Try another view or adjust your filters.</p>
+        </>
+      </div>
+    )
+  }
+  <nav class="actions pagination" aria-label="Enquiry pages">
+    {
+      feed.page > 0 && (
+        <a class="button secondary" href={link(feed.page - 1)}>
+          Previous
+        </a>
+      )
+    }{
+      feed.hasMore && (
+        <a class="button secondary" href={link(feed.page + 1)}>
+          Next
+        </a>
+      )
+    }
+  </nav>
+</AppLayout>

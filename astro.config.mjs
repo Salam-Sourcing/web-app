@@ -4,9 +4,31 @@ import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
+  site: "https://test.salamsourcing.com",
+  output: "server",
+  session: false,
+  markdown: { syntaxHighlight: false },
   integrations: [react()],
   adapter: cloudflare(),
-  vite: {
-    plugins: [tailwindcss()],
+  security: {
+    checkOrigin: true,
+    csp: {
+      directives: [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "frame-ancestors 'none'",
+        "form-action 'self'",
+        "img-src 'self' data: blob:",
+        "font-src 'self'",
+        "connect-src 'self' https://challenges.cloudflare.com",
+        "frame-src https://challenges.cloudflare.com",
+      ],
+      scriptDirective: {
+        resources: ["'self'", "https://challenges.cloudflare.com"],
+      },
+      styleDirective: { resources: ["'self'", "'unsafe-inline'"] },
+    },
   },
+  vite: { plugins: [tailwindcss()] },
 });

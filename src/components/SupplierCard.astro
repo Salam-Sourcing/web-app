@@ -1,0 +1,59 @@
+---
+import type { Database } from "../lib/database.types";
+import SaveButton from "./SaveButton.astro";
+import Icon from "./Icon.astro";
+interface Props {
+  id: number;
+  profile:
+    | Database["public"]["Functions"]["get_public_company_profile"]["Returns"][number]
+    | null;
+}
+const { id, profile } = Astro.props;
+---
+
+<article class="card supplier-card" data-record-id={id}>
+  <div class="supplier-emblem"><Icon name="company" size={30} /></div>{
+    profile ? (
+      <>
+        <h2>
+          <a href={"/app/suppliers/" + id}>{profile.display_name}</a>
+        </h2>
+        {profile.verification_status === "verified" && (
+          <span class="badge success">Verified supplier</span>
+        )}
+        <p class="help-text">
+          {[profile.city, profile.province_state, profile.country]
+            .filter(Boolean)
+            .join(", ")}
+        </p>
+        <>
+          <p>
+            {profile.total_reviews} reviews · {profile.total_listings} listings
+          </p>
+          <SaveButton
+            id={id}
+            kind="company"
+            saved={true}
+            name={profile.display_name}
+          />
+        </>
+      </>
+    ) : (
+      <>
+        <>
+          <h2>Supplier unavailable</h2>
+          <p class="help-text">
+            This saved supplier is no longer accessible. You can remove it from
+            your account.
+          </p>
+          <SaveButton
+            id={id}
+            kind="company"
+            saved={true}
+            name="unavailable supplier"
+          />
+        </>
+      </>
+    )
+  }
+</article>

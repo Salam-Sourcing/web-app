@@ -1,0 +1,294 @@
+---
+import ListingCard from "./ListingCard.astro";
+import SupplierCard from "./SupplierCard.astro";
+import Icon from "./Icon.astro";
+import type { Workspace } from "../lib/server/access";
+import { search, savedSuppliers, taxonomy } from "../lib/server/catalog";
+import { searchInput, categoryIcon } from "../lib/catalog";
+interface Props {
+  state: Workspace;
+  saved?: boolean;
+  companyId?: number;
+}
+const { state, saved = false, companyId } = Astro.props;
+const params = new URLSearchParams(Astro.url.search);
+if (saved) params.set("saved", "true");
+if (companyId) params.set("company_id", String(companyId));
+let error: string | null = null;
+let page: Awaited<ReturnType<typeof search>> = {
+  rows: [],
+  offset: 0,
+  nextOffset: 0,
+  hasMore: false,
+};
+let suppliers: Awaited<ReturnType<typeof savedSuppliers>> = {
+  rows: [],
+  nextOffset: 0,
+  hasMore: false,
+};
+let categories: string[] = [];
+const supplierTab = saved && params.get("tab") === "suppliers";
+try {
+  if (supplierTab)
+    suppliers = await savedSuppliers(state, searchInput(params).offset);
+  else {
+    page = await search(state, params);
+    categories = (await taxonomy(state)).flatMap((c) =>
+      c.sub_categories.map((s) => s.name),
+    );
+  }
+} catch (e) {
+  error = e instanceof Error ? e.message : "Unable to load the marketplace.";
+}
+const value = (key: string) => params.get(key) ?? "";
+---
+
+<section
+  data-catalog-feed
+  data-supplier-tab={String(supplierTab)}
+  data-offset={supplierTab ? suppliers.nextOffset : page.nextOffset}
+  data-has-more={String(supplierTab ? suppliers.hasMore : page.hasMore)}
+>
+  {
+    saved && (
+      <nav class="tab-row" aria-label="Saved item type">
+        <>
+          <a aria-current={!supplierTab ? "page" : undefined} href="/app/saved">
+            Listings
+          </a>
+          <a
+            aria-current={supplierTab ? "page" : undefined}
+            href="/app/saved?tab=suppliers"
+          >
+            Suppliers
+          </a>
+        </>
+      </nav>
+    )
+  }
+  {
+    !supplierTab && (
+      <form class="catalog-filters card" method="get" data-discovery-form>
+        {saved && <input type="hidden" name="saved" value="true" />}
+        {companyId && (
+          <input type="hidden" name="company_id" value={companyId} />
+        )}
+        <input type="hidden" name="category" value={value("category")} />
+        <div class="search-row">
+          <>
+            <label class="field search-field">
+              Search products, suppliers and categories
+              <input
+                name="query"
+                type="search"
+                value={value("query")}
+                maxlength="200"
+                placeholder="What are you sourcing?"
+              />
+            </label>
+            <label class="field">
+              Sort
+              <select name="sort">
+                <>
+                  <option
+                    value="newest"
+                    selected={!value("sort") || value("sort") === "newest"}
+                  >
+                    Newest
+                  </option>
+                  <option
+                    value="price_low"
+                    selected={value("sort") === "price_low"}
+                  >
+                    Price: low to high
+                  </option>
+                  <option
+                    value="price_high"
+                    selected={value("sort") === "price_high"}
+                  >
+                    Price: high to low
+                  </option>
+                  <option
+                    value="lead_time"
+                    selected={value("sort") === "lead_time"}
+                  >
+                    Shortest lead time
+                  </option>
+                </>
+              </select>
+            </label>
+            <button class="button" type="submit">
+              Search
+            </button>
+          </>
+        </div>
+        <details class="filter-details">
+          <>
+            <summary>Filters</summary>
+            <div class="filter-grid mt-5">
+              <>
+                <label class="field">
+                  Location
+                  <input
+                    name="location"
+                    value={value("location")}
+                    maxlength="200"
+                    placeholder="City, province or country"
+                  />
+                </label>
+                <label class="field">
+                  Currency
+                  <input
+                    name="currency"
+                    value={value("currency")}
+                    maxlength="3"
+                    pattern="[A-Za-z]{3}"
+                    placeholder="Any currency"
+                  />
+                </label>
+                <label class="field">
+                  Minimum price
+                  <input
+                    name="min_price"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={value("min_price")}
+                  />
+                </label>
+                <label class="field">
+                  Maximum price
+                  <input
+                    name="max_price"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={value("max_price")}
+                  />
+                </label>
+                <label class="field">
+                  Maximum MOQ
+                  <input
+                    name="max_moq"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={value("max_moq")}
+                  />
+                </label>
+                <label class="field">
+                  Maximum lead time (days)
+                  <input
+                    name="max_lead_days"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={value("max_lead_days")}
+                  />
+                </label>
+                <label class="checkbox-field">
+                  <input
+                    name="verified"
+                    type="checkbox"
+                    value="true"
+                    checked={value("verified") === "true"}
+                  />{" "}
+                  Verified suppliers only
+                </label>
+              </>
+            </div>
+            <p class="help-text mt-4">
+              Prices remain in their original currency. Price sorting groups
+              currencies and does not convert them.
+            </p>
+          </>
+        </details>
+        {categories.length > 0 && (
+          <nav class="category-pills" aria-label="Industry categories">
+            {["", ...categories].map((category) => (
+              <a
+                href={
+                  "?" +
+                  new URLSearchParams({
+                    ...Object.fromEntries(params),
+                    category,
+                    offset: "0",
+                  })
+                }
+                data-category={category}
+                aria-current={
+                  value("category") === category ? "page" : undefined
+                }
+              >
+                <span class="category-icon">
+                  <Icon name={categoryIcon(category)} size={21} />
+                </span>
+                {category || "All categories"}
+              </a>
+            ))}
+          </nav>
+        )}
+      </form>
+    )
+  }
+  <p
+    class="form-message"
+    data-feed-message
+    role="status"
+    aria-live="polite"
+    hidden={!error}
+  >
+    {error}
+  </p>
+  {
+    error && (
+      <a
+        class="button secondary"
+        data-feed-retry
+        href={Astro.url.pathname + "?" + params}
+      >
+        Retry
+      </a>
+    )
+  }
+  <div
+    class:list={["catalog-grid", { "supplier-grid": supplierTab }]}
+    data-feed-results
+  >
+    {
+      supplierTab
+        ? suppliers.rows.map((row) => <SupplierCard {...row} />)
+        : page.rows.map((listing) => <ListingCard listing={listing} />)
+    }
+  </div>
+  <p
+    class="card empty-state"
+    data-feed-empty
+    hidden={Boolean(error) ||
+      (supplierTab ? suppliers.rows.length : page.rows.length) > 0}
+  >
+    {
+      supplierTab
+        ? "No saved suppliers yet."
+        : saved
+          ? "No accessible saved listings. Save items from Discover to see them here."
+          : "No listings match these filters. Try a different search or clear some filters."
+    }
+  </p>
+  <div class="actions justify-center">
+    <a
+      class="button secondary"
+      data-feed-more
+      hidden={!(supplierTab ? suppliers.hasMore : page.hasMore)}
+      href={"?" +
+        new URLSearchParams({
+          ...Object.fromEntries(params),
+          offset: String(supplierTab ? suppliers.nextOffset : page.nextOffset),
+        })}>Load more</a
+    >
+  </div>
+</section>
+<script>
+  import { bindCatalog } from "../scripts/catalog";
+  bindCatalog();
+</script>

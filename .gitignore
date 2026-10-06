@@ -9,3 +9,8 @@ dist/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+
+# Cloudflare local runtime and bindings
+.wrangler/
+.dev.vars
+.dev.vars.*

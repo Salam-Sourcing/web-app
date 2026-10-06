@@ -1,33 +1,65 @@
 ---
-import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
-import "@/styles/globals.css";
-
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/globals.css";
 interface Props {
   title: string;
   description?: string;
+  privatePage?: boolean;
 }
-
 const {
   title,
-  description = "Connect with trusted suppliers and discover products made for your business.",
+  description = "Discover suppliers, request quotes and manage your business sourcing with Salam Sourcing.",
+  privatePage = false,
 } = Astro.props;
+const canonical = new URL(
+  Astro.url.pathname,
+  Astro.site ?? "https://test.salamsourcing.com",
+);
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="description" content={description} />
-    <link rel="icon" href="/images/ss_ebay.webp" type="image/webp" />
-    <title>{title} | Salam Sourcing</title>
-  </head>
-  <body class="flex min-h-screen flex-col">
-    <Header />
-    <main class="flex-1">
+    <meta charset="UTF-8" /><meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="description" content={description} /><meta
+      name="theme-color"
+      content="#9C272E"
+    />
+    {privatePage && <meta name="robots" content="noindex,nofollow,noarchive" />}
+    <link rel="canonical" href={canonical} /><link
+      rel="icon"
+      href="/favicon.svg"
+      type="image/svg+xml"
+    />
+    <link
+      rel="preload"
+      href="/fonts/Inter.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <meta property="og:type" content="website" /><meta
+      property="og:title"
+      content={title + " | Salam Sourcing"}
+    /><meta property="og:description" content={description} /><meta
+      property="og:url"
+      content={canonical}
+    /><meta
+      property="og:image"
+      content={new URL("/images/salam-sourcing.png", canonical)}
+    />
+    <meta name="twitter:card" content="summary" /><title>
+      {title} | Salam Sourcing
+    </title>
+  </head><body class="flex min-h-screen flex-col"
+    ><a href="#main" class="skip-link">Skip to content</a><Header /><main
+      id="main"
+      class="flex-1"
+    >
       <slot />
-    </main>
-    <Footer />
-  </body>
+    </main><Footer /></body>
 </html>

@@ -1,0 +1,56 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+const topics = [
+  [
+    "Getting started",
+    "Create an account, confirm your email and log in. Your existing Salam Sourcing app account works on the website.",
+  ],
+  [
+    "Company access",
+    "Choose an authorized company from the workspace's active-company menu. Your role, permissions and verification determine the actions available to you.",
+  ],
+  [
+    "Account security",
+    "Use an authenticator app for two-factor authentication. Request a recovery email if you forget your password; recovery still requires your second factor when enrolled.",
+  ],
+  [
+    "Safety and deletion",
+    "Report concerns from a listing, company, message or review. Manage blocked companies and account deletion from Account → Privacy & safety. Deletion has a 30-day recovery period while pending.",
+  ],
+  [
+    "Sourcing work",
+    "Use listings and enquiries to discuss requirements and compare quotes. Buyers and suppliers remain responsible for their payment, delivery and contractual arrangements.",
+  ],
+];
+---
+
+<MainLayout title="Help Center"
+  ><section class="container reading section">
+    <p class="eyebrow">We're here to help</p><h1>Help Center</h1><p
+      class="mt-5"
+    >
+      Find your way around Salam Sourcing or contact us for account and
+      marketplace help.
+    </p><div class="stack mt-8">
+      {
+        topics.map(([title, text]) => (
+          <article class="card">
+            <>
+              <h2>{title}</h2>
+              <p>{text}</p>
+            </>
+          </article>
+        ))
+      }
+    </div><section class="card mt-8">
+      <h2>Need a hand?</h2><p>
+        Email our support team. Avoid sending passwords, authenticator secrets
+        or recovery codes.
+      </p><div class="actions">
+        <a class="button" href="mailto:support@salamsourcing.com"
+          >Email support</a
+        ><a class="text-link" href="/app/account">Open your account</a>
+      </div>
+    </section>
+  </section></MainLayout
+>

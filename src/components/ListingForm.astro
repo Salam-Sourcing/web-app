@@ -1,0 +1,213 @@
+---
+import type { Taxonomy } from "../lib/catalog";
+import type { sellerListing } from "../lib/server/catalog";
+type Listing = Awaited<ReturnType<typeof sellerListing>>;
+interface Props {
+  companyId: number;
+  categories: Taxonomy[];
+  listing?: Listing;
+}
+const { companyId, categories, listing } = Astro.props;
+const specs =
+  listing?.specifications &&
+  typeof listing.specifications === "object" &&
+  !Array.isArray(listing.specifications)
+    ? Object.entries(listing.specifications)
+    : [];
+const val = (key: keyof Listing) => String(listing?.[key] ?? "");
+---
+
+<form
+  novalidate
+  class="form"
+  data-listing-form
+  data-review-form
+  data-listing-id={listing?.id}
+  data-existing-images={listing?.listing_images.length ?? 0}
+>
+  <input type="hidden" name="company_id" value={companyId} />{
+    listing && <input type="hidden" name="listing_id" value={listing.id} />
+  }
+  <ol class="step-indicator">
+    <li data-step-label="0" aria-current="step">1 Details</li><li
+      data-step-label="1"
+    >
+      2 Terms & images
+    </li><li data-step-label="2">3 Review</li>
+  </ol>
+  <fieldset data-wizard-step="0">
+    <legend>Product or service</legend><label class="field"
+      >Listing type<select name="listing_type"
+        ><option
+          value="product"
+          selected={!listing || listing.listing_type === "product"}
+          >Product</option
+        ><option value="service" selected={listing?.listing_type === "service"}
+          >Service</option
+        ></select
+      ></label
+    >
+    <label class="field"
+      >Category & subcategory<select name="sub_category_id" required
+        ><option value="">Choose a category</option>{
+          categories.map((category) => (
+            <optgroup label={category.name}>
+              {category.sub_categories.map((child) => (
+                <option
+                  value={child.id}
+                  selected={listing?.sub_category_id === child.id}
+                >
+                  {child.name}
+                </option>
+              ))}
+            </optgroup>
+          ))
+        }</select
+      ></label
+    >
+    <label class="field"
+      >Listing name<input
+        name="name"
+        value={val("name")}
+        maxlength="200"
+        required
+      /></label
+    ><label class="field"
+      >Description<textarea
+        name="description"
+        maxlength="6000"
+        rows="6"
+        required>{val("description")}</textarea
+      ></label
+    >
+    <div>
+      <h3>Specifications</h3><p class="help-text">
+        Add up to 30 key/value pairs.
+      </p><div data-specs class="stack mt-3">
+        {
+          specs.map(([key, value]) => (
+            <div class="spec-row">
+              <>
+                <label class="field">
+                  Name
+                  <input data-spec-key value={key} maxlength="100" />
+                </label>
+                <label class="field">
+                  Value
+                  <input
+                    data-spec-value
+                    value={String(value ?? "")}
+                    maxlength="500"
+                  />
+                </label>
+                <button
+                  type="button"
+                  class="button secondary"
+                  data-spec-remove
+                  aria-label={"Remove specification " + key}
+                >
+                  Remove
+                </button>
+              </>
+            </div>
+          ))
+        }
+      </div><button class="button secondary mt-3" type="button" data-spec-add
+        >Add specification</button>
+    </div>
+  </fieldset>
+  <fieldset data-wizard-step="1" hidden>
+    <legend>Terms and images</legend><p class="help-text">
+      Currency: <strong>{listing?.currency ?? "CAD"}</strong>. No currency
+      conversion is applied.
+    </p><div class="form-row">
+      <label class="field"
+        >Price per unit (optional)<input
+          type="number"
+          name="price_per_unit"
+          min="0"
+          step="any"
+          value={val("price_per_unit")}
+        /></label
+      ><label class="field"
+        >Unit of measure<input
+          name="unit_of_measure"
+          value={listing?.unit_of_measure ?? "unit"}
+          maxlength="60"
+          required
+        /></label
+      ><label class="field"
+        >Minimum order quantity (optional)<input
+          type="number"
+          name="minimum_order_quantity"
+          min="0"
+          step="any"
+          value={val("minimum_order_quantity")}
+        /></label
+      ><label class="field"
+        >Lead time in days (optional)<input
+          type="number"
+          name="estimated_lead_time_days"
+          min="0"
+          step="1"
+          value={val("estimated_lead_time_days")}
+        /></label>
+    </div><label class="field"
+      >Origin country (optional)<input
+        name="origin_country"
+        value={val("origin_country")}
+        maxlength="100"
+      /></label
+    >
+    <label class="field"
+      >Add listing images<input
+        name="images"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+      /></label
+    ><p class="help-text">
+      Up to five images including the {listing?.listing_images.length ?? 0} existing
+      images. JPEG, PNG or WebP, each smaller than 5 MB. Existing images and their
+      cover order are retained.
+    </p><div class="upload-previews" data-upload-previews></div>
+  </fieldset>
+  <fieldset data-wizard-step="2" hidden>
+    <legend>Review your listing</legend><dl data-review-summary></dl><p
+      class="help-text"
+    >
+      Save a manual server draft now, or submit it for moderation after all
+      uploads succeed. Company verification is required to submit. Editing
+      published or paused listings returns them to draft.
+    </p>
+  </fieldset>
+  <p class="form-message" data-form-message role="status" hidden></p><a
+    data-saved-draft
+    class="text-link"
+    hidden>Open saved draft</a
+  ><div class="actions">
+    <button type="button" class="button secondary" data-wizard-back hidden
+      >Back</button
+    ><button type="button" class="button" data-wizard-next>Continue</button
+    ><button
+      type="submit"
+      class="button secondary"
+      data-wizard-submit
+      name="finish"
+      value="draft"
+      hidden>Save draft</button
+    ><button
+      type="submit"
+      class="button"
+      data-wizard-submit
+      name="finish"
+      value="submit"
+      hidden>Submit for review</button>
+  </div>
+</form>
+<script>
+  import { bindWizards } from "../scripts/wizard";
+  import { bindListingForms } from "../scripts/catalog-forms";
+  bindWizards();
+  bindListingForms();
+</script>

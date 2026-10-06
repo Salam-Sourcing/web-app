@@ -1,0 +1,20 @@
+---
+import AppLayout from "../../../layouts/AppLayout.astro";
+import { requireWorkspace } from "../../../lib/server/access";
+import { activeCompany } from "../../../lib/server/catalog";
+const state = await requireWorkspace(Astro),
+  company = activeCompany(state, undefined, "insights");
+---
+
+<AppLayout title="Supplier insights" active="account" state={state}
+  ><section class="card reading">
+    <span class="badge">Available in the Salam Sourcing app</span><h2
+      class="mt-5"
+    >
+      Insights for {company.display_name}
+    </h2><p class="mt-4">
+      View supplier insights in the Salam Sourcing app. Website insights are
+      coming soon.
+    </p><a class="button secondary mt-5" href="/app/sell">Back to Sell</a>
+  </section></AppLayout
+>

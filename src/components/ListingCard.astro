@@ -1,0 +1,60 @@
+---
+import type { ListingCardData } from "../lib/catalog";
+import SaveButton from "./SaveButton.astro";
+import Icon from "./Icon.astro";
+interface Props {
+  listing: ListingCardData;
+}
+const { listing } = Astro.props;
+---
+
+<article class="listing-card" data-record-id={listing.id}>
+  <div class="listing-picture">
+    <a href={"/app/listings/" + listing.id} aria-label={"View " + listing.name}
+      ><Icon name="image" size={36} />{
+        listing.has_image && (
+          <img
+            data-private-media
+            src={"/api/media/listing/" + listing.id}
+            alt={listing.name}
+            loading="lazy"
+          />
+        )
+      }</a
+    >{
+      listing.is_verified && (
+        <span class="badge verified-overlay">✓ Verified vendor</span>
+      )
+    }
+  </div>
+  <div class="listing-card-body">
+    <a
+      class="eyebrow supplier-link"
+      href={"/app/suppliers/" + listing.company_id}>{listing.vendor_name}</a
+    ><h2><a href={"/app/listings/" + listing.id}>{listing.name}</a></h2>{
+      listing.category && <p class="help-text">{listing.category}</p>
+    }
+    <div class="listing-facts">
+      {
+        listing.price_per_unit !== null && (
+          <strong>
+            {listing.currency} {listing.price_per_unit.toLocaleString("en")} /{" "}
+            {listing.unit_of_measure}
+          </strong>
+        )
+      }{
+        listing.minimum_order_quantity !== null && (
+          <p>
+            MOQ: {listing.minimum_order_quantity} {listing.unit_of_measure}
+          </p>
+        )
+      }{listing.location && <p>{listing.location}</p>}
+    </div>
+    <SaveButton
+      id={listing.id}
+      kind="listing"
+      saved={listing.saved}
+      name={listing.name}
+    />
+  </div>
+</article>

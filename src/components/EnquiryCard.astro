@@ -1,0 +1,52 @@
+---
+import type { Enquiry } from "../lib/procurement";
+import { location, dateLabel, quantityLabel } from "../lib/procurement";
+interface Props {
+  enquiry: Enquiry;
+  buyerName: string;
+  verified: boolean;
+  saved: boolean;
+  companyId?: number;
+}
+const { enquiry: e, buyerName, verified, saved, companyId } = Astro.props;
+---
+
+<article class="card enquiry-card">
+  <div class="card-meta">
+    <span class:list={["badge", { success: verified }]}
+      >{verified ? "Verified buyer" : buyerName}</span
+    >{e.urgency === "urgent" && <span class="badge urgent">Urgent</span>}<span
+      class="badge"
+      >{
+        e.enquiry_type === "direct"
+          ? "Direct"
+          : e.publication_status.replaceAll("_", " ")
+      }</span
+    >
+  </div>
+  <h2><a href={"/app/enquiries/" + e.id}>{e.title}</a></h2>
+  {verified && <p class="muted">{buyerName}</p>}
+  <p class="enquiry-excerpt">{e.message}</p>
+  <dl class="compact-facts">
+    <div>
+      <dt>Quantity</dt><dd>
+        {quantityLabel(e)}
+      </dd>
+    </div><div><dt>Delivery</dt><dd>{location(e)}</dd></div><div>
+      <dt>Deadline</dt><dd>{dateLabel(e.quote_deadline)}</dd>
+    </div>
+  </dl>
+  <div class="row-actions">
+    <a class="button secondary" href={"/app/enquiries/" + e.id}
+      >{companyId === e.buyer_company_id ? "View quotes" : "View enquiry"}</a
+    ><form data-api-form action="/api/procurement/saved" method="post">
+      <input type="hidden" name="enquiry_id" value={e.id} /><input
+        type="hidden"
+        name="saved"
+        value={!saved ? "true" : "false"}
+      /><button class="save-button" aria-pressed={saved}
+        >{saved ? "Saved" : "Save"}</button
+      ><p data-form-message hidden role="status"></p>
+    </form>
+  </div>
+</article>

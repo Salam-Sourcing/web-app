@@ -1,0 +1,51 @@
+---
+interface Props {
+  action: string;
+  label: string;
+  companyId?: number;
+  enquiryId?: number;
+  quoteId?: number;
+  confirm?: boolean;
+  reason?: boolean;
+  secondary?: boolean;
+}
+const {
+  action,
+  label,
+  companyId,
+  enquiryId,
+  quoteId,
+  confirm,
+  reason,
+  secondary,
+} = Astro.props;
+---
+
+<form
+  data-api-form
+  action={"/api/procurement/" + action}
+  method="post"
+  class="inline-action"
+>
+  {companyId && <input type="hidden" name="company_id" value={companyId} />}
+  {enquiryId && <input type="hidden" name="enquiry_id" value={enquiryId} />}
+  {quoteId && <input type="hidden" name="quote_id" value={quoteId} />}
+  {
+    reason && (
+      <label class="field">
+        Reason (optional)
+        <textarea name="reason" maxlength="1000" rows="2" />
+      </label>
+    )
+  }
+  {
+    confirm && (
+      <label class="check">
+        <input type="checkbox" name="confirm" value="CONFIRM" required />I
+        confirm: {label.toLowerCase()}.
+      </label>
+    )
+  }
+  <button class:list={["button", { secondary }]} type="submit">{label}</button>
+  <p data-form-message class="form-message" role="status" hidden></p>
+</form>

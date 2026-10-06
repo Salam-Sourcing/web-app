@@ -1,0 +1,215 @@
+---
+import type { Taxonomy } from "../lib/catalog";
+import type { Enquiry } from "../lib/procurement";
+interface Props {
+  companyId: number;
+  categories: Taxonomy[];
+  enquiry?: Enquiry;
+  supplier?: number;
+  listing?: number;
+  supplierName?: string;
+  title?: string;
+  city?: string | null;
+  province?: string | null;
+  country?: string | null;
+}
+const {
+  companyId,
+  categories,
+  enquiry: e,
+  supplier,
+  listing,
+  supplierName,
+  title,
+  city,
+  province,
+  country,
+} = Astro.props;
+const direct = !!supplier || e?.enquiry_type === "direct";
+---
+
+<form
+  class="card form-stack"
+  data-procurement-form
+  data-create={!e}
+  action="/api/procurement/save-enquiry"
+  method="post"
+>
+  <input type="hidden" name="company_id" value={companyId} />
+  <input
+    type="hidden"
+    name="enquiry_type"
+    value={direct ? "direct" : "public_rfq"}
+  />
+  {e && <input type="hidden" name="enquiry_id" value={e.id} />}
+  {
+    supplier && (
+      <input type="hidden" name="supplier_company_id" value={supplier} />
+    )
+  }
+  {listing && <input type="hidden" name="listing_id" value={listing} />}
+  {direct && <p class="muted">Send a private enquiry to {supplierName}.</p>}
+  <label class="field"
+    >Title<input
+      name="title"
+      required
+      maxlength="180"
+      value={e?.title ?? title ?? ""}
+    /></label
+  >
+  <label class="field"
+    >Requirements<textarea name="message" rows="5" required maxlength="8000"
+      >{e?.message ?? ""}</textarea
+    ></label
+  >
+  <div class="form-row">
+    <label class="field"
+      >Category<select name="sub_category_id"
+        ><option value="">Select a category</option>{
+          categories.map((c) => (
+            <optgroup label={c.name}>
+              {c.sub_categories.map((s) => (
+                <option value={s.id} selected={e?.sub_category_id === s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </optgroup>
+          ))
+        }</select
+      ></label
+    >
+    <label class="field"
+      >Urgency<select name="urgency"
+        ><option value="normal" selected={e?.urgency !== "urgent"}
+          >Normal</option
+        ><option value="urgent" selected={e?.urgency === "urgent"}
+          >Urgent</option
+        ></select
+      ></label
+    >
+  </div>
+  <div class="form-row">
+    <label class="field"
+      >Quantity<input
+        type="number"
+        name="quantity"
+        min="0.000001"
+        max="1000000000000"
+        step="any"
+        value={e?.quantity}
+      /></label
+    >
+    <label class="field"
+      >Unit of measure<input
+        name="unit_of_measure"
+        maxlength="50"
+        value={e?.unit_of_measure ?? ""}
+        placeholder="e.g. units, kg, hours"
+      /></label
+    >
+  </div>
+  <div class="form-row">
+    <label class="field"
+      >Delivery city<input
+        name="delivery_city"
+        maxlength="100"
+        value={e?.delivery_city ?? city ?? ""}
+      /></label
+    >
+    <label class="field"
+      >Province / state<input
+        name="delivery_province_state"
+        maxlength="100"
+        value={e?.delivery_province_state ?? province ?? ""}
+      /></label
+    >
+  </div>
+  <div class="form-row">
+    <label class="field"
+      >Delivery country<input
+        name="delivery_country"
+        maxlength="100"
+        required
+        value={e?.delivery_country ?? country ?? "Canada"}
+      /></label
+    >
+    <label class="field"
+      >Currency<input
+        name="currency"
+        readonly={!!e}
+        title={e ? "Currency is fixed after creation." : undefined}
+        pattern="[A-Za-z]{3}"
+        minlength="3"
+        maxlength="3"
+        required
+        value={e?.currency ?? "CAD"}
+      /></label
+    >
+  </div>
+  {
+    !direct && (
+      <div class="form-row">
+        <label class="field">
+          Quote deadline
+          <input
+            type="datetime-local"
+            name="quote_deadline"
+            data-date-field
+            required
+            data-iso={e?.quote_deadline ?? ""}
+          />
+        </label>
+        <label class="field">
+          Who can quote?
+          <select name="visibility">
+            <>
+              <option value="public" selected={e?.visibility !== "invited"}>
+                All verified suppliers
+              </option>
+              <option value="invited" selected={e?.visibility === "invited"}>
+                Invited suppliers only
+              </option>
+            </>
+          </select>
+        </label>
+      </div>
+    )
+  }
+  {
+    !direct && (
+      <label class="field">
+        Attachments (optional, JPEG, PNG, WebP or PDF; under 10 MB each)
+        <input
+          type="file"
+          name="files"
+          accept="image/jpeg,image/png,image/webp,application/pdf"
+          multiple
+          data-file-input
+        />
+      </label>
+    )
+  }
+  <p class="muted">
+    {
+      direct
+        ? "Sending creates a private conversation with this supplier."
+        : "Drafts are saved only when you choose Save draft. Public RFQs are reviewed before publication."
+    }
+  </p>
+  <div class="actions">
+    <button class="button" type="submit" value="draft"
+      >{direct ? "Send enquiry" : "Save draft"}</button
+    >{
+      !direct && (
+        <button class="button secondary" type="submit" value="review">
+          Save & submit for review
+        </button>
+      )
+    }<a class="text-link" href="/app/enquiries?tab=mine">Cancel</a>
+  </div>
+  <p data-form-message class="form-message" role="status" hidden></p>
+</form>
+<script>
+  import { bindProcurementForms } from "../scripts/procurement";
+  bindProcurementForms();
+</script>

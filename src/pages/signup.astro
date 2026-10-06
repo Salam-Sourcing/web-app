@@ -1,0 +1,28 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import AuthForm from "../components/AuthForm.astro";
+---
+
+<MainLayout title="Create an account" privatePage={true}
+  ><section class="auth-section auth-signup">
+    <div class="container signup-grid">
+      <div class="auth-intro">
+        <p class="eyebrow" style="color:#DFC1C5">
+          Better business connections
+        </p><h1>Buy. Sell.<br />Build something together.</h1><p class="mt-6">
+          Join a marketplace built around clear enquiries, considered quotes and
+          trusted business relationships.
+        </p>
+      </div>
+      <div class="card auth-card">
+        <p class="eyebrow">Join Salam Sourcing</p><h2>Create your account</h2><p
+          class="help-text"
+        >
+          Use the same account on the website and app.
+        </p><AuthForm mode="signup" /><p class="auth-foot">
+          Already have an account? <a class="text-link" href="/login">Log in</a>
+        </p>
+      </div>
+    </div>
+  </section></MainLayout
+>

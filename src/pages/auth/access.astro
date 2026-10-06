@@ -1,0 +1,42 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+const reason = Astro.url.searchParams.get("reason");
+const unavailable =
+  reason === "account_unavailable" || reason === "unsupported_factor";
+---
+
+<MainLayout title="Account access" privatePage={true}
+  ><section class="container narrow section">
+    <div class="card">
+      <p class="eyebrow">Account access</p><h1>
+        {
+          unavailable
+            ? "We couldn't open this account."
+            : "Let's check your access again."
+        }
+      </h1><p>
+        {
+          unavailable
+            ? "Your account or security method needs attention. Contact support for help."
+            : "Connect to the internet and try again. We need to verify your account before showing private information."
+        }
+      </p><div class="actions">
+        <a class="button" href="/app/account">Retry</a><a
+          class="text-link"
+          href="mailto:support@salamsourcing.com">Contact support</a>
+      </div><form
+        class="form"
+        data-api-form
+        method="post"
+        action="/api/auth/logout"
+      >
+        <p class="form-message" data-form-message role="status" hidden>
+        </p><button class="button secondary" type="submit">Sign out</button>
+      </form>
+    </div>
+  </section></MainLayout
+>
+<script>
+  import { bindForms } from "../../scripts/forms";
+  bindForms();
+</script>

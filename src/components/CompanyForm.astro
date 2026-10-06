@@ -1,0 +1,145 @@
+---
+import type { Row } from "../lib/catalog";
+interface Props {
+  company?: Row<"companies">;
+  email: string;
+  intent?: string;
+}
+const { company, email, intent } = Astro.props;
+const val = (key: keyof Row<"companies">) => company?.[key] ?? "";
+const type =
+  company?.company_type ??
+  (intent === "buy"
+    ? "buyer"
+    : intent === "both"
+      ? "buyer_supplier"
+      : "supplier");
+const fields = [
+  ["contact_number", "Contact number", 50],
+  ["website", "Website (optional)", 500],
+  ["province_state", "Province / state", 100],
+  ["city", "City", 100],
+  ["postal_code", "Postal code", 30],
+  ["address", "Street address (optional)", 500],
+] as const;
+---
+
+<form
+  novalidate
+  class="form"
+  data-api-form
+  data-review-form
+  method="post"
+  action={"/api/catalog/company-" + (company ? "update" : "create")}
+>
+  {company && <input type="hidden" name="company_id" value={company.id} />}
+  <ol class="step-indicator">
+    <li data-step-label="0" aria-current="step">1 Company</li><li
+      data-step-label="1"
+    >
+      2 Contact & location
+    </li><li data-step-label="2">3 Review</li>
+  </ol>
+  <fieldset data-wizard-step="0">
+    <legend>Company details</legend><div class="form-row">
+      <label class="field"
+        >Legal company name<input
+          name="legal_name"
+          value={val("legal_name")}
+          maxlength="200"
+          required
+        /></label
+      ><label class="field"
+        >Public display name<input
+          name="display_name"
+          value={val("display_name")}
+          maxlength="200"
+          required
+        /></label>
+    </div><label class="field"
+      >Company type<select name="company_type" required
+        ><option value="buyer" selected={type === "buyer"}>Buyer</option><option
+          value="supplier"
+          selected={type === "supplier"}>Supplier</option
+        ><option value="buyer_supplier" selected={type === "buyer_supplier"}
+          >Buyer & supplier</option
+        ></select
+      ></label
+    ><label class="field"
+      >Business registration number (optional)<input
+        name="business_registration_number"
+        value={val("business_registration_number")}
+        maxlength="200"
+      /></label
+    >{
+      company && (
+        <label class="field">
+          Tax number (optional)
+          <input name="tax_number" value={val("tax_number")} maxlength="200" />
+        </label>
+      )
+    }<label class="field"
+      >Description (optional)<textarea
+        name="description"
+        maxlength="4000"
+        rows="4">{val("description")}</textarea
+      ></label>
+  </fieldset>
+  <fieldset data-wizard-step="1" hidden>
+    <legend>Contact and location</legend><label class="field"
+      >Business email<input
+        type="email"
+        name="email"
+        value={company?.email ?? email}
+        maxlength="254"
+        required
+      /></label
+    ><label class="field"
+      >Country<input
+        name="country"
+        value={company?.country ?? "Canada"}
+        maxlength="100"
+        required
+      /></label
+    ><div class="form-row">
+      {
+        fields.map(([key, label, max]) => (
+          <label class="field">
+            {label}
+            <input name={key} value={val(key)} maxlength={max} />
+          </label>
+        ))
+      }
+    </div>
+  </fieldset>
+  <fieldset data-wizard-step="2" hidden>
+    <legend>Review your company</legend><dl data-review-summary></dl>{
+      !company && (
+        <label class="checkbox-field">
+          <input name="confirm" type="checkbox" value="REPRESENT" required /> I
+          am authorized to represent this company and the information is
+          accurate.
+        </label>
+      )
+    }<p class="help-text">
+      {
+        company
+          ? "Changes to verified identity details may require verification again."
+          : "Your company starts unverified. Verification is a separate step after creation."
+      }
+    </p>
+  </fieldset>
+  <p data-form-message class="form-message" role="status" hidden></p><div
+    class="actions"
+  >
+    <button type="button" class="button secondary" data-wizard-back hidden
+      >Back</button
+    ><button type="button" class="button" data-wizard-next>Continue</button
+    ><button type="submit" class="button" data-wizard-submit hidden
+      >{company ? "Save company profile" : "Create company"}</button>
+  </div>
+</form>
+<script>
+  import { bindWizards } from "../scripts/wizard";
+  bindWizards();
+</script>

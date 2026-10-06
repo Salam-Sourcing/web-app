@@ -1,0 +1,161 @@
+---
+import type { Quote, Enquiry } from "../lib/procurement";
+import { money, dateLabel, expired, openEnquiry } from "../lib/procurement";
+import type { Workspace } from "../lib/server/access";
+import type { quoteBundle } from "../lib/server/procurement";
+import ProcurementAction from "./ProcurementAction.astro";
+interface Props {
+  quote: Quote;
+  enquiry: Enquiry;
+  state: Workspace;
+  profile: Awaited<
+    ReturnType<typeof quoteBundle>
+  >["profiles"][number]["profile"];
+}
+const { quote: q, enquiry: e, state, profile } = Astro.props;
+const mine =
+  q.supplier_company_id === state.company?.id &&
+  state.permissions.includes("sales");
+const owner =
+  e.buyer_company_id === state.company?.id &&
+  state.permissions.includes("procurement");
+const canAccept =
+  owner &&
+  openEnquiry(e) &&
+  q.status === "sent" &&
+  !expired(q.valid_until) &&
+  profile?.verification_status === "verified" &&
+  state.company?.verification_status === "verified";
+---
+
+<article class="card quote-card" id={"quote-" + q.id}>
+  <div class="card-meta">
+    <span class="badge"
+      >{q.status}{expired(q.valid_until) ? " · expired" : ""}</span
+    ><span class="muted">Quote #{q.id} · Version {q.version}</span>{
+      profile?.verification_status === "verified" && (
+        <span class="badge success">Verified supplier</span>
+      )
+    }
+  </div>
+  <h2>{profile?.display_name ?? "Supplier unavailable"}</h2>
+  <p class="quote-total">{money(q.total_price, q.currency)}</p>
+  <dl class="compact-facts">
+    <div>
+      <dt>Unit price</dt><dd>{money(q.price_per_unit, q.currency)}</dd>
+    </div><div>
+      <dt>Lead time</dt><dd>
+        {
+          q.lead_time_days === null
+            ? "Not specified"
+            : q.lead_time_days + " days"
+        }
+      </dd>
+    </div><div><dt>Valid until</dt><dd>{dateLabel(q.valid_until)}</dd></div><div
+    >
+      <dt>Reviews</dt><dd>
+        {
+          !profile
+            ? "Unavailable"
+            : profile.total_reviews
+              ? Number(profile.average_rating).toFixed(1) +
+                "/5 (" +
+                profile.total_reviews +
+                " reviews)"
+              : "No reviews yet"
+        }
+      </dd>
+    </div>
+  </dl>
+  <div class="quote-terms">
+    <h3>Payment terms</h3><p>{q.payment_terms || "Not specified"}</p><h3>
+      Shipping terms
+    </h3><p>{q.shipping_terms || "Not specified"}</p><h3>Notes</h3><p
+      class="preserve-lines"
+    >
+      {q.notes || "No notes supplied."}
+    </p>
+  </div>
+  {
+    q.rejection_reason && (
+      <p class="form-message">Reason: {q.rejection_reason}</p>
+    )
+  }
+  <div class="actions">
+    {
+      profile && (
+        <a class="text-link" href={"/app/suppliers/" + q.supplier_company_id}>
+          Supplier profile
+        </a>
+      )
+    }<a
+      class="button secondary"
+      href={"/api/quotes/" + e.id + "/export?quote=" + q.id}>Export quote PDF</a
+    ><a class="text-link" href={"/app/quotes/" + q.id}>Quote details</a>
+  </div>
+  {
+    canAccept && (
+      <div class="decision-panel">
+        <>
+          <p>
+            Accepting this quote creates an agreed deal and rejects the other
+            sent quotes for this enquiry.
+          </p>
+          <ProcurementAction
+            action="accept"
+            label="Accept quote"
+            quoteId={q.id}
+            companyId={state.company!.id}
+            confirm
+          />
+        </>
+      </div>
+    )
+  }
+  {
+    owner && q.status === "sent" && (
+      <details class="decision-panel">
+        <>
+          <summary>Reject this quote</summary>
+          <ProcurementAction
+            action="reject"
+            label="Reject quote"
+            quoteId={q.id}
+            companyId={state.company!.id}
+            reason
+            secondary
+          />
+        </>
+      </details>
+    )
+  }
+  {
+    mine && q.status === "sent" && (
+      <details class="decision-panel">
+        <>
+          <summary>Withdraw quote</summary>
+          <ProcurementAction
+            action="withdraw"
+            label="Withdraw quote"
+            quoteId={q.id}
+            companyId={state.company!.id}
+            secondary
+          />
+        </>
+      </details>
+    )
+  }
+  {
+    mine &&
+      openEnquiry(e) &&
+      !expired(e.quote_deadline) &&
+      q.status !== "accepted" && (
+        <a
+          class="text-link mt-3"
+          href={"/app/enquiries/" + e.id + "/quote?revise=" + q.id}
+        >
+          Revise as a new quote version
+        </a>
+      )
+  }
+</article>

@@ -1,0 +1,149 @@
+---
+import { serverConfig } from "../lib/server/config";
+import { safeNext } from "../lib/security";
+interface Props {
+  mode: "login" | "signup" | "reset";
+}
+const { mode } = Astro.props;
+const config = serverConfig();
+const next = safeNext(Astro.url.searchParams.get("next"));
+const label =
+  mode === "login"
+    ? "Log in"
+    : mode === "signup"
+      ? "Create account"
+      : "Send recovery link";
+---
+
+<form
+  class="form"
+  data-api-form
+  data-captcha={mode === "reset" ? "password_reset" : mode}
+  data-site-key={config.siteKey}
+  data-captcha-enabled={String(config.captchaEnabled)}
+  action={"/api/auth/" + mode}
+  method="post"
+>
+  <input type="hidden" name="next" value={next} />
+  {
+    mode === "signup" && (
+      <>
+        <div class="form-row">
+          <>
+            <label class="field">
+              First name
+              <input
+                name="first_name"
+                autocomplete="given-name"
+                maxlength="80"
+                required
+              />
+            </label>
+            <label class="field">
+              Last name
+              <input
+                name="last_name"
+                autocomplete="family-name"
+                maxlength="80"
+                required
+              />
+            </label>
+          </>
+        </div>
+        <fieldset>
+          <>
+            <legend>I'm here to</legend>
+            <div class="intent-options">
+              <>
+                <label>
+                  <input type="radio" name="intent" value="buy" checked /> Buy
+                </label>
+                <label>
+                  <input type="radio" name="intent" value="sell" /> Sell
+                </label>
+                <label>
+                  <input type="radio" name="intent" value="both" /> Both
+                </label>
+              </>
+            </div>
+          </>
+        </fieldset>
+      </>
+    )
+  }
+  <label class="field"
+    >Email<input
+      name="email"
+      type="email"
+      autocomplete="email"
+      inputmode="email"
+      maxlength="254"
+      required
+    /></label
+  >
+  {
+    mode !== "reset" && (
+      <label class="field">
+        Password
+        <input
+          name="password"
+          type="password"
+          autocomplete={mode === "signup" ? "new-password" : "current-password"}
+          minlength={mode === "signup" ? 8 : undefined}
+          maxlength="128"
+          required
+        />
+      </label>
+    )
+  }
+  {
+    mode === "login" && (
+      <a class="text-link" href="/forgot-password">
+        Forgot password?
+      </a>
+    )
+  }
+  {
+    mode === "signup" && (
+      <p class="help-text">
+        Read our{" "}
+        <a class="text-link" href="/terms">
+          Terms
+        </a>{" "}
+        and{" "}
+        <a class="text-link" href="/privacy">
+          Privacy Policy
+        </a>{" "}
+        before creating an account.
+      </p>
+    )
+  }
+  <div data-captcha-container aria-label="Security verification"></div>
+  <p
+    class="form-message"
+    data-form-message
+    role="status"
+    aria-live="polite"
+    hidden
+  >
+  </p>
+  <button class="button full" type="submit" disabled={!config.configured}
+    >{label}</button
+  >
+  {
+    !config.configured && (
+      <p class="form-message">
+        Account access is temporarily unavailable. Please contact support.
+      </p>
+    )
+  }
+  <noscript
+    ><p class="form-message">
+      Enable JavaScript to complete secure sign-in.
+    </p></noscript
+  >
+</form>
+<script>
+  import { bindForms } from "../scripts/forms";
+  bindForms();
+</script>

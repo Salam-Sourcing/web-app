@@ -1,18 +1,57 @@
 ---
-import MainLayout from "@/layouts/MainLayout.astro";
+import MainLayout from "../layouts/MainLayout.astro";
+const steps = [
+  [
+    "Discover the right fit",
+    "Browse listings and supplier profiles. Save promising businesses and products for later.",
+  ],
+  [
+    "Describe what you need",
+    "Send a direct enquiry or create a request for quotes with your requirements, quantity, location and deadline.",
+  ],
+  [
+    "Discuss and compare",
+    "Talk with suppliers, share relevant files and compare price, currency, lead time and terms before accepting.",
+  ],
+  [
+    "Track your agreement",
+    "Follow preparation, shipping and receipt. Both businesses confirm completion before eligible reviews.",
+  ],
+  [
+    "Keep your company organized",
+    "Use company roles, permissions and account tools to keep your team's work in the right hands.",
+  ],
+];
 ---
 
-<MainLayout title="About us">
-  <section class="mx-auto max-w-3xl px-6 py-24 text-center lg:px-8">
-    <p class="text-sm font-bold uppercase tracking-[0.2em] text-brand-600">
-      Our mission
-    </p>
-    <h1 class="mt-5 text-5xl font-bold tracking-tight text-slate-900">
-      Trade should feel human.
-    </h1>
-    <p class="mt-6 text-lg leading-8 text-slate-600">
-      We are building the sourcing platform we wished existed: clear, welcoming,
-      and designed to help good businesses find each other.
-    </p>
-  </section>
-</MainLayout>
+<MainLayout title="How Salam Sourcing works"
+  ><section class="container reading section">
+    <p class="eyebrow">Trade should feel human</p><h1>
+      From the first enquiry to your next business relationship.
+    </h1><p class="mt-6">
+      Salam Sourcing connects buyers and suppliers through a B2B sourcing
+      workflow. Clear information and direct conversations help businesses make
+      considered decisions.
+    </p><div class="stack mt-8">
+      {
+        steps.map(([title, text], index) => (
+          <article class="card">
+            <>
+              <p class="eyebrow">0{index + 1}</p>
+              <h2>{title}</h2>
+              <p>{text}</p>
+            </>
+          </article>
+        ))
+      }
+    </div><p class="mt-8">
+      Participating businesses agree their own contracts, payment and delivery
+      arrangements. A sourcing quote or deal summary is not a payment receipt or
+      delivery guarantee.
+    </p><div class="actions">
+      <a class="button" href="/signup">Create an account</a><a
+        class="text-link"
+        href="/help">Ask a question</a>
+    </div>
+  </section></MainLayout
+>

@@ -1,0 +1,61 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import { identity, requireClient } from "../../lib/server/access";
+import { safeNext } from "../../lib/security";
+const signedIn = await identity(requireClient(Astro));
+const next = safeNext(Astro.url.searchParams.get("next"));
+if (!signedIn.needsMfa) return Astro.redirect(next, 303);
+---
+
+<MainLayout title="Verify your authenticator" privatePage={true}
+  ><section class="container narrow auth-section">
+    <div class="card">
+      <p class="eyebrow">Account security</p><h1>Verify it's you.</h1><p>
+        Enter the six-digit code from your authenticator app.
+      </p>
+      <form
+        class="form"
+        data-api-form
+        method="post"
+        action="/api/auth/mfa-verify"
+      >
+        <input type="hidden" name="next" value={next} /><input
+          type="hidden"
+          name="purpose"
+          value="signin"
+        />
+        <label class="field"
+          >Authenticator<select name="factor_id"
+            >{
+              signedIn.factors.map((factor) => (
+                <option value={factor.id}>
+                  {factor.friendly_name ?? "Authenticator app"}
+                </option>
+              ))
+            }</select
+          ></label
+        >
+        <label class="field"
+          >Six-digit code<input
+            name="code"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            pattern="[0-9]{6}"
+            minlength="6"
+            maxlength="6"
+            required
+          /></label
+        ><p class="form-message" data-form-message role="status" hidden>
+        </p><button class="button" type="submit">Verify and continue</button>
+      </form>
+      <form class="form" data-api-form method="post" action="/api/auth/logout">
+        <p class="form-message" data-form-message role="status" hidden>
+        </p><button class="button secondary" type="submit">Sign out</button>
+      </form>
+    </div>
+  </section></MainLayout
+>
+<script>
+  import { bindForms } from "../../scripts/forms";
+  bindForms();
+</script>

@@ -1,0 +1,74 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import { requireClient, destination } from "../../lib/server/access";
+import { verifiedCallbackFlow } from "../../lib/security";
+const code = Astro.url.searchParams.get("code");
+const tokenHash = Astro.url.searchParams.get("token_hash");
+const type = Astro.url.searchParams.get("type");
+let failed = false;
+if (code || tokenHash) {
+  const flow = verifiedCallbackFlow(
+    Astro.cookies.get("ss-auth-flow")?.value,
+    Astro.url.searchParams.get("state"),
+  );
+  if (
+    !flow ||
+    (code && code.length > 512) ||
+    (tokenHash && (tokenHash.length > 512 || type !== flow))
+  )
+    failed = true;
+  else {
+    Astro.cookies.delete("ss-auth-flow", {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: Astro.url.protocol === "https:",
+    });
+    try {
+      const client = requireClient(Astro);
+      const result = code
+        ? await client.auth.exchangeCodeForSession(code)
+        : await client.auth.verifyOtp({ token_hash: tokenHash!, type: flow });
+      if (result.error) failed = true;
+      else {
+        const target = await destination(
+          Astro,
+          flow === "recovery" ? "/app/account/password" : "/app/discover",
+        );
+        return Astro.redirect(target, 303);
+      }
+    } catch {
+      failed = true;
+    }
+  }
+}
+---
+
+<MainLayout title="Confirm your account" privatePage={true}>
+  <section class="container narrow section">
+    <div class="card">
+      <p class="eyebrow">Account security</p><h1>Confirm your account</h1>
+      <p role="status" id="callback-message">
+        {
+          failed
+            ? "This link is invalid, expired, or was opened in a different browser. Request a fresh link and try again."
+            : "Open a fresh confirmation or recovery link from your email in the browser where you requested it."
+        }
+      </p>
+      <div class="actions">
+        <a class="button secondary" href="/login">Back to log in</a><a
+          class="text-link"
+          href="/forgot-password">Request a recovery link</a>
+      </div>
+    </div>
+  </section>
+</MainLayout>
+<script>
+  // Do not accept unsolicited session fragments. PKCE or a same-browser, bound OTP
+  // callback is required. Remove any URL credentials without sending/storing them.
+  const hadFragment = location.hash.length > 1;
+  history.replaceState(null, "", location.pathname);
+  if (hadFragment)
+    document.querySelector("#callback-message")!.textContent =
+      "This link format is unsupported. Request a fresh link on this website and open it in this browser.";
+</script>
