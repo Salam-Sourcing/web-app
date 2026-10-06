@@ -32,11 +32,7 @@ const canAccept =
   <div class="card-meta">
     <span class="badge"
       >{q.status}{expired(q.valid_until) ? " · expired" : ""}</span
-    ><span class="muted">Quote #{q.id} · Version {q.version}</span>{
-      profile?.verification_status === "verified" && (
-        <span class="badge success">Verified supplier</span>
-      )
-    }
+    ><span class="muted">Quote #{q.id} · Version {q.version}</span>
   </div>
   <h2>{profile?.display_name ?? "Supplier unavailable"}</h2>
   <p class="quote-total">{money(q.total_price, q.currency)}</p>
@@ -84,15 +80,14 @@ const canAccept =
   <div class="actions">
     {
       profile && (
-        <a class="text-link" href={"/app/suppliers/" + q.supplier_company_id}>
+        <a class="text-link" href={"/suppliers/" + q.supplier_company_id}>
           Supplier profile
         </a>
       )
     }<a
       class="button secondary"
-      href={"/app/enquiries/" + e.id + "/export?quote=" + q.id}
-      >Export quote PDF</a
-    ><a class="text-link" href={"/app/quotes/" + q.id}>Quote details</a>
+      href={"/enquiries/" + e.id + "/export?quote=" + q.id}>Export quote PDF</a
+    ><a class="text-link" href={"/quotes/" + q.id}>Quote details</a>
   </div>
   {
     canAccept && (
@@ -153,7 +148,7 @@ const canAccept =
       q.status !== "accepted" && (
         <a
           class="text-link mt-3"
-          href={"/app/enquiries/" + e.id + "/quote?revise=" + q.id}
+          href={"/enquiries/" + e.id + "/quote?revise=" + q.id}
         >
           Revise as a new quote version
         </a>

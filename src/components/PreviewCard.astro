@@ -1,0 +1,48 @@
+---
+import Icon from "./Icon.astro";
+import type { PreviewCard } from "../lib/server/public-catalog";
+const { listing: l } = Astro.props as { listing: PreviewCard };
+---
+
+<article class="listing-card preview-card">
+  <a
+    class="preview-picture"
+    href={"/listings/" + l.id}
+    data-login-gate
+    aria-label={"View " + l.name}
+  >
+    <Icon name={l.listing_type === "service" ? "briefcase" : "box"} size={40} />
+    {
+      l.has_image && (
+        <img
+          src={"/api/preview/" + l.id}
+          alt={l.name}
+          loading="lazy"
+          decoding="async"
+          data-preview-image
+        />
+      )
+    }
+    <span class="preview-type"
+      >{l.listing_type === "service" ? "Service" : "Product"}</span
+    >
+  </a>
+  <div class="listing-card-body">
+    <p class="eyebrow">{l.category || "Business supplies"}</p>
+    <h2><a href={"/listings/" + l.id} data-login-gate>{l.name}</a></h2>
+    <a class="supplier-link" href={"/suppliers/" + l.company_id} data-login-gate
+      >{l.vendor_name}</a
+    >
+    {
+      l.location && (
+        <p class="help-text preview-location">
+          <Icon name="company" size={15} />
+          {l.location}
+        </p>
+      )
+    }
+    <a class="preview-details" href={"/listings/" + l.id} data-login-gate
+      >View details <Icon name="arrow" size={17} /></a
+    >
+  </div>
+</article>

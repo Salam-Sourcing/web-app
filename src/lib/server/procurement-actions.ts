@@ -108,7 +108,7 @@ export async function procurementAction(
     }
     return json({
       id,
-      redirect: "/app/enquiries/" + id,
+      redirect: "/enquiries/" + id,
       message:
         payload.enquiry_type === "direct" ? "Enquiry sent." : "Draft saved.",
     });
@@ -139,7 +139,7 @@ export async function procurementAction(
             .eq("user_id", state.user.id)
         ).error,
       );
-    return json({ redirect: "/app/enquiries/" + id });
+    return json({ redirect: "/enquiries/" + id });
   }
   if (["review", "invite", "close", "cancel"].includes(action ?? "")) {
     const id = positiveId(input.enquiry_id),
@@ -189,7 +189,7 @@ export async function procurementAction(
         ).error,
       );
     }
-    return json({ redirect: "/app/enquiries/" + id });
+    return json({ redirect: "/enquiries/" + id });
   }
   if (action === "quote") {
     const e = await enquiry(state, positiveId(input.enquiry_id)),
@@ -197,7 +197,7 @@ export async function procurementAction(
     const payload = quotePayload(input, c.id, e);
     const r = await state.client.rpc("submit_quote", { p_quote: payload });
     checked(r.error);
-    return json({ id: r.data, redirect: "/app/enquiries/" + e.id });
+    return json({ id: r.data, redirect: "/enquiries/" + e.id });
   }
   if (["accept", "reject", "withdraw"].includes(action ?? "")) {
     const id = positiveId(input.quote_id);
@@ -254,7 +254,7 @@ export async function procurementAction(
         checked(accepted.error);
         return json({
           deal_id: accepted.data,
-          redirect: "/app/deals/" + positiveId(accepted.data),
+          redirect: "/deals/" + positiveId(accepted.data),
           message: "Quote accepted.",
         });
       }
@@ -272,7 +272,7 @@ export async function procurementAction(
         ).error,
       );
     }
-    return json({ redirect: "/app/enquiries/" + e.id });
+    return json({ redirect: "/enquiries/" + e.id });
   }
   if (action === "send") {
     const id = await sendText(

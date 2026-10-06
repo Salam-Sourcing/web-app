@@ -1,0 +1,135 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import { requireWorkspace } from "../../lib/server/access";
+import { conversationFeed } from "../../lib/server/procurement";
+import { dateLabel } from "../../lib/procurement";
+const state = await requireWorkspace(Astro);
+const feed = state.company
+  ? await conversationFeed(state, Astro.url.searchParams)
+  : null;
+const link = (page: number) => {
+  const p = new URLSearchParams(Astro.url.searchParams);
+  p.set("page", String(page));
+  return "/messages?" + p;
+};
+---
+
+<AppLayout
+  title="Messages"
+  active="messages"
+  state={state}
+  description="Keep your sourcing conversations in one place."
+>
+  <nav class="tabs" aria-label="Conversation views">
+    <a
+      href="/messages"
+      aria-current={feed?.status !== "archived" ? "page" : undefined}>Active</a
+    ><a
+      href="/messages?tab=archived"
+      aria-current={feed?.status === "archived" ? "page" : undefined}
+      >Archived</a
+    >
+  </nav>
+  <form class="card row-actions" method="get">
+    <input
+      type="hidden"
+      name="tab"
+      value={feed?.status === "archived" ? "archived" : "active"}
+    /><label class="field grow"
+      >Search conversations<input
+        type="search"
+        name="q"
+        maxlength="100"
+        value={Astro.url.searchParams.get("q") ?? ""}
+        placeholder="Search company or enquiry"
+      /></label
+    ><button class="button secondary">Search</button>
+  </form>
+  <p
+    class="help-text mt-3"
+    data-list-live
+    data-enabled={!!state.company}
+    role="status"
+  >
+    Checking for new activity…
+  </p>
+  <div class="card conversation-list mt-5" data-conversations>
+    {
+      feed?.rows.length ? (
+        feed.rows.map((c) => (
+          <a
+            class:list={["conversation-row", { "has-unread": c.unread > 0 }]}
+            href={"/messages/" + c.id}
+          >
+            <>
+              <span class="company-avatar" aria-hidden="true">
+                {c.name[0]}
+              </span>
+              <div class="conversation-copy">
+                <>
+                  <div class="row-actions">
+                    <strong>{c.name}</strong>
+
+                  </div>
+                  <p>{c.preview}</p>
+                  <small>{c.enquiry}</small>
+                </>
+              </div>
+              <div class="conversation-time">
+                <time>{dateLabel(c.time)}</time>
+                {c.unread > 0 && (
+                  <span
+                    class="unread-badge"
+                    aria-label={c.unread + " unread messages"}
+                  >
+                    {c.unread > 99 ? "99+" : c.unread}
+                  </span>
+                )}
+              </div>
+            </>
+          </a>
+        ))
+      ) : (
+        <div class="empty-workspace">
+          <>
+            <h2>
+              {state.company
+                ? "No conversations here yet"
+                : "Create or select a company"}
+            </h2>
+            <p>
+              {state.company
+                ? "Start with a direct supplier enquiry or submit a quote."
+                : "Your sourcing conversations are shared with the Salam Sourcing app."}
+            </p>
+            <a
+              class="button secondary"
+              href={state.company ? "/discover" : "/company/new"}
+            >
+              {state.company ? "Discover suppliers" : "Create company"}
+            </a>
+          </>
+        </div>
+      )
+    }
+  </div>
+  <div class="actions pagination">
+    {
+      feed && feed.page > 0 && (
+        <a class="button secondary" href={link(feed.page - 1)}>
+          Previous
+        </a>
+      )
+    }{
+      feed?.hasMore && (
+        <a class="button secondary" href={link(feed.page + 1)} data-next-page>
+          Next
+        </a>
+      )
+    }
+  </div>
+</AppLayout>
+<script>
+  import { bindConversationActivity } from "../../scripts/messages";
+  bindConversationActivity();
+</script>

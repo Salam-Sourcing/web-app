@@ -1,0 +1,58 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import EnquiryForm from "../../components/EnquiryForm.astro";
+import { requireWorkspace } from "../../lib/server/access";
+import {
+  publicCompany,
+  publicListing,
+  taxonomy,
+} from "../../lib/server/catalog";
+import { verifiedCompany } from "../../lib/server/procurement";
+import { positiveId, AccessError } from "../../lib/security";
+const state = await requireWorkspace(Astro);
+const c = verifiedCompany(state, undefined, "procurement");
+const supplierParam = Astro.url.searchParams.get("supplier");
+const supplier = supplierParam ? positiveId(supplierParam) : undefined;
+const company = supplier ? await publicCompany(state, supplier) : null;
+if (
+  supplier === c.id ||
+  (company && company.verification_status !== "verified")
+)
+  throw new AccessError(
+    403,
+    "invalid_supplier",
+    "Choose a different verified supplier.",
+  );
+const listingParam = Astro.url.searchParams.get("listing");
+const listing = listingParam
+  ? await publicListing(state, positiveId(listingParam))
+  : null;
+if (listing && listing.company.id !== supplier)
+  throw new AccessError(
+    400,
+    "invalid_listing",
+    "Choose a listing from this supplier.",
+  );
+const categories = await taxonomy(state);
+---
+
+<AppLayout
+  title={supplier ? "Contact supplier" : "Create an RFQ"}
+  active="enquiries"
+  state={state}
+  description="Tell suppliers what your business needs."
+>
+  <div class="reading">
+    <EnquiryForm
+      companyId={c.id}
+      categories={categories}
+      supplier={supplier}
+      supplierName={company?.display_name}
+      listing={listing?.listing.id}
+      title={listing ? "Enquiry about " + listing.listing.name : undefined}
+      city={c.city}
+      province={c.province_state}
+      country={c.country}
+    />
+  </div>
+</AppLayout>

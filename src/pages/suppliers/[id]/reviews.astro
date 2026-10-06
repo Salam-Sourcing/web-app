@@ -1,0 +1,84 @@
+---
+import AppLayout from "../../../layouts/AppLayout.astro";
+import CompanyReviews from "../../../components/CompanyReviews.astro";
+import { requireWorkspace } from "../../../lib/server/access";
+import { publicCompany } from "../../../lib/server/catalog";
+import { companyReviews } from "../../../lib/server/deals";
+import { positiveId, AccessError } from "../../../lib/security";
+import type { CompanyReview } from "../../../lib/deals";
+const state = await requireWorkspace(Astro),
+  id = positiveId(Astro.params.id),
+  profile = await publicCompany(state, id),
+  page = Number(Astro.url.searchParams.get("page") ?? 0);
+if (!Number.isSafeInteger(page) || page < 0 || page > 10000)
+  throw new AccessError(400, "invalid_page", "Choose a valid page.");
+let rows: CompanyReview[] = [],
+  error: string | undefined;
+try {
+  rows = await companyReviews(state, id, page * 20);
+} catch (e) {
+  error = (e as Error).message;
+}
+---
+
+<AppLayout
+  title={"Reviews for " + profile.display_name}
+  active="discover"
+  state={state}
+  description="Feedback from completed, verified transactions."
+>
+  <a slot="actions" class="button secondary" href={"/suppliers/" + id}
+    >Company profile</a
+  >
+  {
+    error ? (
+      <section class="card">
+        <>
+          <p role="alert">{error}</p>
+          <a
+            class="button secondary mt-4"
+            href={Astro.url.pathname + Astro.url.search}
+          >
+            Retry
+          </a>
+        </>
+      </section>
+    ) : rows.length ? (
+      <CompanyReviews
+        rows={rows}
+        company={id}
+        activeCompany={state.company?.id}
+      />
+    ) : (
+      <section class="card empty-state">
+        <>
+          <h2>No reviews here yet</h2>
+          <p>
+            Verified reviews appear after both companies confirm completion.
+          </p>
+        </>
+      </section>
+    )
+  }
+  <nav class="actions mt-5" aria-label="Review pages">
+    {
+      page > 0 && (
+        <a
+          class="button secondary"
+          href={Astro.url.pathname + "?page=" + (page - 1)}
+        >
+          Previous
+        </a>
+      )
+    }{
+      rows.length === 20 && (
+        <a
+          class="button secondary"
+          href={Astro.url.pathname + "?page=" + (page + 1)}
+        >
+          More reviews
+        </a>
+      )
+    }
+  </nav>
+</AppLayout>

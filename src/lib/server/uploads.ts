@@ -660,7 +660,7 @@ export async function removeDocument(
     } else cleaned = claim.data === "gone" || claim.data === "retained";
   } catch {}
   return json({
-    redirect: cleaned ? "/app/company" : "/app/company?notice=storage-cleanup",
+    redirect: cleaned ? "/company" : "/company?notice=storage-cleanup",
     message: cleaned
       ? "Document removed."
       : "Document removed from verification; storage cleanup could not be confirmed.",
@@ -733,6 +733,6 @@ export async function removeEnquiryFile(
   } catch {}
   return json({
     redirect:
-      "/app/enquiries/" + e.id + (cleaned ? "" : "?notice=storage-cleanup"),
+      "/enquiries/" + e.id + (cleaned ? "" : "?notice=storage-cleanup"),
   });
 }

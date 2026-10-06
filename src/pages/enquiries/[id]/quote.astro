@@ -1,0 +1,146 @@
+---
+import AppLayout from "../../../layouts/AppLayout.astro";
+import { requireWorkspace } from "../../../lib/server/access";
+import { enquiry, quoteTarget } from "../../../lib/server/procurement";
+import { checked } from "../../../lib/server/catalog";
+import { positiveId, AccessError } from "../../../lib/security";
+const state = await requireWorkspace(Astro),
+  id = positiveId(Astro.params.id),
+  e = await enquiry(state, id),
+  c = await quoteTarget(state, e);
+const revise = Astro.url.searchParams.get("revise");
+const result = revise
+  ? await state.client
+      .from("quotes")
+      .select("*")
+      .eq("id", positiveId(revise))
+      .eq("enquiry_id", id)
+      .eq("supplier_company_id", c.id)
+      .maybeSingle()
+  : null;
+if (result) checked(result.error);
+if (result && !result.data)
+  throw new AccessError(404, "quote_unavailable", "This quote is unavailable.");
+const q = result?.data;
+---
+
+<AppLayout
+  title={q ? "Revise quote" : "Submit quote"}
+  active="enquiries"
+  state={state}
+  description={e.title}
+>
+  <a slot="actions" class="button secondary" href={"/enquiries/" + id}
+    >Back to enquiry</a
+  >
+  <form
+    class="card form-stack reading"
+    data-api-form
+    data-non-idempotent="true"
+    data-check-href={"/enquiries/" + id}
+    action="/api/procurement/quote"
+    method="post"
+  >
+    <input type="hidden" name="company_id" value={c.id} /><input
+      type="hidden"
+      name="enquiry_id"
+      value={id}
+    />
+    {
+      q && (
+        <p class="form-message">
+          This submits a new version. Earlier sent versions remain available
+          until you withdraw them explicitly.
+        </p>
+      )
+    }
+    <div class="form-row">
+      <label class="field"
+        >Price per unit<input
+          type="number"
+          name="price_per_unit"
+          min="0"
+          max="1000000000000"
+          step="any"
+          value={q?.price_per_unit}
+        /></label
+      ><label class="field"
+        >Total price<input
+          type="number"
+          name="total_price"
+          min="0.01"
+          max="1000000000000"
+          step="any"
+          required
+          value={q?.total_price}
+        /></label
+      >
+    </div>
+    <div class="form-row">
+      <label class="field"
+        >Currency<input
+          name="currency"
+          pattern="[A-Za-z]{3}"
+          maxlength="3"
+          required
+          value={q?.currency ?? e.currency}
+        /></label
+      ><label class="field"
+        >Lead time (days)<input
+          type="number"
+          name="lead_time_days"
+          min="0"
+          max="36500"
+          step="1"
+          required
+          value={q?.lead_time_days}
+        /></label
+      >
+    </div>
+    <label class="field"
+      >Valid until<input
+        type="datetime-local"
+        name="valid_until"
+        required
+        data-date-field
+        data-iso={q?.valid_until ?? ""}
+      /></label
+    >
+    <label class="field"
+      >Payment terms<textarea name="payment_terms" maxlength="1000" rows="2"
+        >{q?.payment_terms ?? ""}</textarea
+      ></label
+    >
+    <label class="field"
+      >Shipping terms<textarea name="shipping_terms" maxlength="1000" rows="2"
+        >{q?.shipping_terms ?? ""}</textarea
+      ></label
+    >
+    <label class="field"
+      >Notes<textarea name="notes" maxlength="5000" rows="4"
+        >{q?.notes ?? ""}</textarea
+      ></label
+    >
+    <label class="check"
+      ><input type="checkbox" required />I have reviewed the price, terms and
+      validity.</label
+    >
+    <div class="actions">
+      <button class="button">Submit quote</button><a
+        class="text-link"
+        href={"/enquiries/" + id}>Cancel</a
+      >
+    </div><p data-form-message hidden role="status"></p>
+  </form>
+</AppLayout>
+<script>
+  document
+    .querySelectorAll<HTMLInputElement>("[data-date-field]")
+    .forEach((input) => {
+      if (input.dataset.iso) {
+        const d = new Date(input.dataset.iso);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        input.value = d.toISOString().slice(0, 16);
+      }
+    });
+</script>

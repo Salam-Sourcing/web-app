@@ -16,11 +16,9 @@ const { id, profile } = Astro.props;
     profile ? (
       <>
         <h2>
-          <a href={"/app/suppliers/" + id}>{profile.display_name}</a>
+          <a href={"/suppliers/" + id}>{profile.display_name}</a>
         </h2>
-        {profile.verification_status === "verified" && (
-          <span class="badge success">Verified supplier</span>
-        )}
+
         <p class="help-text">
           {[profile.city, profile.province_state, profile.country]
             .filter(Boolean)

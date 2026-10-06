@@ -247,7 +247,7 @@ export function bindForms() {
           if (
             redirect &&
             redirect.origin === location.origin &&
-            (redirect.pathname.startsWith("/app/") ||
+            (redirect.pathname.startsWith("/") ||
               redirect.pathname.startsWith("/auth/") ||
               ["/login", "/verify-email"].includes(redirect.pathname))
           ) {
@@ -280,7 +280,7 @@ export function bindForms() {
               "error",
             );
             const link = document.createElement("a");
-            link.href = form.dataset.checkHref ?? "/app/account";
+            link.href = form.dataset.checkHref ?? "/account";
             link.className = "text-link";
             link.textContent =
               form.dataset.nonIdempotent === "true"

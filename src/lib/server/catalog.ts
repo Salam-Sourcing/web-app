@@ -84,6 +84,18 @@ export async function taxonomy(state: Workspace): Promise<Taxonomy[]> {
       .sort((a, b) => a.name.localeCompare(b.name)),
   }));
 }
+export async function availableCategories(
+  state: Workspace,
+  companyId?: number,
+  saved = false,
+): Promise<string[]> {
+  const result = await state.client.rpc("get_marketplace_categories", {
+    ...(companyId ? { p_company_id: companyId } : {}),
+    p_saved: saved,
+  });
+  checked(result.error);
+  return (result.data ?? []).map((row) => row.name);
+}
 export async function search(state: Workspace, params: URLSearchParams) {
   const input = searchInput(params);
   const result = await state.client.rpc("search_marketplace", {

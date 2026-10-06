@@ -1,0 +1,33 @@
+---
+import AppLayout from "../../../layouts/AppLayout.astro";
+import EnquiryForm from "../../../components/EnquiryForm.astro";
+import { requireWorkspace } from "../../../lib/server/access";
+import { taxonomy } from "../../../lib/server/catalog";
+import { enquiry, buyer } from "../../../lib/server/procurement";
+import { positiveId, AccessError } from "../../../lib/security";
+import { openEnquiry } from "../../../lib/procurement";
+const state = await requireWorkspace(Astro),
+  e = await enquiry(state, positiveId(Astro.params.id)),
+  c = buyer(state, e);
+if (
+  e.enquiry_type !== "public_rfq" ||
+  !["draft", "rejected"].includes(e.publication_status) ||
+  !openEnquiry(e)
+)
+  throw new AccessError(
+    409,
+    "draft_locked",
+    "This enquiry is no longer editable.",
+  );
+const categories = await taxonomy(state);
+---
+
+<AppLayout
+  title="Edit RFQ"
+  active="enquiries"
+  state={state}
+  description="Update your requirements and save or resubmit your draft."
+  ><div class="reading">
+    <EnquiryForm companyId={c.id} categories={categories} enquiry={e} />
+  </div></AppLayout
+>

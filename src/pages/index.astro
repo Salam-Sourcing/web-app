@@ -1,92 +1,232 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
+import PreviewCard from "../components/PreviewCard.astro";
+import LoginPrompt from "../components/LoginPrompt.astro";
 import Icon from "../components/Icon.astro";
-const steps = [
-  ["Discover", "Find products and suppliers that fit your business."],
-  [
-    "Request & compare",
-    "Describe what you need. Discuss terms and compare quotes.",
-  ],
-  [
-    "Move forward together",
-    "Accept a quote, track the deal and confirm completion.",
-  ],
-];
-const audiences = [
-  [
-    "For buyers",
-    "Source products and services, send enquiries and keep your supplier conversations in one place.",
-  ],
-  [
-    "For suppliers",
-    "Show what you offer, respond to enquiries and build business relationships with clear quotes.",
-  ],
-  [
-    "For businesses that do both",
-    "Use your company workspace to manage buying and selling with the same account.",
-  ],
-];
+import { marketplacePreview } from "../lib/server/public-catalog";
+import { requireWorkspace } from "../lib/server/access";
+if (Astro.request.headers.get("cookie")?.includes("ss-auth")) {
+  Astro.locals.authHeaders.set("Cache-Control", "private, no-store");
+  try {
+    await requireWorkspace(Astro);
+    return Astro.redirect("/discover", 303);
+  } catch {}
+}
+let preview: Awaited<ReturnType<typeof marketplacePreview>> = {
+    listings: [],
+    categories: [],
+  },
+  error = false;
+try {
+  preview = await marketplacePreview();
+} catch {
+  error = true;
+}
 ---
 
-<MainLayout title="Better sourcing starts with a conversation"
-  ><section class="hero">
-    <div class="container hero-grid">
-      <div>
-        <p class="eyebrow">Business sourcing, made human</p><h1>
-          Good business starts with the right connection.
-        </h1><p class="lead">
-          Discover suppliers, ask for what you need and agree on the details.
-          Salam Sourcing brings your business conversations and sourcing journey
-          together.
-        </p><div class="actions">
-          <a class="button" href="/signup">Join free <Icon name="arrow" /></a><a
-            class="button secondary"
-            href="/about">How it works</a>
-        </div><p class="help-text mt-5">
-          One account for Salam Sourcing on web and in the app.
+<MainLayout
+  title="Browse products, services and business suppliers"
+  description="Explore products and services from businesses on Salam Sourcing. Find your next supplier, compare opportunities and connect with the right company."
+>
+  <div data-public-browse>
+    <section class="browse-hero">
+      <div class="container">
+        <div class="browse-intro">
+          <div>
+            <p class="eyebrow">A marketplace for better business</p>
+            <h1>
+              Find the right supply.<br /><span
+                >Build your next connection.</span
+              >
+            </h1>
+            <p class="browse-lead">
+              Explore products and services from businesses ready to work with
+              you.
+            </p>
+          </div>
+          <a class="browse-platform-link" href="/platform"
+            >Get to know Salam Sourcing <Icon name="arrow" size={18} /></a
+          >
+        </div>
+        <form
+          class="browse-search card"
+          action="/discover"
+          method="get"
+          data-public-search
+        >
+          <div class="browse-search-row">
+            <label class="field browse-query"
+              >What are you sourcing?
+              <span class="browse-input"
+                ><Icon name="discover" /><input
+                  type="search"
+                  name="query"
+                  maxlength="200"
+                  placeholder="Search products, services or suppliers"
+                /></span
+              >
+            </label>
+            <label class="field"
+              >Category<select name="category"
+                ><option value="">All</option>{
+                  preview.categories.map((category) => (
+                    <option value={category}>{category}</option>
+                  ))
+                }</select
+              ></label
+            >
+            <button class="button" type="submit"
+              ><Icon name="discover" size={18} />Search</button
+            >
+          </div>
+          <details class="browse-filter-details">
+            <summary><Icon name="layers" size={17} />Refine your search</summary
+            >
+            <div class="browse-filter-grid">
+              <label class="field"
+                >Location<input
+                  name="location"
+                  maxlength="200"
+                  placeholder="City, province or country"
+                /></label
+              >
+              <label class="field"
+                >Currency<input
+                  name="currency"
+                  maxlength="3"
+                  pattern="[A-Za-z]{3}"
+                  placeholder="e.g. CAD"
+                /></label
+              >
+              <label class="field"
+                >Minimum price<input
+                  type="number"
+                  name="min_price"
+                  min="0"
+                  step="any"
+                  placeholder="Any"
+                /></label
+              >
+              <label class="field"
+                >Maximum price<input
+                  type="number"
+                  name="max_price"
+                  min="0"
+                  step="any"
+                  placeholder="Any"
+                /></label
+              >
+              <label class="field"
+                >Minimum order: at most<input
+                  type="number"
+                  name="max_moq"
+                  min="0"
+                  step="any"
+                  placeholder="Any"
+                /></label
+              >
+              <label class="field"
+                >Lead time (days)<input
+                  type="number"
+                  name="max_lead_days"
+                  min="0"
+                  step="1"
+                  placeholder="Any"
+                /></label
+              >
+              <label class="field"
+                >Sort by<select name="sort"
+                  ><option value="newest">Newest</option><option
+                    value="price_low">Price: low to high</option
+                  ><option value="price_high">Price: high to low</option><option
+                    value="lead_time">Shortest lead time</option
+                  ></select
+                ></label
+              >
+              <label class="checkbox-field"
+                ><input type="checkbox" name="verified" value="true" />Verified
+                suppliers only</label
+              >
+            </div>
+            <div class="browse-filter-actions">
+              <p class="help-text">
+                Sign in to apply your search and filters.
+              </p><button class="button secondary" type="submit"
+                >Apply filters</button
+              >
+            </div>
+          </details>
+        </form>
+        <div class="browse-benefits">
+          <span><Icon name="box" size={17} />Products &amp; services</span><span
+            ><Icon name="messages" size={17} />Direct business conversations</span
+          ><span
+            ><Icon name="enquiries" size={17} />Clear enquiries &amp; quotes</span
+          >
+        </div>
+      </div>
+    </section>
+    <section class="container browse-catalog">
+      <div class="browse-section-heading">
+        <div>
+          <p class="eyebrow">Explore the marketplace</p><h2>
+            Discover your next opportunity
+          </h2>
+        </div><p class="help-text">
+          Sign in for full details and tailored results.
         </p>
       </div>
-      <div class="journey-card">
-        <div class="journey-header">
-          <h2>A clearer way to source</h2><span class="badge"
-            >Buy · Sell · Both</span>
-        </div>{
-          steps.map(([title, text], index) => (
-            <div class="journey-step">
-              <>
-                <span class="step-number">0{index + 1}</span>
-                <div>
-                  <>
-                    <h3>{title}</h3>
-                    <p>{text}</p>
-                  </>
-                </div>
-              </>
-            </div>
-          ))
-        }
-      </div>
-    </div>
-  </section>
-  <section class="container section">
-    <div class="section-heading">
-      <p class="eyebrow">Made for your business</p><h2>
-        Your next opportunity, in one place.
-      </h2><p>
-        Whether you're looking for supply, sharing what you sell or doing both,
-        start with a company workspace built for the way you trade.
-      </p>
-    </div><div class="feature-grid">
       {
-        audiences.map(([title, text]) => (
-          <article class="card">
+        error ? (
+          <div class="card browse-empty">
             <>
-              <h3>{title}</h3>
-              <p>{text}</p>
+              <Icon name="box" size={36} />
+              <h3>We couldn’t load the marketplace</h3>
+              <p>Please try again in a moment.</p>
+              <a class="button secondary" href="/">
+                Retry
+              </a>
             </>
-          </article>
-        ))
+          </div>
+        ) : preview.listings.length ? (
+          <div class="catalog-grid">
+            {preview.listings.map((listing) => (
+              <PreviewCard listing={listing} />
+            ))}
+          </div>
+        ) : (
+          <div class="card browse-empty">
+            <>
+              <Icon name="box" size={36} />
+              <h3>New opportunities are on their way</h3>
+              <p>
+                Listings appear here once they’re approved for the marketplace.
+              </p>
+              <a class="button" href="/signup">
+                Join Salam Sourcing
+              </a>
+            </>
+          </div>
+        )
       }
-    </div>
-  </section></MainLayout
->
+    </section>
+    <section class="container browse-bottom">
+      <div>
+        <h2>Better sourcing starts with a conversation.</h2><p>
+          Discover how Salam Sourcing helps your business buy, sell and work
+          together.
+        </p>
+      </div><div class="actions">
+        <a class="button secondary" href="/about">How it works</a><a
+          class="text-link"
+          href="/plans">Explore our plans <Icon name="arrow" size={17} /></a
+        >
+      </div>
+    </section>
+    <LoginPrompt />
+  </div>
+</MainLayout>
+<script>
+  import { bindPublicBrowse } from "../scripts/public-browse";
+  bindPublicBrowse();
+</script>

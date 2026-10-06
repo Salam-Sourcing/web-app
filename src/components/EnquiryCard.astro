@@ -8,13 +8,12 @@ interface Props {
   saved: boolean;
   companyId?: number;
 }
-const { enquiry: e, buyerName, verified, saved, companyId } = Astro.props;
+const { enquiry: e, buyerName, saved, companyId } = Astro.props;
 ---
 
 <article class="card enquiry-card">
   <div class="card-meta">
-    <span class:list={["badge", { success: verified }]}
-      >{verified ? "Verified buyer" : buyerName}</span
+    <span class="badge">{buyerName}</span
     >{e.urgency === "urgent" && <span class="badge urgent">Urgent</span>}<span
       class="badge"
       >{
@@ -24,8 +23,8 @@ const { enquiry: e, buyerName, verified, saved, companyId } = Astro.props;
       }</span
     >
   </div>
-  <h2><a href={"/app/enquiries/" + e.id}>{e.title}</a></h2>
-  {verified && <p class="muted">{buyerName}</p>}
+  <h2><a href={"/enquiries/" + e.id}>{e.title}</a></h2>
+
   <p class="enquiry-excerpt">{e.message}</p>
   <dl class="compact-facts">
     <div>
@@ -37,7 +36,7 @@ const { enquiry: e, buyerName, verified, saved, companyId } = Astro.props;
     </div>
   </dl>
   <div class="row-actions">
-    <a class="button secondary" href={"/app/enquiries/" + e.id}
+    <a class="button secondary" href={"/enquiries/" + e.id}
       >{companyId === e.buyer_company_id ? "View quotes" : "View enquiry"}</a
     ><form data-api-form action="/api/procurement/saved" method="post">
       <input type="hidden" name="enquiry_id" value={e.id} /><input

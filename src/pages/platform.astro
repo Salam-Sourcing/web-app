@@ -1,0 +1,92 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import Icon from "../components/Icon.astro";
+const steps = [
+  ["Discover", "Find products and suppliers that fit your business."],
+  [
+    "Request & compare",
+    "Describe what you need. Discuss terms and compare quotes.",
+  ],
+  [
+    "Move forward together",
+    "Accept a quote, track the deal and confirm completion.",
+  ],
+];
+const audiences = [
+  [
+    "For buyers",
+    "Source products and services, send enquiries and keep your supplier conversations in one place.",
+  ],
+  [
+    "For suppliers",
+    "Show what you offer, respond to enquiries and build business relationships with clear quotes.",
+  ],
+  [
+    "For businesses that do both",
+    "Use your company workspace to manage buying and selling with the same account.",
+  ],
+];
+---
+
+<MainLayout title="Better sourcing starts with a conversation"
+  ><section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <p class="eyebrow">Business sourcing, made human</p><h1>
+          Good business starts with the right connection.
+        </h1><p class="lead">
+          Discover suppliers, ask for what you need and agree on the details.
+          Salam Sourcing brings your business conversations and sourcing journey
+          together.
+        </p><div class="actions">
+          <a class="button" href="/signup">Join free <Icon name="arrow" /></a><a
+            class="button secondary"
+            href="/about">How it works</a>
+        </div><p class="help-text mt-5">
+          One account for Salam Sourcing on web and in the app.
+        </p>
+      </div>
+      <div class="journey-card">
+        <div class="journey-header">
+          <h2>A clearer way to source</h2><span class="badge"
+            >Buy · Sell · Both</span>
+        </div>{
+          steps.map(([title, text], index) => (
+            <div class="journey-step">
+              <>
+                <span class="step-number">0{index + 1}</span>
+                <div>
+                  <>
+                    <h3>{title}</h3>
+                    <p>{text}</p>
+                  </>
+                </div>
+              </>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+  <section class="container section">
+    <div class="section-heading">
+      <p class="eyebrow">Made for your business</p><h2>
+        Your next opportunity, in one place.
+      </h2><p>
+        Whether you're looking for supply, sharing what you sell or doing both,
+        start with a company workspace built for the way you trade.
+      </p>
+    </div><div class="feature-grid">
+      {
+        audiences.map(([title, text]) => (
+          <article class="card">
+            <>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </>
+          </article>
+        ))
+      }
+    </div>
+  </section></MainLayout
+>

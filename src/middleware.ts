@@ -1,3 +1,4 @@
+import { isPrivatePath, cleanLegacyPath } from "./lib/routes";
 import { defineMiddleware } from "astro:middleware";
 import { createRequestClient } from "./lib/server/supabase";
 import { requireWorkspace } from "./lib/server/access";
@@ -9,14 +10,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const path = context.url.pathname;
   let response: Response;
   try {
-    if (path === "/app" || path.startsWith("/app/"))
-      await requireWorkspace(context);
-    response = await next();
+    if (/^\/app(?:\/|$)/.test(path)) {
+      response = context.redirect(
+        cleanLegacyPath(path) + context.url.search,
+        308,
+      );
+    } else {
+      if (isPrivatePath(path)) await requireWorkspace(context);
+      response = await next();
+    }
   } catch (error) {
     if (path.startsWith("/api/")) response = errorResponse(error);
     else if (error instanceof AccessError && error.redirect)
       response = context.redirect(
-        `${error.redirect}?next=${encodeURIComponent(safeNext(path))}`,
+        `${error.redirect}?next=${encodeURIComponent(safeNext(path + context.url.search))}`,
         303,
       );
     else
@@ -32,6 +39,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   for (const [name, value] of context.locals.authHeaders)
     headers.set(name, value);
   const sensitive =
+    isPrivatePath(path) ||
     /^\/(app|api|auth)(\/|$)/.test(path) ||
     ["/login", "/signup", "/forgot-password", "/verify-email"].includes(path) ||
     context.locals.authHeaders.has("cache-control");

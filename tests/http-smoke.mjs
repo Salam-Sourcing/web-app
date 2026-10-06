@@ -10,6 +10,9 @@ const check = (condition, label) => {
 for (const path of [
   "/",
   "/about",
+  "/platform",
+  "/plans",
+  "/verification",
   "/help",
   "/terms",
   "/privacy",
@@ -60,47 +63,47 @@ for (const path of [
   }
 }
 for (const path of [
-  "/app/account",
-  "/app/account/profile",
-  "/app/account/team",
-  "/app/account/team/00000000-0000-4000-8000-000000000010",
-  "/app/account/billing",
-  "/app/account/notifications",
-  "/app/account/preferences",
-  "/app/account/support",
-  "/app/account/searches",
-  "/app/account/searches/1",
-  "/app/invitations/00000000-0000-4000-8000-000000000020",
-  "/app/notifications/1",
-  "/app/discover",
-  "/app/account/security",
-  "/app/account/safety",
-  "/app/account/password",
-  "/app/saved",
-  "/app/company",
-  "/app/company/new",
-  "/app/company/edit",
-  "/app/sell",
-  "/app/sell/new",
-  "/app/sell/1",
-  "/app/listings/1",
-  "/app/suppliers/1",
-  "/app/enquiries/new",
-  "/app/enquiries",
-  "/app/enquiries/1",
-  "/app/enquiries/1/edit",
-  "/app/enquiries/1/quote",
-  "/app/enquiries/1/compare",
-  "/app/quotes/1",
-  "/app/messages",
-  "/app/messages/1",
-  "/app/account/insights",
-  "/app/deals",
-  "/app/deals/1",
-  "/app/deals/1/export",
-  "/app/enquiries/dashboard",
-  "/app/enquiries/1/export",
-  "/app/suppliers/1/reviews",
+  "/account",
+  "/account/profile",
+  "/account/team",
+  "/account/team/00000000-0000-4000-8000-000000000010",
+  "/account/billing",
+  "/account/notifications",
+  "/account/preferences",
+  "/account/support",
+  "/account/searches",
+  "/account/searches/1",
+  "/invitations/00000000-0000-4000-8000-000000000020",
+  "/notifications/1",
+  "/discover",
+  "/account/security",
+  "/account/safety",
+  "/account/password",
+  "/saved",
+  "/company",
+  "/company/new",
+  "/company/edit",
+  "/sell",
+  "/sell/new",
+  "/sell/1",
+  "/listings/1",
+  "/suppliers/1",
+  "/enquiries/new",
+  "/enquiries",
+  "/enquiries/1",
+  "/enquiries/1/edit",
+  "/enquiries/1/quote",
+  "/enquiries/1/compare",
+  "/quotes/1",
+  "/messages",
+  "/messages/1",
+  "/account/insights",
+  "/deals",
+  "/deals/1",
+  "/deals/1/export",
+  "/enquiries/dashboard",
+  "/enquiries/1/export",
+  "/suppliers/1/reviews",
 ]) {
   const response = await request(path);
   check(response.status === 303, path + " rejects unauthenticated access");
@@ -113,6 +116,82 @@ for (const path of [
     path + " protects redirect caching",
   );
 }
+for (const path of [
+  "/app/account",
+  "/app/messages/1",
+  "/app/listings/1",
+  "/app/discover?query=steel&category=Metal",
+  "/app/invitations/00000000-0000-4000-8000-000000000020",
+]) {
+  const response = await request(path);
+  check(
+    response.status === 308,
+    path + " redirects permanently to the clean URL",
+  );
+  check(
+    response.headers.get("location") === path.replace("/app", ""),
+    path + " retains the destination and filters",
+  );
+  check(
+    response.headers.get("cache-control")?.includes("no-store"),
+    path + " keeps legacy redirects private",
+  );
+}
+const searchRedirect = await request(
+  "/discover?query=steel&max_price=20&code=secret",
+);
+check(searchRedirect.status === 303, "guest filtered search requires sign in");
+check(
+  new URL(searchRedirect.headers.get("location"), origin).searchParams.get(
+    "next",
+  ) === "/discover?query=steel&max_price=20",
+  "search filters survive sign-in without arbitrary parameters",
+);
+const browseHtml = await (await request("/")).text();
+check(
+  browseHtml.includes("data-public-search"),
+  "homepage exposes editable search controls",
+);
+check(
+  browseHtml.includes("data-login-prompt"),
+  "homepage has the sign-in prompt",
+);
+check(!browseHtml.includes('href="/app/'), "homepage links use clean URLs");
+const staleHome = await request("/", {
+  headers: { cookie: "ss-auth=invalid" },
+});
+check(
+  staleHome.headers.get("cache-control")?.includes("no-store"),
+  "homepage auth-dependent responses are never shared-cached",
+);
+check(
+  staleHome.headers.get("cloudflare-cdn-cache-control") === "no-store",
+  "homepage auth-dependent responses bypass CDN caching",
+);
+const plansHtml = await (await request("/plans")).text();
+check(
+  (plansHtml.match(/class="card public-plan"/g) ?? []).length === 3,
+  "plans page renders exactly three placeholders",
+);
+const sitemap = await request("/sitemap.xml");
+check(
+  sitemap.status === 200 &&
+    sitemap.headers.get("content-type")?.includes("xml"),
+  "public sitemap is available",
+);
+const sitemapXml = await sitemap.text();
+check(
+  sitemapXml.includes("/platform</loc>") &&
+    sitemapXml.includes("/plans</loc>") &&
+    sitemapXml.includes("/verification</loc>"),
+  "sitemap includes public information pages",
+);
+check(
+  !sitemapXml.includes("/messages") && !sitemapXml.includes("/listings"),
+  "sitemap excludes login-protected records",
+);
+const robots = await request("/robots.txt");
+check(robots.status === 200, "robots configuration is available");
 const mutate = (path, data, headers = {}) =>
   request(path, {
     method: "POST",

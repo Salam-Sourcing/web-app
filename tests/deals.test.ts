@@ -167,7 +167,7 @@ test("buyer receipt forwards original date, reference and trimmed note to guarde
     },
     "advance",
   );
-  assert.equal((await result.json()).redirect, "/app/deals/7");
+  assert.equal((await result.json()).redirect, "/deals/7");
   assert.deepEqual(f.calls.at(-1), {
     name: "advance_deal_progress",
     args: {

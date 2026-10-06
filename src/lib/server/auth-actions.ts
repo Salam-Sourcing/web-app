@@ -198,7 +198,7 @@ export async function handleAuthAction(
         : undefined;
     checked((await client.auth.updateUser({ password, nonce })).error);
     return json({
-      redirect: "/app/account",
+      redirect: "/account",
       message: "Your password was updated.",
     });
   }
@@ -231,7 +231,7 @@ export async function handleAuthAction(
     checked(
       (await client.auth.mfa.challengeAndVerify({ factorId, code })).error,
     );
-    return json({ redirect: safeNext(input.next, "/app/account/security") });
+    return json({ redirect: safeNext(input.next, "/account/security") });
   }
   if (action === "mfa-enroll") {
     const signedIn = await requireWorkspace(context);
@@ -277,7 +277,7 @@ export async function handleAuthAction(
         "Type REMOVE to confirm.",
       );
     checked((await client.auth.mfa.unenroll({ factorId })).error);
-    return json({ redirect: "/app/account/security" });
+    return json({ redirect: "/account/security" });
   }
   throw new AccessError(404, "not_found", "This action is unavailable.");
 }

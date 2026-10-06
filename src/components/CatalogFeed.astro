@@ -3,7 +3,11 @@ import ListingCard from "./ListingCard.astro";
 import SupplierCard from "./SupplierCard.astro";
 import Icon from "./Icon.astro";
 import type { Workspace } from "../lib/server/access";
-import { search, savedSuppliers, taxonomy } from "../lib/server/catalog";
+import {
+  search,
+  savedSuppliers,
+  availableCategories,
+} from "../lib/server/catalog";
 import { searchInput, categoryIcon } from "../lib/catalog";
 interface Props {
   state: Workspace;
@@ -33,9 +37,7 @@ try {
     suppliers = await savedSuppliers(state, searchInput(params).offset);
   else {
     page = await search(state, params);
-    categories = (await taxonomy(state)).flatMap((c) =>
-      c.sub_categories.map((s) => s.name),
-    );
+    categories = await availableCategories(state, companyId, saved);
   }
 } catch (e) {
   error = e instanceof Error ? e.message : "Unable to load the marketplace.";
@@ -53,12 +55,12 @@ const value = (key: string) => params.get(key) ?? "";
     saved && (
       <nav class="tab-row" aria-label="Saved item type">
         <>
-          <a aria-current={!supplierTab ? "page" : undefined} href="/app/saved">
+          <a aria-current={!supplierTab ? "page" : undefined} href="/saved">
             Listings
           </a>
           <a
             aria-current={supplierTab ? "page" : undefined}
-            href="/app/saved?tab=suppliers"
+            href="/saved?tab=suppliers"
           >
             Suppliers
           </a>
@@ -203,7 +205,7 @@ const value = (key: string) => params.get(key) ?? "";
             </p>
           </>
         </details>
-        {categories.length > 0 && (
+        {
           <nav class="category-pills" aria-label="Industry categories">
             {["", ...categories].map((category) => (
               <a
@@ -223,11 +225,11 @@ const value = (key: string) => params.get(key) ?? "";
                 <span class="category-icon">
                   <Icon name={categoryIcon(category)} size={21} />
                 </span>
-                {category || "All categories"}
+                {category || "All"}
               </a>
             ))}
           </nav>
-        )}
+        }
       </form>
     )
   }

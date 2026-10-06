@@ -210,7 +210,7 @@ export function bindListingForms() {
           const draftLink =
             form.querySelector<HTMLAnchorElement>("[data-saved-draft]")!;
           draftLink.hidden = false;
-          draftLink.href = "/app/sell/" + draftId;
+          draftLink.href = "/sell/" + draftId;
           // Keep a returned draft ID and uploaded files across retries. Never create a
           // second draft just because a later upload or review submission failed.
           const pending = files.filter((file) => !completedFiles.has(file));
@@ -243,7 +243,7 @@ export function bindListingForms() {
             });
           }
           location.assign(
-            "/app/sell/" +
+            "/sell/" +
               draftId +
               "?saved=" +
               (finish === "submit" ? "review" : "draft"),
@@ -262,7 +262,7 @@ export function bindListingForms() {
             const link =
               form.querySelector<HTMLAnchorElement>("[data-saved-draft]")!;
             link.hidden = false;
-            link.href = "/app/sell";
+            link.href = "/sell";
             link.textContent = "Check your listings";
           } else
             display(
@@ -322,7 +322,7 @@ export function bindDocumentUploads() {
             company,
             String(data.get("document_type")),
           );
-          location.assign("/app/company");
+          location.assign("/company");
         } catch (error) {
           display(
             form,
@@ -350,7 +350,7 @@ export function bindDocumentUploads() {
             "/api/catalog/verification-prepare",
             Object.fromEntries(new FormData(form)),
           );
-          location.assign("/app/company");
+          location.assign("/company");
         } catch (error) {
           display(
             form,

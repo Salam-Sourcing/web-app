@@ -107,7 +107,7 @@ export async function handleAccountAction(
       p_role: role,
     });
     checked(result.error);
-    return done("/app/account/team");
+    return done("/account/team");
   }
   if (action === "member") {
     const c = teamCompany(state, input.company_id),
@@ -132,7 +132,7 @@ export async function handleAccountAction(
         })
       ).error,
     );
-    return json({ redirect: "/app/account/team", contextChanged: true });
+    return json({ redirect: "/account/team", contextChanged: true });
   }
   if (action === "permissions") {
     const c = teamCompany(state, input.company_id);
@@ -153,7 +153,7 @@ export async function handleAccountAction(
         })
       ).error,
     );
-    return json({ redirect: "/app/account/team", contextChanged: true });
+    return json({ redirect: "/account/team", contextChanged: true });
   }
   if (action === "revoke-invitation") {
     const c = teamCompany(state, input.company_id),
@@ -172,10 +172,10 @@ export async function handleAccountAction(
       (await client.rpc("revoke_company_invitation", { p_invitation_id: id }))
         .error,
     );
-    return done("/app/account/team");
+    return done("/account/team");
   }
   if (action === "invitation-preview")
-    return done("/app/invitations/" + uuid(input.invitation_id));
+    return done("/invitations/" + uuid(input.invitation_id));
   if (action === "accept-invitation") {
     const id = uuid(input.invitation_id);
     if (input.confirm !== "ACCEPT")
@@ -204,7 +204,7 @@ export async function handleAccountAction(
       secure: context.url.protocol === "https:",
       maxAge: 2592000,
     });
-    return json({ redirect: "/app/account", companyChanged: true });
+    return json({ redirect: "/account", companyChanged: true });
   }
   if (action === "billing") {
     const c = activeCompany(state, input.company_id, "billing"),
@@ -229,7 +229,7 @@ export async function handleAccountAction(
         })
       ).error,
     );
-    return done("/app/account/billing");
+    return done("/account/billing");
   }
   if (action === "preferences") {
     const changes = Object.fromEntries(
@@ -262,7 +262,7 @@ export async function handleAccountAction(
     if (id) q = q.eq("id", id);
     else q = q.eq("is_read", false);
     checked((await q).error);
-    return done("/app/account/notifications");
+    return done("/account/notifications");
   }
   if (action === "search-delete") {
     checked(
@@ -274,7 +274,7 @@ export async function handleAccountAction(
           .eq("user_id", state.user.id)
       ).error,
     );
-    return done("/app/account/searches");
+    return done("/account/searches");
   }
   if (action === "search-save") {
     const kind = textField(input, "kind", 10),
@@ -307,7 +307,7 @@ export async function handleAccountAction(
       ...(input.id ? { p_id: positiveId(input.id) } : {}),
     });
     checked(result.error);
-    return done("/app/account/searches/" + result.data);
+    return done("/account/searches/" + result.data);
   }
   if (
     ["support-reply", "support-appeal", "support-recovery"].includes(
@@ -351,7 +351,7 @@ export async function handleAccountAction(
         "This request changed. Refresh before replying.",
       );
     checked(result.error);
-    return done("/app/account/support");
+    return done("/account/support");
   }
   throw new AccessError(
     404,

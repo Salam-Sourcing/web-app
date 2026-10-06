@@ -41,7 +41,7 @@ const actor = (id: number) =>
       <dt>Agreed value</dt><dd>{money(d.deal_value_estimate, d.currency)}</dd>
     </div><div><dt>Agreed</dt><dd>{dateLabel(d.agreed_at)}</dd></div>
   </dl>
-  <a class="text-link" href={"/app/enquiries/" + d.enquiry_id}
+  <a class="text-link" href={"/enquiries/" + d.enquiry_id}
     >View enquiry #{d.enquiry_id} & quotes</a
   >
 </section>
@@ -292,7 +292,7 @@ const actor = (id: number) =>
         reviewError && (
           <p class="form-message" role="alert">
             {reviewError}{" "}
-            <a class="text-link" href={"/app/deals/" + d.id}>
+            <a class="text-link" href={"/deals/" + d.id}>
               Retry eligibility check
             </a>
           </p>
@@ -357,7 +357,7 @@ const actor = (id: number) =>
         This summary is not a payment invoice, receipt or proof of delivery.
       </p><a
         class="button secondary mt-4"
-        href={"/app/deals/" + d.id + "/export"}>Preview & export PDF</a>
+        href={"/deals/" + d.id + "/export"}>Preview & export PDF</a>
     </section>
   </aside>
 </div>

@@ -1,0 +1,126 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import { requireWorkspace } from "../../lib/server/access";
+import { activeCompany, checked } from "../../lib/server/catalog";
+import { money, dateLabel } from "../../lib/procurement";
+import { AccessError } from "../../lib/security";
+const state = await requireWorkspace(Astro),
+  c = activeCompany(state);
+const page = Number(Astro.url.searchParams.get("page") ?? 0),
+  status = Astro.url.searchParams.get("status") ?? "active";
+if (!Number.isSafeInteger(page) || page < 0 || page > 10000)
+  throw new AccessError(400, "invalid_page", "Choose a valid page.");
+const parties = [];
+if (state.permissions.includes("procurement"))
+  parties.push("buyer_company_id.eq." + c.id);
+if (state.permissions.includes("sales"))
+  parties.push("supplier_company_id.eq." + c.id);
+let rows: import("../../lib/deals").Deal[] = [],
+  more = false,
+  error: string | undefined;
+try {
+  if (parties.length) {
+    let q = state.client.from("deals").select("*").or(parties.join(","));
+    if (status === "active") q = q.in("status", ["agreed", "in_progress"]);
+    else if (["completed", "cancelled", "disputed"].includes(status))
+      q = q.eq("status", status);
+    const result = await q
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(page * 24, page * 24 + 24);
+    checked(result.error);
+    more = (result.data?.length ?? 0) > 24;
+    rows = (result.data ?? []).slice(0, 24);
+  }
+} catch (e) {
+  error = (e as Error).message;
+}
+const link = (n: number) =>
+  "/deals?status=" + encodeURIComponent(status) + "&page=" + n;
+---
+
+<AppLayout
+  title="Deals"
+  active="enquiries"
+  state={state}
+  description={"Transactions for " + c.display_name + "."}
+>
+  <a slot="actions" class="button secondary" href="/enquiries?tab=mine"
+    >My enquiries</a
+  >
+  <nav class="tabs" aria-label="Deal views">
+    {
+      ["active", "completed", "cancelled", "disputed", "all"].map((s) => (
+        <a
+          href={"/deals?status=" + s}
+          aria-current={s === status ? "page" : undefined}
+        >
+          {s[0].toUpperCase() + s.slice(1)}
+        </a>
+      ))
+    }
+  </nav>
+  {
+    error ? (
+      <section class="card">
+        <>
+          <p role="alert">{error}</p>
+          <a
+            class="button secondary mt-4"
+            href={Astro.url.pathname + Astro.url.search}
+          >
+            Retry
+          </a>
+        </>
+      </section>
+    ) : rows.length ? (
+      <div class="deal-list">
+        {rows.map((d) => (
+          <a class="card deal-list-item" href={"/deals/" + d.id}>
+            <div>
+              <p class="eyebrow">
+                Deal #{d.id} ·{" "}
+                {c.id === d.buyer_company_id ? "Buyer" : "Supplier"}
+              </p>
+              <h2>{d.product_name}</h2>
+              <p class="help-text mt-2">{dateLabel(d.agreed_at)}</p>
+            </div>
+            <div>
+              <span class="badge">{d.status.replaceAll("_", " ")}</span>
+              <p class="mt-3">{money(d.deal_value_estimate, d.currency)}</p>
+              <span class="text-link">Open deal →</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <section class="card empty-state">
+        <>
+          <h2>
+            {parties.length ? "No deals in this view" : "Deal access required"}
+          </h2>
+          <p>
+            {parties.length
+              ? "Accepted quotes appear here. Try another view to find completed transactions."
+              : "Your selected company needs procurement or sales permission to view deals."}
+          </p>
+        </>
+      </section>
+    )
+  }
+  <nav class="actions mt-5" aria-label="Deal pages">
+    {
+      page > 0 && (
+        <a class="button secondary" href={link(page - 1)}>
+          Previous
+        </a>
+      )
+    }{
+      more && (
+        <a class="button secondary" href={link(page + 1)}>
+          Next deals
+        </a>
+      )
+    }
+  </nav>
+</AppLayout>

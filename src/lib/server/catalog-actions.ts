@@ -50,7 +50,7 @@ export async function handleCatalogAction(
       secure: context.url.protocol === "https:",
       maxAge: 2592000,
     });
-    return json({ redirect: "/app/company", companyChanged: true });
+    return json({ redirect: "/company", companyChanged: true });
   }
   if (action === "company-update") {
     const company = companyManager(state, input.company_id);
@@ -62,7 +62,7 @@ export async function handleCatalogAction(
         })
       ).error,
     );
-    return json({ redirect: "/app/company", contextChanged: true });
+    return json({ redirect: "/company", contextChanged: true });
   }
   if (action === "verification-prepare") {
     const company = companyManager(state, input.company_id);
@@ -88,7 +88,7 @@ export async function handleCatalogAction(
         })
       ).error,
     );
-    return json({ redirect: "/app/company", contextChanged: true });
+    return json({ redirect: "/company", contextChanged: true });
   }
   if (action === "listing-create" || action === "listing-update") {
     const company = activeCompany(state, input.company_id, "listings");
@@ -137,7 +137,7 @@ export async function handleCatalogAction(
         ).error,
       );
     }
-    return json({ id, redirect: "/app/sell/" + id, message: "Draft saved." });
+    return json({ id, redirect: "/sell/" + id, message: "Draft saved." });
   }
   if (action === "listing-status") {
     const id = positiveId(input.listing_id),
@@ -172,7 +172,7 @@ export async function handleCatalogAction(
         })
       ).error,
     );
-    return json({ redirect: "/app/sell/" + id });
+    return json({ redirect: "/sell/" + id });
   }
   if (action === "save") {
     const id = positiveId(input.id),

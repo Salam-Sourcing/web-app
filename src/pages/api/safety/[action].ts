@@ -24,7 +24,7 @@ export const POST: APIRoute = async (context) => {
           "Type DELETE to confirm.",
         );
       checked((await state.client.rpc("request_account_deletion")).error);
-      return json({ redirect: "/app/account/safety" });
+      return json({ redirect: "/account/safety" });
     }
     if (action === "cancel-deletion") {
       const request = await state.client
@@ -39,7 +39,7 @@ export const POST: APIRoute = async (context) => {
           "Deletion cannot be cancelled in its current state. Refresh to check its status.",
         );
       checked((await state.client.rpc("cancel_account_deletion")).error);
-      return json({ redirect: "/app/account/safety" });
+      return json({ redirect: "/account/safety" });
     }
     if (action === "block" || action === "unblock") {
       if (
@@ -66,7 +66,7 @@ export const POST: APIRoute = async (context) => {
           )
         ).error,
       );
-      return json({ redirect: "/app/account/safety", contextChanged: true });
+      return json({ redirect: "/account/safety", contextChanged: true });
     }
     if (action === "report") {
       const type = textField(input, "target_type", 10);

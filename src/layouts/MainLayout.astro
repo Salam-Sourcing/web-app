@@ -1,4 +1,5 @@
 ---
+import { publicSite } from "../lib/server/seo";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import "../styles/globals.css";
@@ -12,10 +13,8 @@ const {
   description = "Discover suppliers, request quotes and manage your business sourcing with Salam Sourcing.",
   privatePage = false,
 } = Astro.props;
-const canonical = new URL(
-  Astro.url.pathname,
-  Astro.site ?? "https://test.salamsourcing.com",
-);
+const site = publicSite();
+const canonical = new URL(Astro.url.pathname, site.origin);
 ---
 
 <!doctype html>
@@ -29,7 +28,11 @@ const canonical = new URL(
       name="theme-color"
       content="#9C272E"
     />
-    {privatePage && <meta name="robots" content="noindex,nofollow,noarchive" />}
+    {
+      (privatePage || !site.indexable) && (
+        <meta name="robots" content="noindex,nofollow,noarchive" />
+      )
+    }
     <link rel="canonical" href={canonical} /><link
       rel="icon"
       href="/favicon.svg"
@@ -61,5 +64,6 @@ const canonical = new URL(
       class="flex-1"
     >
       <slot />
-    </main><Footer /></body>
+    </main><Footer /></body
+  >
 </html>

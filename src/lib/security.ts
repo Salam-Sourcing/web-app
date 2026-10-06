@@ -1,3 +1,4 @@
+import { isPrivatePath, cleanLegacyPath } from "./routes";
 export class AccessError extends Error {
   constructor(
     public status: number,
@@ -9,21 +10,40 @@ export class AccessError extends Error {
   }
 }
 
-export function safeNext(value: unknown, fallback = "/app/discover"): string {
+export function safeNext(value: unknown, fallback = "/discover"): string {
   if (
     typeof value !== "string" ||
-    !/^\/app(?:\/|$)/.test(value) ||
+    value.length > 4096 ||
+    !value.startsWith("/") ||
     /[\\\x00-\x20]/.test(value)
   )
     return fallback;
   const parsed = new URL(value, "https://local.invalid");
-  if (
-    parsed.origin !== "https://local.invalid" ||
-    !/^\/app(?:\/|$)/.test(parsed.pathname)
-  )
+  if (parsed.origin !== "https://local.invalid") return fallback;
+  const path = /^\/app(?:\/|$)/.test(parsed.pathname)
+    ? cleanLegacyPath(parsed.pathname)
+    : parsed.pathname;
+  if (!isPrivatePath(path) || !/^\/[A-Za-z0-9_/-]+$/.test(path))
     return fallback;
-  // Callback, invitation and arbitrary query parameters never become redirect authority.
-  return parsed.pathname;
+  if (path !== "/discover") return path;
+  const filters = new URLSearchParams();
+  for (const key of [
+    "query",
+    "category",
+    "location",
+    "currency",
+    "min_price",
+    "max_price",
+    "max_moq",
+    "max_lead_days",
+    "verified",
+    "sort",
+    "type",
+  ]) {
+    const input = parsed.searchParams.get(key);
+    if (input !== null && input.length <= 200) filters.set(key, input);
+  }
+  return path + (filters.size ? "?" + filters : "");
 }
 
 export function positiveId(value: unknown): number {

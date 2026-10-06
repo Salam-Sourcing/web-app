@@ -320,7 +320,7 @@ test("MFA verification accepts only this user's appropriate factor and six digit
     next: "https://other.invalid",
   });
   assert.deepEqual(await response.json(), {
-    redirect: "/app/account/security",
+    redirect: "/account/security",
   });
   assert.deepEqual(f.calls.find((c) => c.name === "verify")?.args, {
     factorId: verified.id,

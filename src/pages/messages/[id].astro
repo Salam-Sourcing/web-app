@@ -1,0 +1,177 @@
+---
+import MessageAttachment from "../../components/MessageAttachment.astro";
+import AppLayout from "../../layouts/AppLayout.astro";
+import { requireWorkspace } from "../../lib/server/access";
+import {
+  conversation,
+  enquiry,
+  messagePage,
+  companySummaries,
+} from "../../lib/server/procurement";
+import { quantityLabel } from "../../lib/procurement";
+import { positiveId } from "../../lib/security";
+const state = await requireWorkspace(Astro),
+  id = positiveId(Astro.params.id),
+  cv = await conversation(state, id),
+  e = await enquiry(state, cv.enquiry_id),
+  page = await messagePage(state, id, new URLSearchParams());
+const otherId =
+  cv.buyer_company_id === state.company?.id
+    ? cv.supplier_company_id
+    : cv.buyer_company_id;
+const companies = otherId ? await companySummaries(state, [otherId]) : [],
+  other = companies[0];
+---
+
+<AppLayout
+  title={other?.display_name ?? "Conversation"}
+  active="messages"
+  state={state}
+  description={"Enquiry #" + e.id}
+>
+  <a slot="actions" class="button secondary" href="/messages"
+    >All messages</a
+  >
+  <section
+    class="card thread"
+    data-thread
+    data-conversation={id}
+    data-company={state.company!.id}
+    data-more={page.hasMore}
+    data-open={cv.status === "open"}
+  >
+    <div class="thread-context">
+      <div>
+        <a class="text-link" href={"/enquiries/" + e.id}>{e.title}</a><p
+          class="help-text"
+        >
+          {quantityLabel(e)} · {e.currency}
+        </p>
+      </div>{
+        e.listing_id && (
+          <a class="text-link" href={"/listings/" + e.listing_id}>
+            Product / service
+          </a>
+        )
+      }
+    </div>
+    <p class="help-text" data-live-status role="status">
+      Connecting to updates…
+    </p>
+    <button
+      class="button secondary older-button"
+      type="button"
+      data-older
+      hidden={!page.hasMore}>Load older messages</button
+    >
+    <div class="message-history" data-history aria-label="Conversation history">
+      {
+        page.rows.map((m) => (
+          <article
+            class:list={["message-bubble", { outgoing: m.outgoing }]}
+            data-message-id={m.id}
+            data-sent-at={m.sent_at}
+          >
+            {m.content && <p class="preserve-lines">{m.content}</p>}
+            {m.attachments.map(a => <MessageAttachment attachment={a}/>)}
+            {!m.content && !m.attachments.length && (
+              <p class="muted">Attachment processing or unavailable.</p>
+            )}
+            <small>
+              <time datetime={m.sent_at}>
+                {new Date(m.sent_at).toLocaleString("en-CA", {
+                  timeZone: "America/Edmonton",
+                })}{" "}
+                MT
+              </time>
+              {m.outgoing ? " · " + (m.seen ? "Seen" : "Sent") : ""}
+            </small>
+          </article>
+        ))
+      }
+      {
+        !page.rows.length && (
+          <p data-empty-thread class="muted">
+            Start your conversation below.
+          </p>
+        )
+      }
+    </div>
+    {
+      cv.status === "open" ? (
+        <div class="thread-composers">
+          <>
+            <form data-send-form class="form-stack">
+              <>
+                <label class="field">
+                  Message
+                  <textarea
+                    name="content"
+                    maxlength="8000"
+                    rows="3"
+                    required
+                    placeholder="Write a message…"
+                  />
+                </label>
+                <div class="row-actions">
+                  <>
+                    <button class="button" type="submit" data-send>
+                      Send message
+                    </button>
+                    <button
+                      class="button secondary"
+                      type="button"
+                      data-retry
+                      hidden
+                    >
+                      Retry same message
+                    </button>
+                  </>
+                </div>
+                <p data-form-message hidden role="status" />
+              </>
+            </form>
+            <details class="attachment-composer">
+              <>
+                <summary>Send a file</summary>
+                <form class="form" data-file-form data-kind="message">
+                  <>
+                    <input type="hidden" name="target_id" value={id} />
+                    <input
+                      type="hidden"
+                      name="company_id"
+                      value={state.company!.id}
+                    />
+                    <label class="field">
+                      File
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,application/pdf"
+                        required
+                      />
+                    </label>
+                    <p class="help-text">
+                      JPEG, PNG, WebP or PDF, under 10 MB.
+                    </p>
+                    <button class="button secondary">Send file</button>
+                    <p data-form-message hidden role="status" />
+                  </>
+                </form>
+              </>
+            </details>
+          </>
+        </div>
+      ) : (
+        <p class="form-message">
+          This conversation is archived. Its history remains available.
+        </p>
+      )
+    }
+  </section>
+</AppLayout>
+<script>
+  import { bindThread } from "../../scripts/messages";
+  import { bindProcurementForms } from "../../scripts/procurement";
+  bindThread();
+  bindProcurementForms();
+</script>

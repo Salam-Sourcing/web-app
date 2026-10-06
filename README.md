@@ -25,6 +25,17 @@ personal export. Phase 6 adds compatible website invitation links, Flutter key
 alignment and a CI production smoke runner. Browser push code is prepared but
 configuration and backend rollout are deferred; invitation email stays disabled.
 
+The website now opens on a public marketplace preview. Guests can prepare searches
+and filters, then sign in to submit or open full product/company details. The
+marketing homepage is at `/platform`; `/plans` has three placeholders and
+`/verification` explains the company-profile check. Private URLs omit `/app/`,
+with redirects retained for old bookmarks. See [public browse, routing and SEO
+notes](documentation/public_browse.md).
+
+Discovery filters now show **All** and only categories with visible published
+listings in both clients. Flutter chat images embed inline and open a private,
+zoomable viewer with haptic feedback. See [category filters and Flutter photos](documentation/category_filters_and_chat_photos.md).
+
 Progress: [remaining_work.md](remaining_work.md).
 Setup, database findings and acceptance: [Phase 1 notes](documentation/phase_1.md),
 [Phase 2 evidence](documentation/phase_2.md), [Phase 3 evidence](documentation/phase_3.md),

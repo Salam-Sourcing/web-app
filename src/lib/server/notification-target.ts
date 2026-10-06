@@ -42,12 +42,12 @@ export async function notificationTarget(
       );
     selected = await workspace(state.client, String(n.recipient_company_id));
   }
-  let path = "/app/account/notifications";
+  let path = "/account/notifications";
   if (n.entity_id) {
     const entity = n.entity_id;
     if (n.entity_type === "conversation") {
       await conversation(selected, entity);
-      path = "/app/messages/" + entity;
+      path = "/messages/" + entity;
     } else if (n.entity_type === "enquiry") {
       const e = await enquiry(selected, entity),
         c = activeCompany(selected);
@@ -56,13 +56,13 @@ export async function notificationTarget(
         undefined,
         c.id === e.buyer_company_id ? "procurement" : "sales",
       );
-      path = "/app/enquiries/" + entity;
+      path = "/enquiries/" + entity;
     } else if (n.entity_type === "quote") {
       await quoteBundle(selected, entity);
-      path = "/app/quotes/" + entity;
+      path = "/quotes/" + entity;
     } else if (n.entity_type === "deal") {
       await dealBundle(selected, entity);
-      path = "/app/deals/" + entity;
+      path = "/deals/" + entity;
     } else if (n.entity_type === "listing") {
       const r = await selected.client
         .from("listings")
@@ -78,16 +78,16 @@ export async function notificationTarget(
         );
       if (r.data.company_id === selected.company?.id) {
         activeCompany(selected, undefined, "listings");
-        path = "/app/sell/" + entity;
+        path = "/sell/" + entity;
       } else {
         await publicListing(selected, entity);
-        path = "/app/listings/" + entity;
+        path = "/listings/" + entity;
       }
     } else if (n.entity_type === "company") {
-      if (entity === selected.company?.id) path = "/app/company";
+      if (entity === selected.company?.id) path = "/company";
       else {
         await publicCompany(selected, entity);
-        path = "/app/suppliers/" + entity;
+        path = "/suppliers/" + entity;
       }
     } else if (n.entity_type === "saved_search") {
       checked(
@@ -97,7 +97,7 @@ export async function notificationTarget(
           })
         ).error,
       );
-      path = "/app/account/searches/" + entity;
+      path = "/account/searches/" + entity;
     }
   }
   if (selected.company?.id !== state.company?.id)

@@ -27,17 +27,17 @@ test("redirects stay in normalized workspace paths and drop arbitrary queries", 
     "https://evil.test",
     "//evil.test",
     "/app\\evil.test",
-    "/app/../api/company",
-    "/app/../../evil",
+    "/../api/company",
+    "/../../evil",
     "/app x",
     null,
   ])
-    assert.equal(safeNext(value), "/app/discover");
+    assert.equal(safeNext(value), "/discover");
   assert.equal(
-    safeNext("/app/account/password?code=private#token"),
-    "/app/account/password",
+    safeNext("/account/password?code=private#token"),
+    "/account/password",
   );
-  assert.equal(safeNext("/app/enquiries"), "/app/enquiries");
+  assert.equal(safeNext("/enquiries"), "/enquiries");
 });
 test("IDs reject imprecise bigint numbers and malformed targets", () => {
   for (const value of ["01", "0", -1, "1.5", "1e2", "9007199254740992", null])
@@ -144,4 +144,28 @@ test("confirmation/recovery requires a matching unexpired same-browser flow", ()
     ),
     null,
   );
+});
+
+test("clean routes keep search choices through login without forwarding secrets", () => {
+  assert.equal(safeNext("/app/messages/3"), "/messages/3");
+  assert.equal(
+    safeNext(
+      "/app/discover?query=steel&category=Metal&max_price=20&code=secret#token",
+    ),
+    "/discover?query=steel&category=Metal&max_price=20",
+  );
+  assert.equal(
+    safeNext("/discover?query=steel&next=https%3A%2F%2Fevil.test"),
+    "/discover?query=steel",
+  );
+  for (const path of [
+    "/api/auth/logout",
+    "/auth/callback",
+    "/plans",
+    "/platform",
+    "/application/messages",
+    "/app/%2F%2Fevil.test",
+    "/messages%2f..%2fapi",
+  ])
+    assert.equal(safeNext(path), "/discover");
 });

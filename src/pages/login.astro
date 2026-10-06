@@ -22,7 +22,7 @@ import AuthForm from "../components/AuthForm.astro";
           class="text-link"
           href={"/signup?next=" +
             encodeURIComponent(
-              Astro.url.searchParams.get("next") ?? "/app/discover",
+              Astro.url.searchParams.get("next") ?? "/discover",
             )}>Create an account</a
         >
       </p>

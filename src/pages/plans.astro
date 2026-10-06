@@ -1,0 +1,59 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import Icon from "../components/Icon.astro";
+const plans = [
+  ["Plan 1", "The first of our three upcoming subscription options."],
+  ["Plan 2", "The second of our three upcoming subscription options."],
+  ["Plan 3", "The third of our three upcoming subscription options."],
+];
+---
+
+<MainLayout
+  title="Subscription plans"
+  description="Explore the three subscription plans coming to Salam Sourcing. Pricing, plan names and included features will be announced here."
+>
+  <section class="container plans-section">
+    <div class="plans-intro">
+      <p class="eyebrow">Room for your business to grow</p><h1>
+        Three plans. More possibilities.
+      </h1><p>
+        We’re preparing subscription options for businesses using Salam
+        Sourcing.
+      </p>
+    </div>
+    <div class="plans-grid">
+      {
+        plans.map(([name, description]) => (
+          <article class="card public-plan">
+            <>
+              <div class="plan-symbol">
+                <Icon name="company" size={26} />
+              </div>
+              <p class="eyebrow">Coming soon</p>
+              <h2>{name}</h2>
+              <p>{description}</p>
+              <div class="plan-announcement">
+                <>
+                  <strong>Details to be announced</strong>
+                  <p>
+                    Final names, pricing and included features will appear here.
+                  </p>
+                </>
+              </div>
+            </>
+          </article>
+        ))
+      }
+    </div>
+    <p class="plans-note">
+      Plan details are coming soon. We’ll publish pricing and features here when
+      they’re available.
+    </p>
+    <div class="actions justify-center">
+      <a class="button" href="/signup">Create an account</a><a
+        class="text-link"
+        href="/help">Contact support</a
+      >
+    </div>
+  </section>
+</MainLayout>

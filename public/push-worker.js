@@ -68,7 +68,7 @@ self.addEventListener("notificationclick", (event) => {
           current.session_id !== data.session_id
         )
           return;
-        await self.clients.openWindow("/app/notifications/" + data.id);
+        await self.clients.openWindow("/notifications/" + data.id);
       } catch {}
     })(),
   );

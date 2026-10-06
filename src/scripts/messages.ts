@@ -446,7 +446,7 @@ export function bindConversationActivity() {
           const link = document.createElement("a");
           link.className =
             "conversation-row" + (c.unread > 0 ? " has-unread" : "");
-          link.href = "/app/messages/" + c.id;
+          link.href = "/messages/" + c.id;
           const avatar = document.createElement("span");
           avatar.className = "company-avatar";
           avatar.ariaHidden = "true";
@@ -459,12 +459,6 @@ export function bindConversationActivity() {
           const name = document.createElement("strong");
           name.textContent = c.name;
           heading.append(name);
-          if (c.verified) {
-            const badge = document.createElement("span");
-            badge.className = "badge success";
-            badge.textContent = "Verified";
-            heading.append(badge);
-          }
           const preview = document.createElement("p");
           preview.textContent = c.preview;
           const enquiry = document.createElement("small");

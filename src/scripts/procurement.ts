@@ -167,7 +167,7 @@ export function bindProcurementForms() {
               true,
             );
             const link = document.createElement("a");
-            link.href = "/app/enquiries?tab=mine";
+            link.href = "/enquiries?tab=mine";
             link.className = "text-link";
             link.textContent = "Check My Enquiries";
             form.append(link);

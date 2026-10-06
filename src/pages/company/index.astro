@@ -1,0 +1,254 @@
+---
+import VerifiedBadge from "../../components/VerifiedBadge.astro";
+import AppLayout from "../../layouts/AppLayout.astro";
+import { requireWorkspace } from "../../lib/server/access";
+import { companyManager, checked } from "../../lib/server/catalog";
+import { documentTypes } from "../../lib/catalog";
+const state = await requireWorkspace(Astro);
+if (!state.company) return Astro.redirect("/company/new", 303);
+companyManager(state);
+const company = await state.client
+  .from("companies")
+  .select(
+    "id,legal_name,display_name,description,country,verification_status,company_type,email,website",
+  )
+  .eq("id", state.company.id)
+  .single();
+checked(company.error);
+const latest = await state.client
+  .from("company_verifications")
+  .select(
+    "id,status,rejection_reason,submitted_at,verification_documents(id,file_name,document_type,status)",
+  )
+  .eq("company_id", state.company.id)
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .maybeSingle();
+checked(latest.error);
+const verification = latest.data;
+const editable =
+  !verification || ["draft", "rejected"].includes(verification.status);
+---
+
+<AppLayout title="Company profile" active="account" state={state}
+  >{
+    Astro.url.searchParams.get("notice") === "storage-cleanup" && (
+      <p class="form-message">
+        Document removed from verification. Storage cleanup could not be
+        confirmed; contact support if needed.
+      </p>
+    )
+  }<div class="account-grid">
+    <section class="card">
+      <p class="eyebrow">Company information</p><h2>
+        {company.data?.display_name}
+      </h2>{
+        company.data?.verification_status === "verified" ? (
+          <VerifiedBadge />
+        ) : (
+          <span class="badge mt-3">{company.data?.verification_status}</span>
+        )
+      }<dl class="mt-5">
+        <div class="info-row">
+          <dt>Legal name</dt><dd>{company.data?.legal_name}</dd>
+        </div><div class="info-row">
+          <dt>Type</dt><dd>
+            {company.data?.company_type?.replaceAll("_", " & ")}
+          </dd>
+        </div><div class="info-row">
+          <dt>Business email</dt><dd>
+            {company.data?.email ?? "Not provided"}
+          </dd>
+        </div><div class="info-row">
+          <dt>Country</dt><dd>{company.data?.country}</dd>
+        </div>
+      </dl><p class="mt-5">{company.data?.description}</p><div class="actions">
+        <a class="button secondary" href="/company/edit">Edit profile</a><a
+          class="text-link"
+          href="/company/new">Create another company</a
+        >
+      </div>
+    </section>
+    <section class="card">
+      <p class="eyebrow">Company verification</p><h2>Documents & review</h2><p
+        class="help-text"
+      >
+        Company verification is separate from listing moderation. Identity
+        changes can require a fresh review.
+      </p>
+      {
+        verification && (
+          <>
+            <p class="mt-4">
+              <span class="badge">{verification.status}</span>
+            </p>
+            {verification.rejection_reason && (
+              <p class="form-message mt-4">{verification.rejection_reason}</p>
+            )}
+            <ul class="settings-list">
+              {verification.verification_documents.map((doc) => (
+                <li class="py-4">
+                  <h3>{doc.file_name ?? "Document"}</h3>
+                  <p class="help-text">
+                    {doc.document_type.replaceAll("_", " ")} · {doc.status}
+                  </p>
+                  <a class="text-link" href={"/api/media/document/" + doc.id}>
+                    Download private document
+                  </a>
+                  {editable && (
+                    <form
+                      class="form"
+                      data-api-form
+                      method="post"
+                      action="/api/uploads/remove-document"
+                    >
+                      <input
+                        type="hidden"
+                        name="company_id"
+                        value={state.company!.id}
+                      />
+                      <input type="hidden" name="document_id" value={doc.id} />
+                      <label class="checkbox-field">
+                        <input
+                          type="checkbox"
+                          name="confirm"
+                          value="REMOVE"
+                          required
+                        />{" "}
+                        Remove this document
+                      </label>
+                      <p
+                        class="form-message"
+                        data-form-message
+                        role="status"
+                        hidden
+                      />
+                      <button class="button secondary" type="submit">
+                        Confirm removal
+                      </button>
+                    </form>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      }
+      {
+        editable ? (
+          <form
+            class="form"
+            data-document-upload
+            data-verification-id={verification?.id}
+          >
+            <>
+              <input type="hidden" name="company_id" value={state.company.id} />
+              <label class="field">
+                Document type
+                <select name="document_type">
+                  {documentTypes.map((type) => (
+                    <option value={type}>{type.replaceAll("_", " ")}</option>
+                  ))}
+                </select>
+              </label>
+              <label class="field">
+                Choose document
+                <input
+                  type="file"
+                  name="file"
+                  accept="application/pdf,image/jpeg,image/png,image/webp"
+                  required
+                />
+              </label>
+              <p class="help-text">
+                PDF, JPEG, PNG or WebP, smaller than 10 MB. Documents stay
+                private.
+              </p>
+              <p class="form-message" data-form-message role="status" hidden />
+              <button class="button secondary" type="submit">
+                Upload document
+              </button>
+            </>
+          </form>
+        ) : (
+          <p class="help-text mt-5">
+            This review's documents are locked.{" "}
+            {verification?.status === "pending"
+              ? "Your verification is awaiting review."
+              : "Start a new verification to upload current documents."}
+          </p>
+        )
+      }
+      {
+        verification &&
+          editable &&
+          verification.verification_documents.length > 0 && (
+            <form
+              class="form"
+              data-api-form
+              method="post"
+              action="/api/catalog/verification-submit"
+            >
+              <>
+                <input
+                  type="hidden"
+                  name="company_id"
+                  value={state.company.id}
+                />
+                <input
+                  type="hidden"
+                  name="verification_id"
+                  value={verification.id}
+                />
+                <label class="checkbox-field">
+                  <input
+                    name="confirm"
+                    type="checkbox"
+                    value="SUBMIT"
+                    required
+                  />{" "}
+                  Submit current documents for review
+                </label>
+                <p
+                  data-form-message
+                  class="form-message"
+                  role="status"
+                  hidden
+                />
+                <button class="button" type="submit">
+                  Submit verification
+                </button>
+              </>
+            </form>
+          )
+      }
+      {
+        verification &&
+          ["approved", "expired"].includes(verification.status) && (
+            <form class="form" data-prepare-verification>
+              <>
+                <input
+                  type="hidden"
+                  name="company_id"
+                  value={state.company.id}
+                />
+                <p
+                  data-form-message
+                  class="form-message"
+                  role="status"
+                  hidden
+                />
+                <button class="button secondary" type="submit">
+                  Start a new verification
+                </button>
+              </>
+            </form>
+          )
+      }
+    </section>
+  </div></AppLayout
+>
+<script>
+  import { bindDocumentUploads } from "../../scripts/catalog-forms";
+  bindDocumentUploads();
+</script>

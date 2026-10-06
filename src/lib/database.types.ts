@@ -2573,6 +2573,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      get_marketplace_categories: {
+        Args: { p_company_id?: number; p_saved?: boolean };
+        Returns: { name: string }[];
+      };
+      get_marketplace_preview: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       accept_company_invitation: {
         Args: { p_invitation_id: string };
         Returns: number;

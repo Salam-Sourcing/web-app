@@ -1,0 +1,27 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import CompanyForm from "../../components/CompanyForm.astro";
+import { requireWorkspace } from "../../lib/server/access";
+import { companyManager, checked } from "../../lib/server/catalog";
+const state = await requireWorkspace(Astro),
+  company = companyManager(state);
+const result = await state.client
+  .from("companies")
+  .select("*")
+  .eq("id", company.id)
+  .single();
+checked(result.error);
+---
+
+<AppLayout title="Edit company" active="account" state={state}
+  ><section class="card reading">
+    <h2>Company information</h2><p class="help-text">
+      Review changes before saving. Verification may change when identity
+      details are updated.
+    </p>{
+      result.data && (
+        <CompanyForm company={result.data} email={state.user.email ?? ""} />
+      )
+    }
+  </section></AppLayout
+>

@@ -49,7 +49,7 @@ const { data } = Astro.props;
         {
           data.enquiries.map((e) => (
             <li>
-              <a class="settings-link" href={"/app/enquiries/" + e.id}>
+              <a class="settings-link" href={"/enquiries/" + e.id}>
                 <div>
                   <strong>{e.title}</strong>
                   <span>
@@ -69,7 +69,7 @@ const { data } = Astro.props;
         {
           data.deals.map((d) => (
             <li>
-              <a class="settings-link" href={"/app/deals/" + d.id}>
+              <a class="settings-link" href={"/deals/" + d.id}>
                 <div>
                   <strong>{d.product_name}</strong>
                   <span>

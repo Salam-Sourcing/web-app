@@ -22,7 +22,7 @@ export async function dealAction(
       ).error,
     );
     return json({
-      redirect: "/app/suppliers/" + company + "/reviews",
+      redirect: "/suppliers/" + company + "/reviews",
       message: "Review reported.",
     });
   }
@@ -39,7 +39,7 @@ export async function dealAction(
       ).error,
     );
     return json({
-      redirect: "/app/suppliers/" + c.id + "/reviews",
+      redirect: "/suppliers/" + c.id + "/reviews",
       message: "Response saved.",
     });
   }
@@ -126,5 +126,5 @@ export async function dealAction(
       );
     }
   }
-  return json({ redirect: "/app/deals/" + id, message: "Deal updated." });
+  return json({ redirect: "/deals/" + id, message: "Deal updated." });
 }

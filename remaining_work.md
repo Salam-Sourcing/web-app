@@ -1,6 +1,6 @@
 # Salam Sourcing web app — remaining work
 
-Reviewed: **2026-10-05**.
+Reviewed: **2026-10-06**.
 
 This document captures the two in-depth comparisons and the read-only Flutter,
 visual, and hosted-backend review in this conversation. It is the reference
@@ -14,6 +14,21 @@ Phase 6 invitation compatibility and regression tooling are implemented. Browser
 push is prepared but disabled and deferred at the user’s request.
 Complete and verify one phase before starting the next; an implemented screen
 alone does not satisfy its completion gate.
+
+## Public website follow-up — implemented locally
+
+- [x] Make `/` the public marketplace preview and preserve the marketing homepage at `/platform`.
+- [x] Allow search/filter drafting; prompt sign-in on Search, Apply filters and product/company clicks. Preserve selected discovery filters through login.
+- [x] Remove `/app/` from current website URLs while keeping protected legacy redirects.
+- [x] Restrict anonymous database access to public card fields; apply the invoker preview RPC without changing authenticated Flutter contracts.
+- [x] Keep company verification checks on company profiles with an explanation and `/verification` Learn more destination; remove company badges elsewhere.
+- [x] Add `/plans` with exactly three placeholders and correct responsive card/action spacing.
+- [x] Add public-page canonical metadata, staging noindex, a sitemap and production robots rules.
+- [ ] Deploy and accept the new public website on staging with real cross-client login continuation.
+- [ ] At production cutover, align `SITE_URL`, Astro site, callback configuration and Search Console; verify indexable public pages and excluded private pages.
+- [ ] Replace the three placeholders once final plan names, prices and included features are provided.
+
+Evidence, backend migration and SEO limits: [public website follow-up](documentation/public_browse.md).
 
 ## Phase roadmap and progress
 
@@ -887,3 +902,13 @@ Messaging follow-up: the silent HTTP phone-preview send failure is fixed locally
 and an in-page chat photo viewer is implemented. Regression and browser fixture
 evidence is recorded in [Phase 4](documentation/phase_4.md#messaging-follow-up-http-preview-sending-and-photo-viewer).
 Staging deployment and the real web ↔ Flutter messaging acceptance remain open.
+
+Category/photo follow-up (2026-10-06):
+
+- [x] Both clients show **All** plus categories containing visible published listings; empty taxonomy categories are omitted. Public preview and authenticated discovery share the availability query, with supplier/saved scopes on web.
+- [x] Flutter refreshes category availability and resets a removed selection to All. Creation forms retain the full active taxonomy.
+- [x] Flutter chat photos render inline and open a zoomable in-app viewer; private Storage authorization, error/retry states and haptics cover the new controls.
+- [x] Shared migrations applied and checked: 393 backend checks, 104 Flutter tests, clean Flutter analysis, web tests/type checking/build and 348 HTTP checks.
+- [ ] Deploy the updated web client and distribute a new Flutter build; verify a real cross-client photo conversation on devices.
+
+Details: [category filters and Flutter photos](documentation/category_filters_and_chat_photos.md).

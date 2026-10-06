@@ -10,7 +10,7 @@ const { listing } = Astro.props;
 
 <article class="listing-card" data-record-id={listing.id}>
   <div class="listing-picture">
-    <a href={"/app/listings/" + listing.id} aria-label={"View " + listing.name}
+    <a href={"/listings/" + listing.id} aria-label={"View " + listing.name}
       ><Icon name="image" size={36} />{
         listing.has_image && (
           <img
@@ -21,17 +21,13 @@ const { listing } = Astro.props;
           />
         )
       }</a
-    >{
-      listing.is_verified && (
-        <span class="badge verified-overlay">✓ Verified vendor</span>
-      )
-    }
+    >
   </div>
   <div class="listing-card-body">
     <a
       class="eyebrow supplier-link"
-      href={"/app/suppliers/" + listing.company_id}>{listing.vendor_name}</a
-    ><h2><a href={"/app/listings/" + listing.id}>{listing.name}</a></h2>{
+      href={"/suppliers/" + listing.company_id}>{listing.vendor_name}</a
+    ><h2><a href={"/listings/" + listing.id}>{listing.name}</a></h2>{
       listing.category && <p class="help-text">{listing.category}</p>
     }
     <div class="listing-facts">

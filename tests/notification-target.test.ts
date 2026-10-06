@@ -82,10 +82,10 @@ test("saved-search notification resolves its owned record and ignores untrusted 
     entity_type: "saved_search",
     entity_id: 12,
     link_url: "https://evil.invalid",
-    data: { redirect: "/app/deals/99" },
+    data: { redirect: "/deals/99" },
   });
   assert.deepEqual(await notificationTarget(f.context, f.state, 73), {
-    redirect: "/app/account/searches/12",
+    redirect: "/account/searches/12",
     companyChanged: false,
   });
   assert.ok(

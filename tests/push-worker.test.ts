@@ -80,7 +80,7 @@ test("notification click rejects stale recipients and never trusts payload URLs"
     session_id: "session",
     url: "https://attacker.invalid",
   });
-  assert.deepEqual(f.opened, ["/app/notifications/12"]);
+  assert.deepEqual(f.opened, ["/notifications/12"]);
   const stale = fixture({ user_id: "new-user", session_id: "new-session" });
   await stale.click({ id: "12", user_id: "user", session_id: "session" });
   assert.equal(stale.opened.length, 0);

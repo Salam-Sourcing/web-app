@@ -35,7 +35,7 @@ function listingCard(row: ListingCardData) {
   const card = el("article", "listing-card");
   card.dataset.recordId = String(row.id);
   const picture = el("div", "listing-picture");
-  const imageLink = link("/app/listings/" + row.id, "");
+  const imageLink = link("/listings/" + row.id, "");
   imageLink.setAttribute("aria-label", "View " + row.name);
   imageLink.append(el("span", "image-placeholder", "▧"));
   if (row.has_image) {
@@ -48,18 +48,16 @@ function listingCard(row: ListingCardData) {
     imageLink.append(image);
   }
   picture.append(imageLink);
-  if (row.is_verified)
-    picture.append(el("span", "badge verified-overlay", "✓ Verified vendor"));
   const body = el("div", "listing-card-body");
   body.append(
     link(
-      "/app/suppliers/" + row.company_id,
+      "/suppliers/" + row.company_id,
       row.vendor_name,
       "eyebrow supplier-link",
     ),
   );
   const title = el("h2", "");
-  title.append(link("/app/listings/" + row.id, row.name));
+  title.append(link("/listings/" + row.id, row.name));
   body.append(title);
   if (row.category) body.append(el("p", "help-text", row.category));
   const facts = el("div", "listing-facts");
@@ -104,10 +102,8 @@ function supplierCard(row: {
   card.dataset.recordId = String(row.id);
   const heading = el("h2", "");
   if (row.profile) {
-    heading.append(link("/app/suppliers/" + row.id, row.profile.display_name));
+    heading.append(link("/suppliers/" + row.id, row.profile.display_name));
     card.append(heading);
-    if (row.profile.verification_status === "verified")
-      card.append(el("span", "badge success", "Verified supplier"));
     card.append(
       el(
         "p",
@@ -397,7 +393,7 @@ export function bindSavedActions() {
         });
       message.setAttribute("role", "status");
       message.textContent = String(result.message);
-      if (!saved && location.pathname === "/app/saved") {
+      if (!saved && location.pathname === "/saved") {
         button.closest("[data-record-id]")?.remove();
         const feed =
           button.closest("[data-catalog-feed]") ??

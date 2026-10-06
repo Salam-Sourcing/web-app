@@ -48,10 +48,10 @@ if (code || tokenHash) {
         const target = await destination(
           Astro,
           flow === "recovery"
-            ? "/app/account/password"
+            ? "/account/password"
             : flow === "email_change"
-              ? "/app/account/profile"
-              : (Astro.cookies.get("ss-next")?.value ?? "/app/discover"),
+              ? "/account/profile"
+              : (Astro.cookies.get("ss-next")?.value ?? "/discover"),
         );
         Astro.cookies.delete("ss-next", { path: "/" });
         return Astro.redirect(target, 303);

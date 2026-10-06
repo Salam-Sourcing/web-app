@@ -1,0 +1,116 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import { requireWorkspace } from "../../lib/server/access";
+import { activeCompany, checked } from "../../lib/server/catalog";
+import { object, rows, ratio } from "../../lib/account";
+import { AccessError } from "../../lib/security";
+const state = await requireWorkspace(Astro),
+  company = activeCompany(state, undefined, "insights"),
+  days = Number(Astro.url.searchParams.get("days") ?? 30);
+if (![7, 30, 90].includes(days))
+  throw new AccessError(400, "invalid_period", "Choose 7, 30 or 90 days.");
+const r = await state.client.rpc("get_supplier_insights", {
+  p_company_id: company.id,
+  p_days: days,
+});
+checked(r.error);
+const data = object(r.data),
+  listings = rows(data.listings);
+const metrics = [
+  ["Listing views", data.views],
+  ["Direct enquiries", data.enquiries],
+  ["Quotes", data.quotes],
+  ["Accepted quotes", data.accepted_quotes],
+  ["Deals", data.deals],
+  ["Quote acceptance", ratio(data.accepted_quotes, data.quotes)],
+  ["Enquiry conversion", ratio(data.converted_enquiries, data.enquiries)],
+  [
+    "Average first reply",
+    typeof data.response_hours === "number"
+      ? data.response_hours.toFixed(1) + " hours"
+      : "Unavailable",
+  ],
+];
+---
+
+<AppLayout
+  title="Supplier insights"
+  active="account"
+  state={state}
+  description={"Activity for " +
+    company.display_name +
+    " over the last " +
+    days +
+    " days."}
+>
+  <div
+    slot="actions"
+    class="tabs"
+    role="navigation"
+    aria-label="Insights period"
+  >
+    {
+      [7, 30, 90].map((d) => (
+        <a
+          class:list={["button secondary", d === days && "selected"]}
+          aria-current={d === days ? "page" : undefined}
+          href={"?days=" + d}
+        >
+          {d} days
+        </a>
+      ))
+    }
+  </div>
+  <div class="stat-grid">
+    {
+      metrics.map(([label, value]) => (
+        <section class="card">
+          <>
+            <>
+              <p>{label}</p>
+              <h2>{value ?? "Unavailable"}</h2>
+            </>
+          </>
+        </section>
+      ))
+    }
+  </div>
+  <p class="help-text mt-5">
+    Metrics reflect recorded activity within this period. A rate or reply time
+    is unavailable when there is insufficient activity.
+  </p>
+  <section class="card mt-5">
+    <h2>Listing activity</h2><p class="help-text">
+      Latest 100 listings by publication date.
+    </p><div
+      class="table-scroll"
+      tabindex="0"
+      role="region"
+      aria-label="Listing activity"
+    >
+      <table class="comparison-table">
+        <thead
+          ><tr
+            ><th scope="col">Listing</th><th scope="col">Views</th><th
+              scope="col">Enquiries</th
+            ></tr
+          ></thead
+        ><tbody
+          >{
+            listings.map((l) => (
+              <tr>
+                <>
+                  <>
+                    <th scope="row">{l.name}</th>
+                    <td>{l.views}</td>
+                    <td>{l.enquiries}</td>
+                  </>
+                </>
+              </tr>
+            ))
+          }</tbody
+        >
+      </table>
+    </div>{!listings.length && <p>No listing activity yet.</p>}
+  </section>
+</AppLayout>

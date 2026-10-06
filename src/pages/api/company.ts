@@ -34,7 +34,7 @@ export const POST: APIRoute = async (context) => {
       secure: context.url.protocol === "https:",
       maxAge: 60 * 60 * 24 * 30,
     });
-    return json({ redirect: "/app/account", companyChanged: true });
+    return json({ redirect: "/account", companyChanged: true });
   } catch (error) {
     return errorResponse(error);
   }
