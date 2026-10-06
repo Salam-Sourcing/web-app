@@ -267,3 +267,12 @@ client-supplied origin.
 
 Core Phase 1 needed no marketplace schema change. Browser push and eventual
 invitation-email links retain narrow backend/configuration work in Phase 6.
+
+### Flutter key alignment follow-up — 2026-10-05/06 UTC
+
+The replacement public widget key is now also the Flutter CAPTCHA default, local
+build fallback and Xcode Cloud fallback. Example configuration and Auth runbook
+match. Two build-configuration checks and the current 95-test Flutter suite pass.
+Installed clients still need a new release; source alignment does not update their
+embedded widget. Real signup/reset/email-change and final domain rollout remain
+in the launch acceptance checklist.

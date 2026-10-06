@@ -7,6 +7,14 @@ import { taxonomy } from "../../../lib/server/catalog";
 const state = await requireWorkspace(Astro),
   feed = await enquiryFeed(state, Astro.url.searchParams),
   categories = await taxonomy(state);
+const savedParams = new URLSearchParams({
+  kind: "rfq",
+  query: Astro.url.searchParams.get("q") ?? "",
+});
+const selectedCategory = categories
+  .flatMap((c) => c.sub_categories)
+  .find((c) => String(c.id) === Astro.url.searchParams.get("category"));
+if (selectedCategory) savedParams.set("category", selectedCategory.name);
 const link = (page: number) => {
   const p = new URLSearchParams(Astro.url.searchParams);
   p.set("page", String(page));
@@ -42,6 +50,11 @@ const link = (page: number) => {
       </div>
     )
   }
+  <div class="actions mb-5">
+    <a class="text-link" href={"/app/account/searches?" + savedParams}
+      >Save an RFQ search</a
+    >
+  </div>
   <nav class="tabs" aria-label="Enquiry views">
     {
       [

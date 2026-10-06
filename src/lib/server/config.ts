@@ -28,7 +28,7 @@ export function serverConfig() {
 }
 export function callbackUrl(
   request: Request,
-  flow: "signup" | "recovery",
+  flow: "signup" | "recovery" | "email_change",
   state: string,
 ) {
   const config = serverConfig();

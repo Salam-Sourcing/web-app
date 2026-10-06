@@ -1,0 +1,41 @@
+---
+import AppLayout from "../../../layouts/AppLayout.astro";
+import AccountForm from "../../../components/AccountForm.astro";
+import { requireWorkspace } from "../../../lib/server/access";
+import { uuid, object } from "../../../lib/account";
+import { checked } from "../../../lib/server/catalog";
+const state = await requireWorkspace(Astro),
+  id = uuid(Astro.params.id);
+const r = await state.client.rpc("get_company_invitation", {
+  p_invitation_id: id,
+});
+checked(r.error);
+const invitation = object(r.data);
+---
+
+<AppLayout title="Company invitation" active="account" state={state}>
+  <section class="card reading">
+    <h2>Join {invitation.company}</h2><dl>
+      <div class="info-row">
+        <dt>Invited role</dt><dd>{invitation.role}</dd>
+      </div><div class="info-row">
+        <dt>Expires</dt><dd>
+          {new Date(invitation.expires_at).toLocaleString("en-CA")}
+        </dd>
+      </div>
+    </dl>
+    <p class="help-text">
+      You are signed in as {state.user.email}. Acceptance requires the verified
+      email that received this invitation. Company and subscription limits still
+      apply.
+    </p>
+    <AccountForm action="accept-invitation" submit="Accept invitation"
+      ><input type="hidden" name="invitation_id" value={id} /><label
+        class="check-row"
+        ><input type="checkbox" name="confirm" value="ACCEPT" required />I agree
+        to join this company with the role shown above.</label
+      ><a slot="actions" class="text-link" href="/app/account">Cancel</a
+      ></AccountForm
+    >
+  </section>
+</AppLayout>

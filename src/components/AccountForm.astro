@@ -1,0 +1,30 @@
+---
+const {
+  action,
+  company,
+  id,
+  submit = "Save changes",
+  class: css = "",
+  uncertain = false,
+  check = "/app/account",
+} = Astro.props;
+---
+
+<form
+  class:list={["form", css]}
+  data-api-form
+  action={"/api/account/" + action}
+  method="post"
+  data-non-idempotent={uncertain ? "true" : undefined}
+  data-check-href={check}
+>
+  {company && <input type="hidden" name="company_id" value={company} />}
+  {id && <input type="hidden" name="id" value={id} />}
+  <slot />
+  <p class="form-message" data-form-message role="status" hidden></p>
+  <div class="actions">
+    <button class="button secondary" type="submit">{submit}</button><slot
+      name="actions"
+    />
+  </div>
+</form>

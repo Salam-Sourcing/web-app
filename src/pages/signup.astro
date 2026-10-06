@@ -20,7 +20,13 @@ import AuthForm from "../components/AuthForm.astro";
         >
           Use the same account on the website and app.
         </p><AuthForm mode="signup" /><p class="auth-foot">
-          Already have an account? <a class="text-link" href="/login">Log in</a>
+          Already have an account? <a
+            class="text-link"
+            href={"/login?next=" +
+              encodeURIComponent(
+                Astro.url.searchParams.get("next") ?? "/app/discover",
+              )}>Log in</a
+          >
         </p>
       </div>
     </div>

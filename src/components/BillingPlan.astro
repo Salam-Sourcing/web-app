@@ -1,0 +1,64 @@
+---
+import AccountForm from "./AccountForm.astro";
+import type { Row } from "../lib/catalog";
+interface Props {
+  plan: Pick<
+    Row<"subscription_plans">,
+    | "id"
+    | "name"
+    | "description"
+    | "price"
+    | "currency"
+    | "billing_interval"
+    | "max_users"
+    | "max_listings"
+    | "max_enquiries_per_month"
+  >;
+  company: number;
+  subscribed: boolean;
+  current: boolean;
+  pending: boolean;
+}
+const { plan, company, subscribed, current, pending } = Astro.props;
+const price = new Intl.NumberFormat("en-CA", {
+  style: "currency",
+  currency: plan.currency.trim(),
+}).format(plan.price);
+---
+
+<section class="card">
+  <h2>{plan.name}</h2><p>{plan.description}</p><p class="plan-price">
+    {price} / {plan.billing_interval}
+  </p>
+  <p>
+    {plan.max_users ?? "Unlimited"} users · {plan.max_listings ?? "Unlimited"} listings
+    · {plan.max_enquiries_per_month ?? "Unlimited"} enquiries / month
+  </p>
+  {current && <p class="badge">Current plan</p>}
+  {
+    !pending && !current && (
+      <AccountForm
+        action="billing"
+        company={company}
+        submit={subscribed ? "Request plan change" : "Request this plan"}
+        uncertain
+        check="/app/account/billing"
+      >
+        <>
+          <>
+            <input type="hidden" name="plan_id" value={plan.id} />
+            <input
+              type="hidden"
+              name="request_type"
+              value={subscribed ? "change" : "start"}
+            />
+            <label class="check-row">
+              <input type="checkbox" name="confirm" value="REQUEST" required />I
+              confirm this billing request.
+            </label>
+          </>
+        </>
+      </AccountForm>
+    )
+  }
+</section>

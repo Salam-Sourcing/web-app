@@ -148,10 +148,12 @@ const destinations = [
   </body>
 </html>
 <script>
+  import { bindPushLogout } from "../scripts/push-boundary";
   import { bindForms } from "../scripts/forms";
   import { bindSavedActions } from "../scripts/catalog";
   import { bindBoundary } from "../scripts/boundary";
   bindForms();
+  bindPushLogout();
   bindBoundary();
   bindSavedActions();
 </script>

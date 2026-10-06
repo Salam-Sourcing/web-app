@@ -1957,3 +1957,74 @@ summary {
     grid-template-columns: 1fr;
   }
 }
+
+/* Account tools keep action groups aligned and private record text readable. */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.check-row input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin: 3px 0 0;
+  accent-color: var(--primary);
+}
+.account-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 20px;
+}
+.account-item {
+  padding-block: 20px;
+  border-bottom: 1px solid var(--border, #dce0e5);
+  min-width: 0;
+}
+.account-copy {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.notification-unread {
+  border-inline-start: 4px solid var(--primary, #962c38);
+}
+.plan-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-block: 12px;
+}
+.row-actions .form {
+  margin: 0;
+  gap: 8px;
+}
+.row-actions .form-message[hidden] {
+  display: none;
+}
+.account-grid > *,
+.account-plan-grid > *,
+.account-item .field {
+  min-width: 0;
+}
+.account-item input[readonly] {
+  font-size: 0.875rem;
+}
+.tabs .selected {
+  background: var(--primary, #962c38);
+  color: white;
+}
+@media (max-width: 600px) {
+  .row-actions .form {
+    flex: 1 1 140px;
+  }
+  .row-actions .button {
+    width: 100%;
+  }
+  .section-heading {
+    flex-wrap: wrap;
+  }
+}

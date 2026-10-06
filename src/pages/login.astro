@@ -18,8 +18,13 @@ import AuthForm from "../components/AuthForm.astro";
         )
       }
       <AuthForm mode="login" /><p class="auth-foot">
-        New to Salam Sourcing? <a class="text-link" href="/signup"
-          >Create an account</a>
+        New to Salam Sourcing? <a
+          class="text-link"
+          href={"/signup?next=" +
+            encodeURIComponent(
+              Astro.url.searchParams.get("next") ?? "/app/discover",
+            )}>Create an account</a
+        >
       </p>
     </div>
   </section></MainLayout

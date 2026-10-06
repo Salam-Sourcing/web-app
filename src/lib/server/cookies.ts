@@ -10,7 +10,9 @@ export function clearLocalSession(context: APIContext) {
       name.startsWith("ss-auth") ||
       name.startsWith("ss-company-") ||
       name.startsWith("ss-upload-") ||
-      name === "ss-intent"
+      name === "ss-intent" ||
+      name === "ss-next" ||
+      name === "ss-push-token"
     )
       context.cookies.delete(name, {
         path: "/",

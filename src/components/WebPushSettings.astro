@@ -1,0 +1,44 @@
+---
+import { webPushConfig } from "../lib/server/web-push-config";
+const { configured, config, vapidKey } = webPushConfig();
+---
+
+<section
+  class="card reading mt-5"
+  data-web-push
+  data-configured={String(configured)}
+  data-firebase={configured ? JSON.stringify(config) : undefined}
+  data-vapid={configured ? vapidKey : undefined}
+>
+  <h2>Browser message notifications</h2><p class="help-text">
+    Enable notifications on this browser to receive message alerts. Your
+    Messages preference also applies. On iPhone, add the HTTPS website to your
+    Home Screen first.
+  </p>
+  <p data-push-status role="status">
+    {
+      configured
+        ? "Browser notifications are off."
+        : "Browser notifications are awaiting configuration."
+    }
+  </p>
+  <div class="actions mt-4">
+    <button
+      type="button"
+      class="button secondary"
+      data-push-action="enable"
+      disabled={!configured}>Enable notifications</button
+    ><button type="button" class="button secondary" data-push-action="disable"
+      >Disable on this browser</button
+    ><button
+      type="button"
+      class="text-link"
+      data-push-action="test"
+      disabled={!configured}>Send test</button
+    >
+  </div>
+</section>
+<script>
+  import { bindWebPush } from "../scripts/web-push";
+  bindWebPush();
+</script>

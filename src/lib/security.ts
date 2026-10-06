@@ -58,6 +58,7 @@ export function textField(
 
 export async function readMutation(
   request: Request,
+  maxBytes = 16384,
 ): Promise<Record<string, unknown>> {
   if (
     request.headers.get("origin") !== new URL(request.url).origin ||
@@ -82,7 +83,7 @@ export async function readMutation(
     const { value, done } = await reader.read();
     if (done) break;
     total += value.byteLength;
-    if (total > 16384) {
+    if (total > maxBytes) {
       await reader.cancel();
       throw new AccessError(413, "too_large", "The request is too large.");
     }
@@ -170,7 +171,7 @@ export function verifiedCallbackFlow(
   rawCookie: string | undefined,
   state: string | null,
   now = Date.now(),
-): "signup" | "recovery" | null {
+): "signup" | "recovery" | "email_change" | null {
   if (!rawCookie || !state) return null;
   try {
     const value: unknown = JSON.parse(rawCookie);
@@ -185,7 +186,9 @@ export function verifiedCallbackFlow(
       flow.state !== state ||
       typeof flow.expires !== "number" ||
       flow.expires <= now ||
-      (flow.flow !== "signup" && flow.flow !== "recovery")
+      (flow.flow !== "signup" &&
+        flow.flow !== "recovery" &&
+        flow.flow !== "email_change")
     )
       return null;
     return flow.flow;

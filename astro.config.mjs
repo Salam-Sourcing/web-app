@@ -21,7 +21,7 @@ export default defineConfig({
         "form-action 'self'",
         "img-src 'self' data: blob:",
         "font-src 'self'",
-        "connect-src 'self' https://challenges.cloudflare.com",
+        "connect-src 'self' https://challenges.cloudflare.com https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com https://fcm.googleapis.com",
         "frame-src 'self' https://challenges.cloudflare.com",
       ],
       scriptDirective: {

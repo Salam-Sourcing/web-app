@@ -8,19 +8,24 @@ checklist for making the website a complete web client for Salam Sourcing.
 Unchecked items are outstanding web work or acceptance checks, not claims that
 the corresponding Flutter implementation is missing.
 
-The work below is organized into **six dependency-ordered phases**. Phases 1–3 code
+The work below is organized into **six dependency-ordered phases**. Phases 1–5 code
 is implemented and locally verified; their live acceptance gates remain open.
+Phase 6 invitation compatibility and regression tooling are implemented. Browser
+push is prepared but disabled and deferred at the user’s request.
 Complete and verify one phase before starting the next; an implemented screen
 alone does not satisfy its completion gate.
 
 ## Phase roadmap and progress
 
-**Current phase: Phase 4 — implementation delivered; live cross-client acceptance pending.**
-Phases 2–4 were started at the user's request while earlier staging acceptance
-remains open. Phases 5–6 remain pending. See [Phase 1 evidence and setup](documentation/phase_1.md),
+**Current phase: Phases 5–6 — account tools delivered; final live acceptance pending.**
+Later phases were started at the user’s request while earlier staging acceptance
+remains open. Browser push configuration and deployment are deferred. Invitation
+email remains disabled. See [Phase 1 evidence and setup](documentation/phase_1.md),
 [Phase 2 implementation and checks](documentation/phase_2.md), and
 [Phase 3 implementation, UI corrections and checks](documentation/phase_3.md), and
-[Phase 4 deals, reviews, exports and image embeds](documentation/phase_4.md).
+[Phase 4 deals, reviews, exports and image embeds](documentation/phase_4.md),
+[Phase 5 account tools and evidence](documentation/phase_5.md), and
+[Phase 6 integrations and release gates](documentation/phase_6.md).
 
 | Phase | Scope                                                                                                                                       | Depends on                | Completion gate                                                                                                                      |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -126,7 +131,7 @@ the backend reference before promising browser readiness.
       from the automated localhost challenge verification.
 - [ ] Verify CAPTCHA replay rejection against the live protected endpoint. The
       raw LAN IP last returned `110200`; use the working hostname for phone tests.
-- [ ] Align Flutter's public widget key and build defaults with the changed shared
+- [x] Align Flutter's public widget key and build defaults with the changed shared
       Auth provider; account for installed clients still using the previous widget.
       See [existing widget evidence](documentation/phase_1.md#existing-widget-integration-follow-up).
 - [ ] Verify invitation-function origin configuration. Its source defaults to
@@ -548,47 +553,47 @@ company switching already exist; this phase adds their remaining management UI.
 
 ### Profile settings, teams, invitations and billing
 
-- [ ] Implement personal-profile and company-profile settings.
-- [ ] Implement team/member lists, invitation creation/revocation, role changes,
+- [x] Implement personal-profile and company-profile settings.
+- [x] Implement team/member lists, invitation creation/revocation, role changes,
       removal, and existing owner/admin authority rules.
-- [ ] Preview company and assigned role before invitation acceptance.
-- [ ] Preserve verified invited email, expiry, replay/revocation, issuer authority,
+- [x] Preview company and assigned role before invitation acceptance.
+- [x] Preserve verified invited email, expiry, replay/revocation, issuer authority,
       and subscription seat-limit checks.
-- [ ] Provide web links/manual invitation codes and continuation through login/signup
+- [x] Provide web links/manual invitation codes and continuation through login/signup
       without confusing invitation parameters with Auth PKCE `code` parameters.
-- [ ] Implement owner-assigned permission restrictions for listings, sales/chat,
+- [x] Implement owner-assigned permission restrictions for listings, sales/chat,
       procurement/chat, insights, billing, and team administration. Overrides restrict
       role authority; they do not promote members beyond their existing role ceiling.
-- [ ] Keep permission-aware controls consistent with independent backend enforcement.
-- [ ] Show actual plan/status/limits, invoice history, pending plan-change requests,
+- [x] Keep permission-aware controls consistent with independent backend enforcement.
+- [x] Show actual plan/status/limits, invoice history, pending plan-change requests,
       change requests, and cancellation requests. Do not ship preview membership data
       as real account information or imply an unimplemented instant payment checkout.
 
 ### In-app notifications and preferences
 
-- [ ] Implement notification center, unread count, mark-read/all-read, and deletion.
-- [ ] Resolve notification destinations to the exact authorized record; select its
+- [x] Implement notification center, unread count, mark-read/all-read, and deletion.
+- [x] Resolve notification destinations to the exact authorized record; select its
       company when needed and handle records that are no longer available.
-- [ ] Implement message, enquiry, quote, deal, listing-review, and saved-search
+- [x] Implement message, enquiry, quote, deal, listing-review, and saved-search
       preferences, including global saved-search preference and push distinctions.
-- [ ] Treat in-app notification parity separately from the browser-push extension.
-- [ ] Preserve account/company permission revocation and recipient/session validation
+- [x] Treat in-app notification parity separately from the browser-push extension.
+- [x] Preserve account/company permission revocation and recipient/session validation
       when opening notifications or existing conversations.
 
 ### Saved searches, buyer dashboard and supplier insights
 
-- [ ] Save named discovery queries/categories/filters and RFQ queries.
-- [ ] Implement private saved-search lists, editing alert frequency, deleting, and
+- [x] Save named discovery queries/categories/filters and RFQ queries.
+- [x] Implement private saved-search lists, editing alert frequency, deleting, and
       current result navigation; preserve current limits/defaults.
-- [ ] Alerts are initially off; provide explicit hourly/daily opt-in and respect the
+- [x] Alerts are initially off; provide explicit hourly/daily opt-in and respect the
       global preference. Current alerts appear in the in-app center, not email/OS push.
-- [ ] Reuse existing matching/scheduler APIs rather than creating a duplicate worker.
+- [x] Reuse existing matching/scheduler APIs rather than creating a duplicate worker.
 - [x] Implement the selected-company buyer dashboard: full counts plus deadline and
       expected-delivery lists linked to the correct enquiry/deal. Delivered in Phase 4.
-- [ ] Implement supplier insights for 7/30/90 days: listing views, direct enquiries,
+- [x] Implement supplier insights for 7/30/90 days: listing views, direct enquiries,
       quotes, deals, quote acceptance, enquiry conversion, average first reply, and
       per-listing counts.
-- [ ] Preserve aggregate-only privacy, unavailable/zero-denominator states, and
+- [x] Preserve aggregate-only privacy, unavailable/zero-denominator states, and
       current metric limits. Do not imply historical collection before it began.
 
 Manual invitation preview/acceptance and login continuation must work here even
@@ -598,13 +603,14 @@ alerts remain part of this phase and do not require a new worker.
 
 ### Refreshed Flutter support and personal export
 
-- [ ] Verify shared deployment of `customer_support` and `panel_customer_export`;
-      neither was present in the 2026-10-05 hosted function inventory.
-- [ ] Port support-request list, versioned replies, appeal subjects/actions and
+- [x] Verify shared deployment of `customer_support` and `panel_customer_export`;
+      both are present in the refreshed hosted inventory. The original review
+      preceded their deployment; current signatures were inspected before use.
+- [x] Port support-request list, versioned replies, appeal subjects/actions and
       ownership recovery with the same permission and concurrency rules.
-- [ ] Port paginated personal export with bounded pagination, the same sections,
+- [x] Port paginated personal export with bounded pagination, the same sections,
       backend authorization and safe private download behavior.
-- [ ] Keep email support usable while these APIs are unavailable; never show
+- [x] Keep email support usable while these APIs are unavailable; never show
       fixture responses as real submitted support work.
 
 ### Completion gate
@@ -615,8 +621,9 @@ alerts remain part of this phase and do not require a new worker.
       navigation, saved-search frequencies/matching, buyer counts/deadlines and supplier
       metrics against existing APIs. Preserve private aggregate and unavailable states.
 
-**Evidence:** Pending. Record changed paths, checks, results and unresolved blockers
-when this phase is implemented.
+**Evidence:** Account tools implemented and locally checked. See
+[Phase 5 implementation and checks](documentation/phase_5.md). Signed-in hosted
+acceptance with owner/admin/restricted accounts remains open.
 
 ## Phase 6 — browser integrations, full acceptance and launch
 
@@ -636,24 +643,37 @@ configuration and actual recipient delivery. Keep the existing rollout lock unti
 its requirements are satisfied; shipping the port does not authorize enabling it.
 If email stays disabled, record that explicitly rather than claiming email parity.
 
+- [x] Provide `/invite/:uuid` website continuation and compatible HTTPS parsing in
+      Flutter; preserve the existing custom scheme and manual-code fallback.
+- [x] Add HTTPS website and mobile destinations to the prepared email handler.
+      The handler remains disabled and this source update is not deployed.
+- [ ] Verify actual device app opening and hosted delivery. HTTPS universal/app-link
+      association and deferred-install routing are still outside this implementation.
+
 ### Background browser push extension
 
-- [ ] Add an explicit browser registration representation; do not disguise web
+**Deferred at the user’s request.** Checked items below mean source implementation
+and isolated validation only. No push migration/function deployment or real browser
+delivery is claimed. Enable/test controls stay disabled without public configuration.
+
+- [x] Add an explicit browser registration representation; do not disguise web
       registrations as Android/iOS.
-- [ ] Extend the database platform constraint and registration API as necessary.
-- [ ] Preserve account/session ownership, token replacement/removal, revoked-session
+- [x] Extend the database platform constraint and registration API as necessary.
+- [x] Preserve account/session ownership, token replacement/removal, revoked-session
       checks, blocked-company checks, preferences, and logout cleanup.
-- [ ] Configure a Firebase web application and web push credentials.
-- [ ] Implement browser permission handling and a service worker.
-- [ ] Adapt delivery/click destinations to open the correct authorized web record.
-- [ ] Keep notification content generic; private message/file content must not be
+- [ ] Configure a Firebase web application and web push credentials — deferred.
+- [ ] Apply the prepared additive web-push migration and deploy the matching sender
+      in that order, then verify existing Android/iOS delivery before enabling web.
+- [x] Implement browser permission handling and a service worker.
+- [x] Adapt delivery/click destinations to open the correct authorized web record.
+- [x] Keep notification content generic; private message/file content must not be
       exposed in a notification that can outlive logout.
 - [ ] Test foreground/background delivery, permission denial, rotation, logout,
       stale sessions, multiple devices, and supported target browsers.
 
 ### Complete desktop, responsive and accessibility acceptance
 
-- [ ] Implement desktop navigation, an obvious active-company control, listing grids,
+- [x] Implement desktop navigation, an obvious active-company control, listing grids,
       conversation-list/thread columns, wider quote comparison, forms, and dashboards.
 - [ ] Verify keyboard navigation, visible focus, labels, selected semantics, screen
       readers, zoom/large text, RTL layout, wrapping, and horizontal table access.
@@ -686,7 +706,7 @@ parity or describe an implemented but unaccepted integration as proven delivery.
 - [ ] Verify actual plans/invoices/change requests and deletion scheduling/cancellation.
 - [ ] Test two distinct accounts/companies, restricted team members, multiple open
       browser tabs, mobile/desktop browsers, large text/RTL, and interrupted networks.
-- [ ] Run web type/build checks and appropriate behavioral/end-to-end tests; integrate
+- [x] Run web type/build checks and appropriate behavioral/end-to-end tests; integrate
       release checks into CI. Use isolated fixtures and verified cleanup for hosted tests.
 - [ ] Demonstrate browser push and invitation email separately if enabled; function
       deployment/provider acceptance is not proof of recipient delivery.
@@ -702,8 +722,8 @@ redesign.
 
 - [ ] Reconcile relevant shared launch requirements with the current Flutter/admin
       checklists before releasing the website.
-- [ ] Keep mobile signing/store preparation distinct from web implementation work.
-- [ ] Do not assume earlier tests or deployed APIs establish current production
+- [x] Keep mobile signing/store preparation distinct from web implementation work.
+- [x] Do not assume earlier tests or deployed APIs establish current production
       readiness, backup restoration, or real email/push delivery.
 
 Persistent offline drafts/outbox and broader marketplace analytics are optional
@@ -858,3 +878,7 @@ verification. New Flutter tap controls must include haptic feedback.
 Keep phase order, dependencies and completion gates current. Mark a phase complete
 only after its required checklist items and acceptance gate have evidence. Work
 that spans phases must be rechecked as each dependent feature is introduced.
+
+Phase 6 evidence and the exact deferred rollout sequence are recorded in
+[phase_6.md](documentation/phase_6.md). Local checks and fixture layouts do not
+replace the cross-platform acceptance matrix above.

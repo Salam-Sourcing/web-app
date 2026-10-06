@@ -18,12 +18,13 @@ if (code || tokenHash) {
   )
     failed = true;
   else {
-    Astro.cookies.delete("ss-auth-flow", {
-      path: "/",
-      httpOnly: true,
-      sameSite: "lax",
-      secure: Astro.url.protocol === "https:",
-    });
+    if (flow !== "email_change")
+      Astro.cookies.delete("ss-auth-flow", {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: Astro.url.protocol === "https:",
+      });
     try {
       const client = requireClient(Astro);
       const result = code
@@ -31,10 +32,28 @@ if (code || tokenHash) {
         : await client.auth.verifyOtp({ token_hash: tokenHash!, type: flow });
       if (result.error) failed = true;
       else {
+        const current =
+          flow === "email_change" ? await client.auth.getUser() : null;
+        if (
+          flow === "email_change" &&
+          current?.data.user &&
+          !current.data.user.new_email
+        )
+          Astro.cookies.delete("ss-auth-flow", {
+            path: "/",
+            httpOnly: true,
+            sameSite: "lax",
+            secure: Astro.url.protocol === "https:",
+          });
         const target = await destination(
           Astro,
-          flow === "recovery" ? "/app/account/password" : "/app/discover",
+          flow === "recovery"
+            ? "/app/account/password"
+            : flow === "email_change"
+              ? "/app/account/profile"
+              : (Astro.cookies.get("ss-next")?.value ?? "/app/discover"),
         );
+        Astro.cookies.delete("ss-next", { path: "/" });
         return Astro.redirect(target, 303);
       }
     } catch {
@@ -58,7 +77,8 @@ if (code || tokenHash) {
       <div class="actions">
         <a class="button secondary" href="/login">Back to log in</a><a
           class="text-link"
-          href="/forgot-password">Request a recovery link</a>
+          href="/forgot-password">Request a recovery link</a
+        >
       </div>
     </div>
   </section>

@@ -187,7 +187,10 @@ export async function post(
       String(result.code ?? ""),
     );
   }
-  if (result.signedOut) broadcast("logout");
+  if (result.signedOut) {
+    broadcast("logout");
+    window.dispatchEvent(new Event("salam-logout"));
+  }
   if (result.companyChanged || result.contextChanged) broadcast("context");
   return result;
 }
@@ -272,7 +275,7 @@ export function bindForms() {
             message(
               form,
               form.dataset.nonIdempotent === "true"
-                ? "Submission could not be confirmed. Check the enquiry before submitting another quote."
+                ? "Submission could not be confirmed. Check the current records before submitting again."
                 : "Creation could not be confirmed. Check Account and your company selector before creating another company.",
               "error",
             );
@@ -281,7 +284,7 @@ export function bindForms() {
             link.className = "text-link";
             link.textContent =
               form.dataset.nonIdempotent === "true"
-                ? "Check the enquiry"
+                ? "Check current records"
                 : "Check your companies";
             form.append(link);
             return;

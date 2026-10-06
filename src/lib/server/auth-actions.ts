@@ -25,6 +25,14 @@ export async function handleAuthAction(
   if (action === "logout") {
     let revoked = false;
     try {
+      const pushToken = context.cookies.get("ss-push-token")?.value;
+      if (pushToken) {
+        try {
+          await context.locals.supabase?.rpc("unregister_push_token", {
+            p_token: pushToken,
+          });
+        } catch {}
+      }
       const result = await context.locals.supabase?.auth.signOut({
         scope: "local",
       });
@@ -73,6 +81,13 @@ export async function handleAuthAction(
   const captcha = () =>
     config.captchaEnabled ? textField(input, "captcha_token", 2048) : undefined;
   const startEmailFlow = (flow: "signup" | "recovery") => {
+    context.cookies.set("ss-next", safeNext(input.next), {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: context.url.protocol === "https:",
+      maxAge: 3600,
+    });
     const state = crypto.randomUUID();
     const url = config.callback(context.request, flow, state);
     context.cookies.set(

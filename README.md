@@ -18,12 +18,18 @@ Phase 4 adds deal lists and buyer dashboard links, delivery milestones, private
 immutable deal documents, separate party completion confirmations, verified
 reviews/responses/reporting, and quote/deal PDF previews/downloads/sharing.
 Messages now embed authorized image attachments inline with download links.
-Insights, team administration and remaining account tools are in later phases.
+Phase 5 adds profile/email settings, teams/invitations/permission restrictions,
+actual plans/invoices/change requests, in-app notifications/preferences, saved
+searches, supplier insights, support replies/appeals/ownership requests and private
+personal export. Phase 6 adds compatible website invitation links, Flutter key
+alignment and a CI production smoke runner. Browser push code is prepared but
+configuration and backend rollout are deferred; invitation email stays disabled.
 
 Progress: [remaining_work.md](remaining_work.md).
 Setup, database findings and acceptance: [Phase 1 notes](documentation/phase_1.md),
 [Phase 2 evidence](documentation/phase_2.md), [Phase 3 evidence](documentation/phase_3.md),
-and [Phase 4 evidence](documentation/phase_4.md).
+[Phase 4 evidence](documentation/phase_4.md), [Phase 5 evidence](documentation/phase_5.md),
+and [Phase 6 integrations and release gates](documentation/phase_6.md).
 
 ## Local development
 
@@ -52,9 +58,8 @@ credential validation for a deliberately nonexistent test account. An invalid
 token still returns `captcha_failed`, confirming provider CAPTCHA remains enabled.
 The earlier `invalid-input-secret` blocker is resolved. The raw IP host still
 returns `110200`; the user confirmed mobile login works after the hostname URL
-handoff. Live replay rejection remains pending. Align Flutter's widget/build configuration with
-the shared provider before release; its committed configuration still references
-the previous site key.
+handoff. Live replay rejection remains pending. Flutter's source/build defaults
+now match the replacement key; installed clients still require an updated release.
 
 Mobile testing over a raw LAN IP can load the UI but may fail Turnstile before
 password verification. This was reproduced at `192.168.1.229` with Turnstile
@@ -88,6 +93,7 @@ browser where they were requested.
 npm run check
 npm test
 npm run build
+npm run test:release
 ```
 
 With the dev server running, `npm run test:http` checks public pages, protected
@@ -131,3 +137,11 @@ bucket. It requires no new backend migration or Flutter changes. Browser-native
 PDF printing and file sharing depend on browser support; download/open controls
 remain available. Five-minute deal-document URLs stay valid until expiry, as in
 Flutter. Live cross-client release acceptance remains pending.
+
+Phase 5 reuses the current hosted account/support/export APIs. Email changes must
+be confirmed in the originating browser; the actual secure dual-confirmation
+provider flow still needs acceptance. Phase 6 browser push would require the
+prepared additive migration followed by its matching sender deployment. Neither
+was deployed in this continuation. Leave the Firebase public configuration blank
+to keep enable/test controls disabled; see the Phase 6 rollout sequence before
+enabling it. No service-account/private key belongs in web configuration.

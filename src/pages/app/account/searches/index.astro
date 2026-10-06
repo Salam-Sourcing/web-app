@@ -1,0 +1,96 @@
+---
+import AppLayout from "../../../../layouts/AppLayout.astro";
+import AccountForm from "../../../../components/AccountForm.astro";
+import { requireWorkspace } from "../../../../lib/server/access";
+import { savedSearches } from "../../../../lib/server/account";
+const initial: Record<string, unknown> = {};
+for (const key of [
+  "query",
+  "category",
+  "location",
+  "currency",
+  "min_price",
+  "max_price",
+  "max_moq",
+  "max_lead_days",
+  "sort",
+]) {
+  const value = Astro.url.searchParams.get(key);
+  if (value && value.length <= 200) initial[key] = value;
+}
+if (Astro.url.searchParams.get("verified") === "true") initial.verified = true;
+const kind = Astro.url.searchParams.get("kind") === "rfq" ? "rfq" : "listing";
+const state = await requireWorkspace(Astro),
+  items = await savedSearches(state);
+---
+
+<AppLayout
+  title="Saved searches"
+  active="account"
+  state={state}
+  description="Save up to 25 searches. Matching alerts appear in your notification center."
+>
+  <a slot="actions" class="text-link" href="/app/discover">Discover</a>
+  <section class="card reading">
+    <h2>Save a search</h2><AccountForm action="search-save" submit="Save search"
+      ><label class="field"
+        >Name<input name="name" required maxlength="80" /></label
+      ><label class="field"
+        >Type<select name="kind"
+          ><option value="listing" selected={kind === "listing"}
+            >Listings</option
+          ><option selected={kind === "rfq"} value="rfq">Public RFQs</option
+          ></select
+        ></label
+      ><label class="field"
+        >Search phrase<input
+          name="query"
+          value={String(initial.query ?? "")}
+          maxlength="200"
+        /></label
+      ><input
+        type="hidden"
+        name="filters"
+        value={JSON.stringify(initial)}
+      /><label class="check-row"
+        ><input name="alerts" type="checkbox" />Enable matching alerts</label
+      ><label class="field"
+        >Alert frequency<select name="frequency"
+          ><option value="daily">Daily</option><option value="hourly"
+            >Hourly</option
+          ></select
+        ></label
+      ></AccountForm
+    >
+  </section>
+  <div class="account-plan-grid mt-5">
+    {
+      items.map((s) => (
+        <section class="card">
+          <>
+            <>
+              <h2>
+                <a class="text-link" href={"/app/account/searches/" + s.id}>
+                  {s.name}
+                </a>
+              </h2>
+              <p>
+                {s.kind === "rfq" ? "Public RFQs" : "Listings"} ·{" "}
+                {s.alerts ? s.frequency + " alerts" : "Alerts off"}
+              </p>
+              <AccountForm
+                action="search-delete"
+                id={s.id}
+                submit="Delete search"
+              />
+            </>
+          </>
+        </section>
+      ))
+    }
+  </div>
+  <script>
+    import { bindSearchForms } from "../../../../scripts/account";
+    bindSearchForms();
+  </script>
+</AppLayout>

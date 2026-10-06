@@ -2681,6 +2681,21 @@ export type Database = {
         Args: { p_attempt: string; p_invitation_id: string; p_sent: boolean };
         Returns: undefined;
       };
+      register_web_push_token: {
+        Args: { p_token: string; p_origin: string; p_previous_token?: string };
+        Returns: undefined;
+      };
+      get_web_push_delivery: {
+        Args: { p_notification_id: number };
+        Returns: {
+          token: string;
+          user_id: string;
+          session_id: string;
+          conversation_id: number;
+          is_test: boolean;
+          web_origin: string;
+        }[];
+      };
       get_buyer_dashboard: { Args: { p_company_id: number }; Returns: Json };
       get_company_invitation: {
         Args: { p_invitation_id: string };
