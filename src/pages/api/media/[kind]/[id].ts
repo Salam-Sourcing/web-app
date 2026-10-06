@@ -1,3 +1,4 @@
+import { dealDocumentUrl } from "../../../../lib/server/deals";
 import { enquiry, conversation } from "../../../../lib/server/procurement";
 import type { APIRoute } from "astro";
 import { requireWorkspace } from "../../../../lib/server/access";
@@ -87,6 +88,16 @@ export const GET: APIRoute = async (context) => {
       path = row.data.storage_path;
       name = row.data.file_name;
       bucket = "enquiry-attachments";
+    } else if (kind === "deal") {
+      const url = await dealDocumentUrl(state, id, serverConfig().url);
+      return new Response(null, {
+        status: 303,
+        headers: {
+          Location: url,
+          "Cache-Control": "private, no-store",
+          "Referrer-Policy": "no-referrer",
+        },
+      });
     } else if (kind === "message") {
       const row = await state.client
         .from("message_attachments")
@@ -128,11 +139,16 @@ export const GET: APIRoute = async (context) => {
       );
     const headers = new Headers({
       "Content-Type": result.data.type,
+      "X-Content-Type-Options": "nosniff",
       "Cache-Control": "private, no-store",
       "Content-Security-Policy":
         "default-src 'none'; sandbox; frame-ancestors 'none'",
     });
-    if (kind !== "listing")
+    const inlineImage =
+      kind === "message" &&
+      context.url.searchParams.get("inline") === "1" &&
+      imageTypes.includes(result.data.type as (typeof imageTypes)[number]);
+    if (kind !== "listing" && !inlineImage)
       headers.set(
         "Content-Disposition",
         "attachment; filename=" +

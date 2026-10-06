@@ -48,7 +48,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("Referrer-Policy", "no-referrer");
-  headers.set("X-Frame-Options", "DENY");
+  // Only authenticated PDF exports explicitly permit their same-origin preview.
+  headers.set(
+    "X-Frame-Options",
+    headers.get("Content-Type") === "application/pdf" &&
+      headers.get("X-Frame-Options") === "SAMEORIGIN"
+      ? "SAMEORIGIN"
+      : "DENY",
+  );
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   // Preserve Astro's generated script/style hashes on production HTML.
   // APIs, redirects and development responses receive a fallback.

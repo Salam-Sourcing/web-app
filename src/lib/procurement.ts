@@ -235,6 +235,7 @@ export type ThreadMessage = {
   attachments: {
     id: number;
     file_name: string;
+    file_mime_type: string | null;
     file_size_bytes: number | null;
   }[];
 };

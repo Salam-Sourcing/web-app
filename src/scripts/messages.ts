@@ -1,3 +1,4 @@
+import { messageImage } from "../lib/deals";
 import { post, ApiError } from "./forms";
 import {
   mergeMessages,
@@ -39,6 +40,30 @@ export function bindThread() {
       (x) => Number(x.dataset.messageId),
     ),
   );
+  history.addEventListener(
+    "error",
+    (event) => {
+      const img = event.target;
+      if (
+        img instanceof HTMLImageElement &&
+        img.matches("[data-message-image]")
+      ) {
+        img.hidden = true;
+        const fallback = img.nextElementSibling as HTMLElement | null;
+        if (fallback) fallback.hidden = false;
+      }
+    },
+    true,
+  );
+  history
+    .querySelectorAll<HTMLImageElement>("[data-message-image]")
+    .forEach((img) => {
+      if (img.complete && !img.naturalWidth) {
+        img.hidden = true;
+        const fallback = img.nextElementSibling as HTMLElement | null;
+        if (fallback) fallback.hidden = false;
+      }
+    });
   const get = async (params = new URLSearchParams()) => {
     const response = await fetch("/api/messages/" + id + "?" + params, {
       credentials: "same-origin",
@@ -76,6 +101,9 @@ export function bindThread() {
         el.dataset.sentAt = m.sent_at;
         el.className = "message-bubble" + (m.outgoing ? " outgoing" : "");
       }
+      const signature = JSON.stringify(m);
+      if (el.dataset.renderedMessage === signature) continue;
+      el.dataset.renderedMessage = signature;
       el.replaceChildren();
       if (m.content) {
         const p = document.createElement("p");
@@ -84,15 +112,41 @@ export function bindThread() {
         el.append(p);
       }
       for (const a of m.attachments) {
+        const attachment = document.createElement("div");
+        attachment.className = "message-attachment";
+        if (messageImage(a.file_mime_type)) {
+          const open = document.createElement("a"),
+            img = document.createElement("img"),
+            fallback = document.createElement("span");
+          open.className = "message-image-link";
+          open.href = "/api/media/message/" + a.id + "?inline=1";
+          open.target = "_blank";
+          open.rel = "noopener noreferrer";
+          open.ariaLabel = "Open image: " + (a.file_name ?? "attachment");
+          img.className = "message-image";
+          img.src = open.href;
+          img.alt = a.file_name ?? "Message image";
+          img.loading = "lazy";
+          img.decoding = "async";
+          img.dataset.messageImage = "";
+          fallback.className = "image-fallback";
+          fallback.hidden = true;
+          fallback.textContent =
+            "Image unavailable. Use the download link or retry.";
+          open.append(img, fallback);
+          attachment.append(open);
+        }
         const link = document.createElement("a");
         link.href = "/api/media/message/" + a.id;
         link.className = "attachment-link";
         link.textContent =
+          "Download " +
           a.file_name +
           (a.file_size_bytes
             ? " (" + Math.ceil(a.file_size_bytes / 1024) + " KB)"
             : "");
-        el.append(link);
+        attachment.append(link);
+        el.append(attachment);
       }
       if (!m.content && !m.attachments.length) {
         const p = document.createElement("p");

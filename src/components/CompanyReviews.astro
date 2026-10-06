@@ -1,0 +1,22 @@
+---
+import CompanyReviewCard from "./CompanyReviewCard.astro";
+import type { CompanyReview } from "../lib/deals";
+interface Props {
+  rows: CompanyReview[];
+  company: number;
+  activeCompany?: number;
+}
+const { rows, company, activeCompany } = Astro.props;
+---
+
+<div class="review-list">
+  {
+    rows.map((review) => (
+      <CompanyReviewCard
+        review={review}
+        company={company}
+        activeCompany={activeCompany}
+      />
+    ))
+  }
+</div>

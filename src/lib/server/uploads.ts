@@ -1,3 +1,5 @@
+import { editableDeal, dealBundle } from "./deals";
+import { dealFileTypes } from "../deals";
 import { enquiry, buyer, conversation, sendText } from "./procurement";
 import { requestId, openEnquiry } from "../procurement";
 import type { APIContext } from "astro";
@@ -13,7 +15,7 @@ import {
 } from "./catalog";
 type Intent = {
   user: string;
-  kind: "listing" | "document" | "enquiry" | "message";
+  kind: "listing" | "document" | "enquiry" | "message" | "deal";
   target: number;
   path: string;
   mime: string;
@@ -32,7 +34,7 @@ export function ownedIntent(value: unknown, user: string): value is Intent {
   const i = value as Intent;
   if (
     i.user !== user ||
-    !["listing", "document", "enquiry", "message"].includes(i.kind) ||
+    !["listing", "document", "enquiry", "message", "deal"].includes(i.kind) ||
     !Number.isSafeInteger(i.target) ||
     i.target <= 0 ||
     !Number.isFinite(i.created) ||
@@ -43,7 +45,9 @@ export function ownedIntent(value: unknown, user: string): value is Intent {
   if (
     !(i.kind === "listing"
       ? imageTypes.includes(i.mime as (typeof imageTypes)[number])
-      : [...imageTypes, "application/pdf"].includes(i.mime))
+      : i.kind === "deal"
+        ? dealFileTypes.includes(i.mime as (typeof dealFileTypes)[number])
+        : [...imageTypes, "application/pdf"].includes(i.mime))
   )
     return false;
   const extension =
@@ -113,6 +117,8 @@ async function target(
       );
     return row;
   }
+  if (intent.kind === "deal")
+    return editableDeal(state, intent.target, expected);
   return editableVerification(state, intent.target, expected);
 }
 export async function prepareUpload(
@@ -121,7 +127,7 @@ export async function prepareUpload(
 ) {
   const state = await requireWorkspace(context),
     kind = textField(input, "kind", 10);
-  if (!["listing", "document", "enquiry", "message"].includes(kind))
+  if (!["listing", "document", "enquiry", "message", "deal"].includes(kind))
     throw new AccessError(400, "invalid_upload", "Choose a valid upload.");
   const id = positiveId(input.target_id);
   await target(
@@ -140,7 +146,9 @@ export async function prepareUpload(
   if (
     !(kind === "listing"
       ? imageTypes.includes(mime as (typeof imageTypes)[number])
-      : [...imageTypes, "application/pdf"].includes(mime))
+      : kind === "deal"
+        ? dealFileTypes.includes(mime as (typeof dealFileTypes)[number])
+        : [...imageTypes, "application/pdf"].includes(mime))
   )
     throw new AccessError(400, "file_type", "This file type is unsupported.");
   if (kind === "listing") {
@@ -277,8 +285,14 @@ export async function attachUpload(context: APIContext, form: FormData) {
     recorded ?? (ownedIntent(candidate, state.user.id) ? candidate : undefined);
   if (!intent || Date.now() - intent.created > 7 * 86400000)
     throw new AccessError(409, "upload_expired", "Prepare this upload again.");
-  await target(state, intent, form.get("company_id"));
-  if (file.type !== intent.mime || file.name.length > 200)
+  // A committed document can still be reconciled after the deal completes.
+  if (intent.kind === "deal")
+    await dealBundle(state, intent.target, form.get("company_id"));
+  else await target(state, intent, form.get("company_id"));
+  if (
+    file.type !== intent.mime ||
+    file.name.length > (intent.kind === "deal" ? 255 : 200)
+  )
     throw new AccessError(
       400,
       "file_type",
@@ -308,23 +322,51 @@ export async function attachUpload(context: APIContext, form: FormData) {
             .eq("enquiry_id", intent.target)
             .eq("storage_path", intent.path)
             .maybeSingle()
-        : intent.kind === "message"
+        : intent.kind === "deal"
           ? await state.client
-              .from("message_attachments")
-              .select("id")
-              .eq("file_url", intent.path)
+              .from("deal_documents")
+              .select("id,deal_id,file_name,file_mime_type,file_size_bytes")
+              .eq("deal_id", intent.target)
+              .eq("storage_path", intent.path)
               .maybeSingle()
-          : await state.client
-              .from("verification_documents")
-              .select("id")
-              .eq("company_verification_id", intent.target)
-              .eq("file_url", intent.path)
-              .maybeSingle();
+          : intent.kind === "message"
+            ? await state.client
+                .from("message_attachments")
+                .select("id")
+                .eq("file_url", intent.path)
+                .maybeSingle()
+            : await state.client
+                .from("verification_documents")
+                .select("id")
+                .eq("company_verification_id", intent.target)
+                .eq("file_url", intent.path)
+                .maybeSingle();
   checked(existing.error);
   if (existing.data) {
+    if (intent.kind === "deal") {
+      const row = existing.data as {
+        deal_id?: number;
+        file_name?: string;
+        file_mime_type?: string;
+        file_size_bytes?: number;
+      };
+      if (
+        row.deal_id !== intent.target ||
+        row.file_name !== file.name ||
+        row.file_mime_type !== intent.mime ||
+        row.file_size_bytes !== bytes.length
+      )
+        throw new AccessError(
+          409,
+          "document_unconfirmed",
+          "Refresh this deal before retrying the document.",
+        );
+    }
     context.cookies.delete(cookieName(intent.key), options(context));
     return json({ id: existing.data.id, attached: true });
   }
+  if (intent.kind === "deal")
+    await editableDeal(state, intent.target, form.get("company_id"));
   if (!recorded)
     throw new AccessError(409, "upload_expired", "Prepare this upload again.");
   let displayOrder = 0;
@@ -426,6 +468,42 @@ export async function attachUpload(context: APIContext, form: FormData) {
       file_mime_type: intent.mime,
       file_size_bytes: bytes.length,
     });
+  } else if (intent.kind === "deal") {
+    checked(
+      (
+        await state.client
+          .from("deal_documents")
+          .upsert(
+            {
+              deal_id: intent.target,
+              uploaded_by_user_id: state.user.id,
+              storage_path: intent.path,
+              file_name: file.name,
+              file_mime_type: intent.mime,
+              file_size_bytes: bytes.length,
+            },
+            { onConflict: "storage_path", ignoreDuplicates: true },
+          )
+      ).error,
+    );
+    const confirmed = await state.client
+      .from("deal_documents")
+      .select("id,deal_id,file_name,file_mime_type,file_size_bytes")
+      .eq("storage_path", intent.path)
+      .maybeSingle();
+    checked(confirmed.error);
+    if (
+      !confirmed.data ||
+      confirmed.data.deal_id !== intent.target ||
+      confirmed.data.file_name !== file.name ||
+      confirmed.data.file_mime_type !== intent.mime ||
+      confirmed.data.file_size_bytes !== bytes.length
+    )
+      throw new AccessError(
+        409,
+        "document_unconfirmed",
+        "Refresh this deal before retrying the document.",
+      );
   } else
     checked(
       (
@@ -596,7 +674,9 @@ export function uploadBucket(kind: Intent["kind"]) {
       ? "company-verification-documents"
       : kind === "enquiry"
         ? "enquiry-attachments"
-        : "message-attachments";
+        : kind === "deal"
+          ? "deal-documents"
+          : "message-attachments";
 }
 export async function removeEnquiryFile(
   context: APIContext,

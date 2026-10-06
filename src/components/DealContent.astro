@@ -1,0 +1,363 @@
+---
+import type { DealBundle, ReviewState } from "../lib/deals";
+import { stages, nextMilestone } from "../lib/deals";
+import { money, dateLabel } from "../lib/procurement";
+interface Props {
+  bundle: DealBundle;
+  review?: ReviewState;
+  reviewError?: string;
+  company: number;
+}
+const { bundle, review, reviewError, company } = Astro.props;
+const d = bundle.deal,
+  p = bundle.progress,
+  next = nextMilestone(d, p.stage, company);
+const active = ["agreed", "in_progress"].includes(d.status);
+const actor = (id: number) =>
+  id === d.buyer_company_id
+    ? bundle.buyer
+    : id === d.supplier_company_id
+      ? bundle.supplier
+      : "Company";
+---
+
+<section class="card deal-summary">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">
+        {
+          company === d.buyer_company_id
+            ? "Buying from " + bundle.supplier
+            : "Supplying to " + bundle.buyer
+        }
+      </p><h2>{d.product_name}</h2>
+    </div><span class:list={["badge", { success: d.status === "completed" }]}
+      >{d.status.replaceAll("_", " ")}</span>
+  </div>
+  <dl class="deal-facts">
+    <div><dt>Buyer</dt><dd>{bundle.buyer}</dd></div><div>
+      <dt>Supplier</dt><dd>{bundle.supplier}</dd>
+    </div><div>
+      <dt>Agreed value</dt><dd>{money(d.deal_value_estimate, d.currency)}</dd>
+    </div><div><dt>Agreed</dt><dd>{dateLabel(d.agreed_at)}</dd></div>
+  </dl>
+  <a class="text-link" href={"/app/enquiries/" + d.enquiry_id}
+    >View enquiry #{d.enquiry_id} & quotes</a
+  >
+</section>
+<div class="deal-grid">
+  <div class="stack">
+    <section class="card">
+      <div class="section-heading">
+        <h2>Delivery progress</h2><span class="badge">{p.stage}</span>
+      </div>
+      <ol class="deal-milestones" aria-label="Delivery milestones">
+        {
+          stages.map((stage, index) => (
+            <li
+              class:list={[
+                {
+                  done:
+                    index <= stages.indexOf(p.stage as (typeof stages)[number]),
+                },
+              ]}
+              aria-current={stage === p.stage ? "step" : undefined}
+            >
+              <>
+                <span aria-hidden="true">{index + 1}</span>
+                <strong>{stage[0].toUpperCase() + stage.slice(1)}</strong>
+                <small>
+                  {stage === "received"
+                    ? "Buyer"
+                    : stage === "agreed"
+                      ? "Both companies"
+                      : "Supplier"}
+                </small>
+              </>
+            </li>
+          ))
+        }
+      </ol>
+      <dl>
+        <div class="info-row">
+          <dt>Expected delivery</dt><dd>{p.expected_delivery ?? "Not set"}</dd>
+        </div><div class="info-row">
+          <dt>Tracking / reference</dt><dd>
+            {p.tracking_reference ?? "Not set"}
+          </dd>
+        </div>
+      </dl>
+      {
+        next ? (
+          <form
+            class="form"
+            data-api-form
+            action="/api/deals/advance"
+            method="post"
+          >
+            <h3>{next === "received" ? "Confirm receipt" : "Mark " + next}</h3>
+            <>
+              <input type="hidden" name="deal_id" value={d.id} />
+              <input type="hidden" name="company_id" value={company} />
+              <input type="hidden" name="stage" value={next} />
+            </>
+            <label class="field">
+              Shared note
+              <textarea
+                name="note"
+                maxlength="1000"
+                rows="3"
+                placeholder="Add an update for the other company"
+              />
+            </label>
+            <div class="form-grid">
+              <>
+                <label class="field">
+                  Expected delivery
+                  <input
+                    name="delivery"
+                    type="date"
+                    value={p.expected_delivery ?? ""}
+                  />
+                </label>
+                <label class="field">
+                  Tracking / reference
+                  <input
+                    name="tracking"
+                    maxlength="200"
+                    value={p.tracking_reference ?? ""}
+                  />
+                </label>
+              </>
+            </div>
+            <label class="check">
+              <input name="confirm" type="checkbox" value="CONFIRM" required />I
+              confirm{" "}
+              {next === "received"
+                ? "the goods or services have been received"
+                : "this milestone is complete"}
+              .
+            </label>
+            <>
+              <button class="button">
+                {next === "received" ? "Confirm receipt" : "Mark " + next}
+              </button>
+              <p data-form-message hidden role="status" />
+            </>
+          </form>
+        ) : (
+          <p class="help-text mt-4">
+            {active
+              ? p.stage === "received"
+                ? "Receipt recorded. Each company confirms completion separately below."
+                : "Waiting for the other company’s next delivery update."
+              : "Delivery updates are closed for this " + d.status + " deal."}
+          </p>
+        )
+      }
+    </section>
+    <section class="card">
+      <h2>Milestone history</h2>
+      {
+        bundle.events.length ? (
+          <ol class="deal-history">
+            {bundle.events.map((event) => (
+              <li>
+                <div class="section-heading">
+                  <strong>
+                    {event.stage[0].toUpperCase() + event.stage.slice(1)}
+                  </strong>
+                  <time datetime={event.created_at}>
+                    {dateLabel(event.created_at)}
+                  </time>
+                </div>
+                <p class="help-text">{actor(event.company_id)}</p>
+                {event.note && <p class="preserve-lines mt-2">{event.note}</p>}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p class="muted mt-4">No delivery updates yet.</p>
+        )
+      }
+      {
+        bundle.events.length === 100 && (
+          <p class="help-text mt-4">Showing the latest 100 milestones.</p>
+        )
+      }
+    </section>
+  </div>
+  <aside class="stack">
+    <section class="card">
+      <h2>Completion & review</h2><p class="help-text mt-3">
+        Receipt and completion are separate. Confirm only when your company has
+        fulfilled its obligations and the agreed goods, services and payment are
+        complete.
+      </p>
+      <ul class="completion-list">
+        <li>
+          <strong>{bundle.buyer}</strong><span
+            >{
+              d.buyer_completed_at
+                ? "Confirmed " + dateLabel(d.buyer_completed_at)
+                : "Awaiting confirmation"
+            }</span>
+        </li><li>
+          <strong>{bundle.supplier}</strong><span
+            >{
+              d.supplier_completed_at
+                ? "Confirmed " + dateLabel(d.supplier_completed_at)
+                : "Awaiting confirmation"
+            }</span>
+        </li>
+      </ul>
+      {
+        review?.can_confirm && (
+          <form
+            class="form"
+            data-api-form
+            action="/api/deals/complete"
+            method="post"
+          >
+            <>
+              <input type="hidden" name="company_id" value={company} />
+              <input type="hidden" name="deal_id" value={d.id} />
+              <label class="check">
+                <input
+                  type="checkbox"
+                  name="confirm"
+                  value="CONFIRM"
+                  required
+                />
+                My company’s obligations are complete. This confirmation cannot
+                be undone.
+              </label>
+              <button class="button secondary">Confirm completion</button>
+              <p data-form-message hidden role="status" />
+            </>
+          </form>
+        )
+      }
+      {
+        review?.review_id ? (
+          <p class="form-message success">
+            Your company has reviewed this deal.
+          </p>
+        ) : review?.can_review ? (
+          <form
+            class="form"
+            data-api-form
+            action="/api/deals/review"
+            method="post"
+          >
+            <>
+              <h3>Review {review.reviewed_company_name}</h3>
+              <p class="help-text">
+                Verified transaction · {review.product_name}
+              </p>
+              <input type="hidden" name="company_id" value={company} />
+              <input type="hidden" name="deal_id" value={d.id} />
+              <label class="field">
+                Rating
+                <select name="rating" required>
+                  <option value="">Choose a rating</option>
+                  {[5, 4, 3, 2, 1].map((n) => (
+                    <option value={n}>
+                      {n} {n === 1 ? "star" : "stars"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label class="field">
+                Your review
+                <textarea name="review" required maxlength="2000" rows="4" />
+              </label>
+              <p class="help-text">
+                Your review will appear on the other company’s profile. Each
+                company can review a deal once.
+              </p>
+              <button class="button">Publish review</button>
+              <p data-form-message hidden role="status" />
+            </>
+          </form>
+        ) : (
+          <p class="help-text mt-4">
+            {["cancelled", "disputed"].includes(d.status)
+              ? "Reviews are unavailable for cancelled or disputed deals."
+              : "Reviews unlock after both companies confirm completion, subject to company permissions."}
+          </p>
+        )
+      }
+      {
+        reviewError && (
+          <p class="form-message" role="alert">
+            {reviewError}{" "}
+            <a class="text-link" href={"/app/deals/" + d.id}>
+              Retry eligibility check
+            </a>
+          </p>
+        )
+      }
+    </section>
+    <section class="card">
+      <h2>Shared documents</h2><p class="help-text mt-3">
+        Private to the buyer and accepted supplier. Other bidders cannot access
+        these files.
+      </p>
+      <ul class="deal-files">
+        {
+          bundle.documents.map((a) => (
+            <li>
+              <a
+                class="attachment-link"
+                href={"/api/media/deal/" + a.id}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {a.file_name}
+                <span>Open document ↗</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      {!bundle.documents.length && <p class="muted mt-3">No documents yet.</p>}
+      {
+        active && (
+          <details class="mt-4">
+            <>
+              <summary>Add a document</summary>
+              <form class="form" data-file-form data-kind="deal">
+                <>
+                  <input type="hidden" name="company_id" value={company} />
+                  <input type="hidden" name="target_id" value={d.id} />
+                  <label class="field">
+                    PDF or image
+                    <input
+                      type="file"
+                      accept="application/pdf,image/jpeg,image/png"
+                      required
+                    />
+                  </label>
+                  <p class="help-text">
+                    PDF, JPEG or PNG, up to 10 MB. Attached documents cannot be
+                    replaced or deleted.
+                  </p>
+                  <button class="button secondary">Attach document</button>
+                  <p data-form-message hidden role="status" />
+                </>
+              </form>
+            </>
+          </details>
+        )
+      }
+    </section>
+    <section class="card">
+      <h2>Business record</h2><p class="help-text mt-3">
+        This summary is not a payment invoice, receipt or proof of delivery.
+      </p><a
+        class="button secondary mt-4"
+        href={"/app/deals/" + d.id + "/export"}>Preview & export PDF</a>
+    </section>
+  </aside>
+</div>

@@ -1,0 +1,92 @@
+---
+import { money, dateLabel } from "../lib/procurement";
+type Dashboard = {
+  open_enquiries: number;
+  pending_quotes: number;
+  active_deals: number;
+  enquiries: {
+    id: number;
+    title: string;
+    status: string;
+    quote_deadline: string | null;
+    quotes: number;
+  }[];
+  deals: {
+    id: number;
+    product_name: string;
+    stage: string;
+    currency: string;
+    deal_value_estimate: number | null;
+    expected_delivery: string | null;
+  }[];
+};
+
+interface Props {
+  data: Dashboard;
+}
+const { data } = Astro.props;
+---
+
+<div class="stat-grid mb-6">
+  {
+    [
+      [data.open_enquiries, "Open enquiries"],
+      [data.pending_quotes, "Pending quotes"],
+      [data.active_deals, "Active deals"],
+    ].map(([value, label]) => (
+      <div class="card">
+        <p class="eyebrow">{label}</p>
+        <h2>{value}</h2>
+      </div>
+    ))
+  }
+</div>
+<div class="deal-grid">
+  <>
+    <section class="card">
+      <h2>Upcoming enquiry deadlines</h2>
+      <ul class="settings-list">
+        {
+          data.enquiries.map((e) => (
+            <li>
+              <a class="settings-link" href={"/app/enquiries/" + e.id}>
+                <div>
+                  <strong>{e.title}</strong>
+                  <span>
+                    {e.quotes} quotes · {dateLabel(e.quote_deadline)}
+                  </span>
+                </div>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      {!data.enquiries.length && <p class="muted mt-4">No open enquiries.</p>}
+    </section>
+    <section class="card">
+      <h2>Active deals</h2>
+      <ul class="settings-list">
+        {
+          data.deals.map((d) => (
+            <li>
+              <a class="settings-link" href={"/app/deals/" + d.id}>
+                <div>
+                  <strong>{d.product_name}</strong>
+                  <span>
+                    {d.stage} · {money(d.deal_value_estimate, d.currency)} ·
+                    Expected {d.expected_delivery ?? "not set"}
+                  </span>
+                </div>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      {!data.deals.length && <p class="muted mt-4">No active deals.</p>}
+    </section>
+  </>
+</div>
+<p class="help-text mt-5">
+  Shows the next 50 enquiries and 50 active deals. Counts include all matching
+  company records.
+</p>

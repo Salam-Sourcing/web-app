@@ -530,7 +530,12 @@ test("timestamp/ID pagination removes private sender identity and exposes only g
         is_deleted: false,
         sent_at: "2026-01-01T00:00:00.123456Z",
         message_attachments: [
-          { id: 4, file_name: "photo.png", file_size_bytes: 12 },
+          {
+            id: 4,
+            file_name: "photo.png",
+            file_mime_type: "image/png",
+            file_size_bytes: 12,
+          },
         ],
       },
     ],
@@ -551,6 +556,7 @@ test("timestamp/ID pagination removes private sender identity and exposes only g
     ),
   );
   assert.equal(page.rows[0].attachments[0].id, 4);
+  assert.equal(page.rows[0].attachments[0].file_mime_type, "image/png");
   assert.ok(!("file_url" in page.rows[0].attachments[0]));
 });
 test("Phase 3 upload journals preserve immutable owner-scoped paths and bucket limits", () => {

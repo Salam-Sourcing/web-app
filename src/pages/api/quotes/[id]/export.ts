@@ -36,10 +36,10 @@ export const GET: APIRoute = async (context) => {
         "export_too_large",
         "Export quotes individually for this enquiry with more than 500 quotes.",
       );
-    const summaries = await companySummaries(
-      state,
-      result.data.map((x) => x.supplier_company_id),
-    );
+    const summaries = await companySummaries(state, [
+      e.buyer_company_id,
+      ...result.data.map((x) => x.supplier_company_id),
+    ]);
     const base64 = inter.slice(inter.indexOf(",") + 1),
       fontBytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
     const bytes = await quotePdf(
@@ -51,15 +51,19 @@ export const GET: APIRoute = async (context) => {
     return new Response(bytes as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/pdf",
+        "X-Frame-Options": "SAMEORIGIN",
         "Content-Disposition":
-          'attachment; filename="enquiry-' +
+          (context.url.searchParams.get("preview") === "1"
+            ? "inline"
+            : "attachment") +
+          '; filename="enquiry-' +
           id +
           (single ? "-quote-" + positiveId(single) : "-quotes") +
           '.pdf"',
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
         "Content-Security-Policy":
-          "default-src 'none'; sandbox; frame-ancestors 'none'",
+          "default-src 'none'; sandbox; frame-ancestors 'self'",
       },
     });
   } catch (e) {

@@ -15,11 +15,12 @@ alone does not satisfy its completion gate.
 
 ## Phase roadmap and progress
 
-**Current phase: Phase 3 — implementation delivered; live cross-client acceptance pending.**
-Phases 2 and 3 were started at the user's request while earlier staging acceptance
-remains open. Phases 4–6 remain pending. See [Phase 1 evidence and setup](documentation/phase_1.md),
+**Current phase: Phase 4 — implementation delivered; live cross-client acceptance pending.**
+Phases 2–4 were started at the user's request while earlier staging acceptance
+remains open. Phases 5–6 remain pending. See [Phase 1 evidence and setup](documentation/phase_1.md),
 [Phase 2 implementation and checks](documentation/phase_2.md), and
-[Phase 3 implementation, UI corrections and checks](documentation/phase_3.md).
+[Phase 3 implementation, UI corrections and checks](documentation/phase_3.md), and
+[Phase 4 deals, reviews, exports and image embeds](documentation/phase_4.md).
 
 | Phase | Scope                                                                                                                                       | Depends on                | Completion gate                                                                                                                      |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -114,6 +115,20 @@ the backend reference before promising browser readiness.
       appropriately.
 - [ ] Verify Turnstile hostname configuration for the intended web domain. The
       Flutter CAPTCHA configuration currently defaults to `https://test.salamsourcing.com/`.
+- [x] Integrate the user-provided web widget `0x4AAAAAAFO7STkIlGsSXpd_` into
+      local/example configuration and reset/remove each form's widget after its
+      protected request. CAPTCHA lifecycle tests cover fresh retry tokens and failures.
+- [x] Verify the replacement widget passes a fresh real localhost challenge and
+      reaches Supabase credential validation, while an invalid token remains
+      rejected with `captcha_failed`. The provider secret blocker is resolved.
+- [x] Verify mobile login: the user confirmed it works after the provider-secret
+      update and hostname URL handoff. This is user-reported acceptance, separate
+      from the automated localhost challenge verification.
+- [ ] Verify CAPTCHA replay rejection against the live protected endpoint. The
+      raw LAN IP last returned `110200`; use the working hostname for phone tests.
+- [ ] Align Flutter's public widget key and build defaults with the changed shared
+      Auth provider; account for installed clients still using the previous widget.
+      See [existing widget evidence](documentation/phase_1.md#existing-widget-integration-follow-up).
 - [ ] Verify invitation-function origin configuration. Its source defaults to
       `https://test.salamsourcing.com`; the effective runtime origin was not inspected.
 - [x] Keep invitation delivery disabled until the existing sender/rollout requirements
@@ -471,27 +486,38 @@ Preserve separate deal-document authorization and all existing actor/state rules
 
 ### Deal lifecycle, private files, reviews and PDFs
 
-- [ ] Open the correct deal from enquiry details or the buyer dashboard.
-- [ ] Implement sequential milestones: agreed → preparing → shipped → received.
-- [ ] Enforce supplier preparation/shipment and buyer receipt actions.
-- [ ] Show shared notes, actor/company history, timestamps, expected delivery,
+- [x] Open the correct deal from enquiry details or the buyer dashboard.
+- [x] Implement sequential milestones: agreed → preparing → shipped → received.
+- [x] Enforce supplier preparation/shipment and buyer receipt actions.
+- [x] Show shared notes, actor/company history, timestamps, expected delivery,
       tracking/reference, and current state.
-- [ ] Handle stale/duplicate transitions and completed/cancelled deal restrictions.
-- [ ] Keep receipt separate from both parties' completion confirmations.
-- [ ] Implement separate buyer/supplier completion confirmations and resulting
+- [x] Handle stale/duplicate transitions and completed/cancelled deal restrictions.
+- [x] Keep receipt separate from both parties' completion confirmations.
+- [x] Implement separate buyer/supplier completion confirmations and resulting
       review eligibility.
-- [ ] Use the separate private deal-document bucket; documents must not become
+- [x] Use the separate private deal-document bucket; documents must not become
       accessible to other RFQ bidders.
-- [ ] Preserve PDF/JPEG/PNG and 10 MB deal-document limits, upload restrictions,
+- [x] Preserve PDF/JPEG/PNG and 10 MB deal-document limits, upload restrictions,
       attachment immutability, and five-minute signed URLs.
-- [ ] Implement company reviews, transaction verification labels, reviewed-item
+- [x] Implement company reviews, transaction verification labels, reviewed-item
       information, ratings/text, company responses, editing responses, and reporting.
-- [ ] Preserve the one-review/eligibility rules enforced by the existing APIs.
-- [ ] Generate, preview, download/print/share quote and deal PDFs using browser
+- [x] Preserve the one-review/eligibility rules enforced by the existing APIs.
+- [x] Generate, preview, download/print/share quote and deal PDFs using browser
       equivalents, preserving identities, currencies, terms, expiry, generation time,
       pagination, long content, and Inter font rendering.
-- [ ] Keep exported summaries labelled as business records; they are not payment
+- [x] Keep exported summaries labelled as business records; they are not payment
       invoices, receipts, or delivery proof. Export/sharing must be explicit.
+
+### Message image embeds and UI corrections
+
+- [x] Embed JPEG/PNG/WebP attachments inline in both initial message history and
+      subsequent live/older-history updates; keep explicit download/open actions.
+- [x] Authorize every image request using the selected company and private Storage
+      policies, without exposing raw paths or reusable image signed tokens.
+- [x] Show image failure fallback, keep PDF attachments as downloads, preserve image
+      aspect ratio and avoid reloading unchanged images during message refreshes.
+- [x] Check deal, document, review, dashboard and export layouts at mobile/tablet/
+      desktop widths. Wrap long names and five-tab navigation without page overflow.
 
 ### Completion gate
 
@@ -501,8 +527,16 @@ Preserve separate deal-document authorization and all existing actor/state rules
       intended, duplicate/stale transitions fail safely, responses/reporting work, and
       quote/deal PDFs retain correct values, labels and long-content pagination.
 
-**Evidence:** Pending. Record changed paths, checks, results and unresolved blockers
-when this phase is implemented.
+**Evidence:** [Phase 4 notes](documentation/phase_4.md): hosted function/Storage/RLS
+contracts rechecked; no backend, Flutter or customer-data changes. Web **93 tests**,
+**367** isolated backend regression checks, development **232** and production
+**250** HTTP assertions passed; Astro check/build passed. Isolated browser fixtures
+verified receipt vs completion, both-party review eligibility, response editing,
+inline images, cancelled-state restrictions and responsive layouts. PDF pages were
+rendered and their identities, values, terms and disclaimers extracted and checked.
+
+The live web ↔ Flutter completion gate and real-device share/print acceptance remain
+open. Deploy the web source before treating this as a released feature.
 
 ## Phase 5 — teams, account tools and productivity
 
@@ -549,8 +583,8 @@ company switching already exist; this phase adds their remaining management UI.
 - [ ] Alerts are initially off; provide explicit hourly/daily opt-in and respect the
       global preference. Current alerts appear in the in-app center, not email/OS push.
 - [ ] Reuse existing matching/scheduler APIs rather than creating a duplicate worker.
-- [ ] Implement the selected-company buyer dashboard: full counts plus deadline and
-      expected-delivery lists linked to the correct enquiry/deal.
+- [x] Implement the selected-company buyer dashboard: full counts plus deadline and
+      expected-delivery lists linked to the correct enquiry/deal. Delivered in Phase 4.
 - [ ] Implement supplier insights for 7/30/90 days: listing views, direct enquiries,
       quotes, deals, quote acceptance, enquiry conversion, average first reply, and
       per-listing counts.

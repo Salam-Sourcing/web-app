@@ -303,6 +303,7 @@ export async function messagePage(
         : r.message_attachments.map((a) => ({
             id: a.id,
             file_name: a.file_name ?? "Attachment",
+            file_mime_type: a.file_mime_type,
             file_size_bytes: a.file_size_bytes,
           })),
     })),

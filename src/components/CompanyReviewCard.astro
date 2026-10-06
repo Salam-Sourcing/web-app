@@ -1,0 +1,94 @@
+---
+import type { CompanyReview } from "../lib/deals";
+import { dateLabel } from "../lib/procurement";
+interface Props {
+  review: CompanyReview;
+  company: number;
+  activeCompany?: number;
+}
+const { review: r, company, activeCompany } = Astro.props;
+---
+
+<article class="card review-card">
+  <div class="section-heading">
+    <div>
+      <h2>{r.reviewer_name}</h2><p class="help-text">
+        {r.reviewer_role} · {dateLabel(r.created_at)}
+      </p>
+    </div><span class="review-rating" aria-label={r.rating + " out of 5 stars"}
+      ><span aria-hidden="true">★</span> {r.rating}/5</span>
+  </div>
+  <div class="row-actions mt-3">
+    <span class="badge success">Verified transaction</span><span
+      class="help-text">{r.product_name}</span>
+  </div>
+  <p class="preserve-lines mt-4">{r.review_text}</p>
+  {
+    r.response_text && (
+      <div class="review-response">
+        <h3>Company response</h3>
+        <p class="preserve-lines mt-2">{r.response_text}</p>
+        <p class="help-text mt-2">{dateLabel(r.responded_at)}</p>
+      </div>
+    )
+  }
+  {
+    r.can_respond && activeCompany === company && (
+      <details class="mt-4">
+        <summary>
+          {r.response_text ? "Edit response" : "Respond to review"}
+        </summary>
+        <form
+          class="form"
+          data-api-form
+          action="/api/deals/respond"
+          method="post"
+        >
+          <input type="hidden" name="company_id" value={company} />
+          <input type="hidden" name="review_id" value={r.id} />
+          <label class="field">
+            Public company response
+            <textarea name="response" maxlength="2000" rows="4" required>
+              {r.response_text ?? ""}
+            </textarea>
+          </label>
+          <button class="button secondary">Save response</button>
+          <p data-form-message hidden role="status" />
+        </form>
+      </details>
+    )
+  }
+  <details class="review-report">
+    <>
+      <summary>Report review</summary>
+      <form class="form" data-api-form action="/api/deals/report" method="post">
+        <>
+          <input type="hidden" name="review_id" value={r.id} />
+          <input type="hidden" name="reviewed_company_id" value={company} />
+          <label class="field">
+            Reason
+            <select name="reason" required>
+              <>
+                <option value="">Choose a reason</option>
+                <option value="spam_scam">Spam</option>
+                <option value="misleading">
+                  Fraud or misleading content
+                </option>
+                <option value="harassment">Harassment</option>
+                <option value="prohibited">Inappropriate content</option>
+                <option value="other">Other</option>
+              </>
+            </select>
+          </label>
+          <label class="field">
+            Details
+            <textarea name="description" maxlength="2000" rows="3" required
+            ></textarea>
+          </label>
+          <button class="button secondary">Submit report</button>
+          <p data-form-message hidden role="status"></p>
+        </>
+      </form>
+    </>
+  </details>
+</article>

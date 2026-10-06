@@ -94,6 +94,19 @@ const items = [
                   </div>
                 </>
               </dl>
+              <div class="actions mt-5">
+                <>
+                  <a class="button secondary" href="/app/deals">
+                    Company deals
+                  </a>
+                  <a
+                    class="text-link"
+                    href={"/app/suppliers/" + state.company.id + "/reviews"}
+                  >
+                    Company reviews & responses
+                  </a>
+                </>
+              </div>
               <h3 class="mt-5">Your permissions</h3>
               <div class="permission-list">
                 {state.permissions.length ? (

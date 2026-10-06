@@ -1,0 +1,48 @@
+---
+import { messageImage } from "../lib/deals";
+interface Props {
+  attachment: {
+    id: number;
+    file_name: string | null;
+    file_mime_type: string | null;
+    file_size_bytes: number | null;
+  };
+}
+const { attachment: a } = Astro.props,
+  url = "/api/media/message/" + a.id;
+---
+
+<div class="message-attachment">
+  {
+    messageImage(a.file_mime_type) && (
+      <a
+        class="message-image-link"
+        href={url + "?inline=1"}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={"Open image: " + (a.file_name ?? "attachment")}
+      >
+        <>
+          <img
+            class="message-image"
+            src={url + "?inline=1"}
+            alt={a.file_name ?? "Message image"}
+            loading="lazy"
+            decoding="async"
+            data-message-image
+          />
+          <span class="image-fallback" hidden>
+            Image unavailable. Use the download link or retry.
+          </span>
+        </>
+      </a>
+    )
+  }
+  <a class="attachment-link" href={url}
+    >Download {a.file_name ?? "attachment"}{
+      a.file_size_bytes
+        ? " (" + Math.ceil(a.file_size_bytes / 1024) + " KB)"
+        : ""
+    }</a
+  >
+</div>

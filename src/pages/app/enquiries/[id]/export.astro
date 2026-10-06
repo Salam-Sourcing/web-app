@@ -1,0 +1,52 @@
+---
+import AppLayout from "../../../../layouts/AppLayout.astro";
+import { requireWorkspace } from "../../../../lib/server/access";
+import { enquiry } from "../../../../lib/server/procurement";
+import { positiveId } from "../../../../lib/security";
+const state = await requireWorkspace(Astro),
+  id = positiveId(Astro.params.id);
+await enquiry(state, id);
+const single = Astro.url.searchParams.get("quote"),
+  quote = single ? positiveId(single) : null;
+const url = "/api/quotes/" + id + "/export" + (quote ? "?quote=" + quote : ""),
+  preview = url + (quote ? "&" : "?") + "preview=1";
+---
+
+<AppLayout
+  title={quote ? "Quote #" + quote + " export" : "Quote comparison export"}
+  active="enquiries"
+  state={state}
+>
+  <a slot="actions" class="button secondary" href={"/app/enquiries/" + id}
+    >Back to enquiry</a
+  >
+  <section
+    class="card"
+    data-pdf-export
+    data-url={url}
+    data-filename={"salam-enquiry-" + id + "-quotes.pdf"}
+  >
+    <p class="help-text">
+      Business summary only. This is not an invoice, payment receipt or proof of
+      delivery. Prices keep their original currencies.
+    </p><div class="actions mt-4">
+      <a class="button" href={url}>Download PDF</a><a
+        class="button secondary"
+        href={preview}
+        target="_blank"
+        rel="noopener noreferrer">Open / print PDF ↗</a
+      ><button class="button secondary" data-share type="button" hidden
+        >Share PDF</button>
+    </div><p data-export-status hidden role="status"></p><iframe
+      class="pdf-preview"
+      title="Quote PDF preview"
+      src={preview}></iframe><p class="help-text">
+      If your browser cannot display this preview, use Download PDF or Open /
+      print PDF.
+    </p>
+  </section>
+</AppLayout>
+<script>
+  import { bindPdfShare } from "../../../../scripts/deals";
+  bindPdfShare();
+</script>

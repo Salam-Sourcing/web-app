@@ -254,7 +254,7 @@ export async function procurementAction(
         checked(accepted.error);
         return json({
           deal_id: accepted.data,
-          redirect: "/app/enquiries/" + e.id,
+          redirect: "/app/deals/" + positiveId(accepted.data),
           message: "Quote accepted.",
         });
       }

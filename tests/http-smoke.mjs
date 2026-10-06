@@ -84,6 +84,12 @@ for (const path of [
   "/app/messages",
   "/app/messages/1",
   "/app/account/insights",
+  "/app/deals",
+  "/app/deals/1",
+  "/app/deals/1/export",
+  "/app/enquiries/dashboard",
+  "/app/enquiries/1/export",
+  "/app/suppliers/1/reviews",
 ]) {
   const response = await request(path);
   check(response.status === 303, path + " rejects unauthenticated access");
@@ -115,6 +121,9 @@ for (const path of [
   "/api/uploads/recover",
   "/api/uploads/remove-document",
   "/api/uploads/remove-enquiry",
+  ...["advance", "complete", "review", "respond", "report"].map(
+    (x) => "/api/deals/" + x,
+  ),
   ...[
     "save-enquiry",
     "review",
@@ -146,6 +155,11 @@ for (const path of [
   "/api/media/document/1",
   "/api/media/enquiry/1",
   "/api/media/message/1",
+  "/api/media/message/1?inline=1",
+  "/api/media/deal/1",
+  "/api/deals/1/export",
+  "/api/deals/1/export?preview=1",
+  "/api/quotes/1/export?preview=1",
   "/api/messages/1",
   "/api/messages/stream",
   "/api/messages/conversations",

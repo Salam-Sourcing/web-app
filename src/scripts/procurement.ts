@@ -9,7 +9,7 @@ const say = (form: HTMLFormElement, text: string, error = false) => {
 };
 export async function attachFile(
   file: File,
-  kind: "enquiry" | "message",
+  kind: "enquiry" | "message" | "deal",
   target: number,
   company: string,
   key?: string,
@@ -46,15 +46,22 @@ export async function attachFile(
   }
   return result;
 }
-export function validatePicked(file: File) {
+export function validatePicked(file: File, kind?: string) {
   if (
     !["image/jpeg", "image/png", "image/webp", "application/pdf"].includes(
       file.type,
     ) ||
     !file.size ||
-    file.size >= 10 * 1024 * 1024
+    (kind === "deal" && file.type === "image/webp") ||
+    (kind === "deal"
+      ? file.size > 10 * 1024 * 1024
+      : file.size >= 10 * 1024 * 1024)
   )
-    throw new Error("Choose JPEG, PNG, WebP or PDF files smaller than 10 MB.");
+    throw new Error(
+      kind === "deal"
+        ? "Choose PDF, JPEG or PNG files up to 10 MB."
+        : "Choose JPEG, PNG, WebP or PDF files smaller than 10 MB.",
+    );
 }
 export function bindProcurementForms() {
   document
@@ -90,7 +97,7 @@ export function bindProcurementForms() {
             [],
         );
         try {
-          files.forEach(validatePicked);
+          files.forEach((file) => validatePicked(file));
         } catch (e) {
           say(form, (e as Error).message, true);
           return;
@@ -195,7 +202,7 @@ export function bindProcurementForms() {
           form.querySelector<HTMLInputElement>("input[type=file]")?.files?.[0];
         if (!file) return;
         try {
-          validatePicked(file);
+          validatePicked(file, form.dataset.kind);
         } catch (e) {
           say(form, (e as Error).message, true);
           return;
@@ -228,7 +235,7 @@ export function bindProcurementForms() {
             );
           await attachFile(
             file,
-            form.dataset.kind as "enquiry" | "message",
+            form.dataset.kind as "enquiry" | "message" | "deal",
             Number(data.target_id),
             String(data.company_id),
             key,

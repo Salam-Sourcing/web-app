@@ -42,7 +42,14 @@ function loadCaptcha(): Promise<void> {
     }, 15000);
     script.onload = () => {
       clearTimeout(timer);
-      resolve();
+      if (window.turnstile) resolve();
+      else {
+        script.remove();
+        captchaLoader = undefined;
+        reject(
+          new Error("Unable to load security verification. Please retry."),
+        );
+      }
     };
     script.onerror = () => {
       clearTimeout(timer);
@@ -54,27 +61,50 @@ function loadCaptcha(): Promise<void> {
   });
   return captchaLoader;
 }
-async function freshCaptcha(
+export type CaptchaChallenge = {
+  token?: string;
+  cleanup: () => void;
+};
+export async function freshCaptcha(
   form: HTMLFormElement,
-): Promise<string | undefined> {
+): Promise<CaptchaChallenge> {
   if (form.dataset.captchaEnabled !== "true" || !form.dataset.captcha)
-    return undefined;
+    return { cleanup: () => {} };
   if (!form.dataset.siteKey)
     throw new Error("Security verification is unavailable. Contact support.");
   await loadCaptcha();
-  const container = form.querySelector<HTMLElement>(
-    "[data-captcha-container]",
-  )!;
+  const container = form.querySelector<HTMLElement>("[data-captcha-container]");
+  if (!container)
+    throw new Error("Security verification is unavailable. Contact support.");
   return new Promise((resolve, reject) => {
     let widget: string | undefined;
     let settled = false;
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned || widget === undefined) return;
+      cleaned = true;
+      // Siteverify consumes a token once. Retain this form's widget until the
+      // protected request finishes, then reset/remove it before enabling retry.
+      try {
+        window.turnstile?.reset(widget);
+      } catch {
+        // Cleanup must not change the protected request's result.
+      }
+      try {
+        window.turnstile?.remove(widget);
+      } catch {
+        container.replaceChildren();
+      }
+    };
     const finish = (error?: string, token?: string) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      if (widget) window.turnstile?.remove(widget);
-      if (error) reject(new Error(error));
-      else resolve(token);
+      if (error) {
+        // Also handles a callback fired synchronously inside render().
+        queueMicrotask(cleanup);
+        reject(new Error(error));
+      } else resolve({ token, cleanup });
     };
     const timer = window.setTimeout(
       () => finish("Security verification expired. Please try again."),
@@ -86,12 +116,32 @@ async function freshCaptcha(
         action: form.dataset.captcha,
         size: "compact",
         execution: "execute",
+        "response-field": false,
+        retry: "never",
+        "refresh-expired": "never",
+        "refresh-timeout": "never",
         callback: (token: string) =>
-          token && token.length <= 2048
+          typeof token === "string" && token.trim() && token.length <= 2048
             ? finish(undefined, token)
             : finish("Security verification failed. Please retry."),
-        "error-callback": () => {
-          finish("Security verification failed. Please retry.");
+        "error-callback": (code: string) => {
+          const configurationErrors: Record<string, string> = {
+            "110100":
+              "Security verification is misconfigured. Contact support.",
+            "110110":
+              "Security verification is misconfigured. Contact support.",
+            "110200":
+              "Security verification is not enabled for this website address. Contact support.",
+            "400020":
+              "Security verification is misconfigured. Contact support.",
+            "400070": "Security verification is unavailable. Contact support.",
+          };
+          const message =
+            configurationErrors[code] ??
+            (code === "200500"
+              ? "Unable to load security verification. Check your connection or content blocker and retry."
+              : "Security verification failed. Please retry.");
+          finish(message + (/^\d{6}$/.test(code) ? ` (${code})` : ""));
           return true;
         },
         "expired-callback": () =>
@@ -99,7 +149,7 @@ async function freshCaptcha(
         "timeout-callback": () =>
           finish("Security verification timed out. Please retry."),
       });
-      window.turnstile!.execute(widget);
+      if (!settled) window.turnstile!.execute(widget);
     } catch {
       finish("Unable to start security verification. Please retry.");
     }
@@ -183,9 +233,10 @@ export function bindForms() {
             : "Working…",
           "pending",
         );
+        let challenge: CaptchaChallenge | undefined;
         try {
-          const token = await freshCaptcha(form);
-          if (token) data.captcha_token = token;
+          challenge = await freshCaptcha(form);
+          if (challenge.token) data.captcha_token = challenge.token;
           const result = await post(form.getAttribute("action")!, data);
           const redirect = result.redirect
             ? new URL(result.redirect, location.origin)
@@ -243,6 +294,7 @@ export function bindForms() {
             "error",
           );
         } finally {
+          challenge?.cleanup();
           form.dataset.busy = "false";
           form.removeAttribute("aria-busy");
           buttons.forEach(

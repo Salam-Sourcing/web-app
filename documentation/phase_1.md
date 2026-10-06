@@ -132,6 +132,103 @@ the same boundaries; those surfaces do not exist yet.
 
 ## Staging configuration and live acceptance
 
+### Mobile LAN login follow-up
+
+- Reproduced the reported verification failure on `http://192.168.1.229:4321/login`
+  with dummy credentials. Turnstile returned `110200` (domain not authorized),
+  before any password verification.
+- The form now explains hostname/key configuration errors and iframe connection
+  failures instead of asking users to repeatedly retry a configuration problem.
+  CAPTCHA remains enabled; no Supabase or Cloudflare settings were changed.
+- Verification: the updated browser message includes the observed `110200`;
+  all 93 tests pass and Astro check has no errors or warnings (one existing hint).
+- Remaining: authorize a specific mobile-testing hostname in Turnstile and
+  permit that exact host in the development server, then prove a real challenge
+  and login on the phone. The user authorized Cloudflare access, but the connected
+  browser is signed out, so the widget setting remains pending.
+- Prepared `http://karamullahs-mac-mini.local:4321/login` with an explicit dev-server
+  hostname allowlist. HTTP checks confirm this host returns 200 and an unrelated
+  hostname returns 403. The local server listens on the Mac's network interfaces;
+  phone access requires the same network and local hostname resolution.
+
+### Existing widget integration follow-up
+
+- Followed the provided [existing-widget instructions](https://developers.cloudflare.com/turnstile/spin/prompt.md).
+  Reused `0x4AAAAAAFO6i1CV5cngCWrF`; updated `.env.example` and the ignored
+  `.env.local`. No new widget or infrastructure was created.
+- Supabase Auth is the existing server-side verification destination, per
+  [its CAPTCHA integration contract](https://supabase.com/docs/guides/auth/auth-captcha).
+  Tokens reach it through the guarded same-origin API. A second local Siteverify
+  call would consume the same token before Supabase could verify it.
+- Retain each form's widget through the protected submission, then reset/remove
+  it in `finally`. Failed/expired/oversized/blank tokens stop submission; every
+  retry acquires a new token. Loader failures remain retryable and cleanup errors
+  cannot alter the Auth result.
+- Validation: 99 tests pass, production build passes, Astro check has no errors
+  or warnings (one existing hint), and 232 LAN HTTP smoke assertions pass.
+  A deliberately invalid token is rejected by the live backend.
+- Real browser evidence: the new key is served on the LAN login page; raw IP
+  still returns `110200`. Localhost reaches the Auth handler but is rejected.
+  Narrow, sanitized Auth-log queries found `invalid-input-secret` on that request.
+  The user confirmed the provider was configured, but a valid matching secret
+  still needs to be stored through the platform's secret-management flow.
+- `karamullahs-mac-mini.local` returned 200 in shell HTTP checks, but the connected
+  browser could not resolve it. Phone DNS/challenge/login remain unverified.
+- Cloudflare is signed out in the connected browser. No secret was retrieved,
+  displayed, rotated or written. No supported approved external Wrangler binary
+  is available for the prompt's guarded secret-recovery flow. If recovery is
+  required, confirm the canonical external binary/version and exact destination
+  before any secret-bearing getter or write.
+- Flutter still references the old key in `captcha_config.dart`, `.env.example`,
+  `prepare-app-build.mjs`, its build-config test and Xcode CI defaults. Align those
+  before releasing a client against the changed shared CAPTCHA provider; already
+  installed builds using the old widget need a rollout plan.
+- Remaining: valid matching provider secret, widget hostname authorization,
+  Flutter coordination, and a fresh successful real request plus replay rejection.
+  End-to-end validation is pending.
+
+### Replacement widget after deletion
+
+- The user deleted the previously integrated widget and supplied replacement
+  site key `0x4AAAAAAFO7STkIlGsSXpd_`. Updated `.env.example`, ignored local
+  configuration, README and remaining-work references. The prior subsection
+  records evidence from the superseded widget; this key is now the active one.
+- Re-fetched the existing-widget flow. Reused the replacement; no widget creation,
+  secret retrieval, secret write or shared provider change was performed.
+- Verified the running LAN login page serves the replacement key with CAPTCHA
+  enabled. All six targeted CAPTCHA lifecycle tests and the production build pass.
+- Real localhost challenge reaches the protected login handler, but Auth logs
+  for the test still report `invalid-input-secret`. The replacement's matching
+  secret needs to be saved in the existing Supabase CAPTCHA provider using its
+  normal secret-management flow. The public site key cannot replace that secret.
+- The raw IP address still returns client-side `110200`; hostname authorization
+  is pending. The connected Supabase settings browser redirects to sign-in,
+  and no callable connector exposes provider secret updates. Dashboard access is
+  required to complete those settings. Fresh successful request/replay validation
+  and phone hostname resolution remain pending.
+- Flutter key/build coordination remains open as described above.
+
+### Replacement widget retest after provider update
+
+- At 2026-10-06 04:07 UTC, a fresh real challenge for the replacement widget on
+  localhost passed server verification and returned `invalid_credentials` for
+  the deliberately nonexistent test account. No real credentials were used.
+- A separate request with an invalid token returned `captcha_failed`, confirming
+  CAPTCHA remains enforced on the backend. The earlier invalid-secret blocker is
+  resolved; no secret was retrieved or exposed by this verification.
+- Retesting the raw LAN IP still returned `110200`. Phone hostname resolution,
+  authorization, actual account login and replay rejection remain pending.
+
+### User-confirmed mobile acceptance
+
+- After the provider-secret retest and local hostname URL handoff, the user
+  confirmed: "Works now." Record mobile login as user-confirmed acceptance;
+  this supersedes the earlier pending mobile-login status above.
+- Live token replay verification and Flutter widget/build alignment remain open.
+  The raw IP address was not subsequently reported or tested as authorized.
+
+### Domain and account acceptance
+
 The user confirmed **test.salamsourcing.com** for staging. The future-domain
 answer was `salamsourcimg.com`; confirm its exact production spelling before
 changing origins/canonical metadata. Use staging now.

@@ -289,10 +289,13 @@ export const imageTypes = ["image/jpeg", "image/png", "image/webp"] as const;
 export function validateFile(
   bytes: Uint8Array,
   mime: string,
-  kind: "listing" | "document" | "enquiry" | "message",
+  kind: "listing" | "document" | "enquiry" | "message" | "deal",
 ) {
   const max = kind === "listing" ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
-  if (bytes.length === 0 || bytes.length >= max)
+  if (
+    bytes.length === 0 ||
+    (kind === "deal" ? bytes.length > max : bytes.length >= max)
+  )
     throw new AccessError(
       400,
       "file_size",
@@ -306,7 +309,7 @@ export function validateFile(
       ? prefix[0] === 255 && prefix[1] === 216 && prefix[2] === 255
       : mime === "image/png"
         ? [137, 80, 78, 71, 13, 10, 26, 10].every((n, i) => prefix[i] === n)
-        : mime === "image/webp"
+        : mime === "image/webp" && kind !== "deal"
           ? String.fromCharCode(...prefix.slice(0, 4)) === "RIFF" &&
             String.fromCharCode(...prefix.slice(8, 12)) === "WEBP"
           : mime === "application/pdf" && kind !== "listing"

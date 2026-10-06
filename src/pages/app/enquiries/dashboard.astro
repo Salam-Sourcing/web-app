@@ -1,0 +1,66 @@
+---
+import BuyerDashboard from "../../../components/BuyerDashboard.astro";
+import AppLayout from "../../../layouts/AppLayout.astro";
+import { requireWorkspace } from "../../../lib/server/access";
+import { activeCompany, checked } from "../../../lib/server/catalog";
+const state = await requireWorkspace(Astro),
+  c = activeCompany(state, undefined, "procurement");
+type Dashboard = {
+  open_enquiries: number;
+  pending_quotes: number;
+  active_deals: number;
+  enquiries: {
+    id: number;
+    title: string;
+    status: string;
+    quote_deadline: string | null;
+    quotes: number;
+  }[];
+  deals: {
+    id: number;
+    product_name: string;
+    stage: string;
+    currency: string;
+    deal_value_estimate: number | null;
+    expected_delivery: string | null;
+  }[];
+};
+let data: Dashboard | undefined, error: string | undefined;
+try {
+  const result = await state.client.rpc("get_buyer_dashboard", {
+    p_company_id: c.id,
+  });
+  checked(result.error);
+  if (result.data) data = result.data as unknown as Dashboard;
+  else error = "The dashboard could not be loaded.";
+} catch (e) {
+  error = (e as Error).message;
+}
+---
+
+<AppLayout
+  title="Buyer dashboard"
+  active="enquiries"
+  state={state}
+  description={"Sourcing activity for " + c.display_name + "."}
+>
+  <a slot="actions" class="button secondary" href="/app/deals">All deals</a>
+  {
+    data ? (
+      <>
+        <>
+          <BuyerDashboard data={data} />
+        </>
+      </>
+    ) : (
+      <section class="card">
+        <>
+          <p role="alert">{error}</p>
+          <a class="button secondary mt-4" href={Astro.url.pathname}>
+            Retry
+          </a>
+        </>
+      </section>
+    )
+  }
+</AppLayout>
