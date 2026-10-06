@@ -12,7 +12,8 @@ applied a shared backend migration and updated web/Flutter attachment retries.
   public RFQs and direct supplier/listing enquiries with guarded company context.
 - Requirements, quantity/unit, delivery, currency, deadline, visibility and urgency.
   Manual server drafts, edit/resubmission, moderation states and rejection reasons.
-  Currency is fixed after creation because the current update RPC cannot change it.
+  Currency remains editable for authorized draft/rejected RFQs: the current hosted
+  draft RPC supports this. The parity follow-up removed the older client restriction.
 - Supplier invitations, private enquiry attachments and removal, close/cancel
   confirmations, current verification/permission/deadline checks. Shared RLS,
   blocked-company, quota and moderation rules remain authoritative.

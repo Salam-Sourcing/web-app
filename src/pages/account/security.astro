@@ -61,7 +61,38 @@ const state = await requireWorkspace(Astro);
               <p class="help-text">
                 Or enter this setup key manually. Keep it private.
               </p>
-              <p class="secret mt-3" id="authenticator-secret" />
+              <p id="qr-warning" class="help-text" role="status" hidden />
+              <label class="field mt-3">
+                Setup key
+                <input
+                  id="authenticator-secret"
+                  data-secret-control
+                  type="password"
+                  readonly
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </label>
+              <div class="row-actions">
+                <button
+                  class="button secondary"
+                  type="button"
+                  data-reveal-key
+                  aria-pressed="false"
+                  disabled
+                >
+                  Show key
+                </button>
+                <button
+                  class="button secondary"
+                  type="button"
+                  data-copy-key
+                  disabled
+                >
+                  Copy setup key
+                </button>
+              </div>
+              <p class="help-text" data-key-message role="status" />
             </>
             <form
               class="form"
@@ -73,11 +104,7 @@ const state = await requireWorkspace(Astro);
               <>
                 <input type="hidden" name="factor_id" />
                 <input type="hidden" name="purpose" value="enrollment" />
-                <input
-                  type="hidden"
-                  name="next"
-                  value="/account/security"
-                />
+                <input type="hidden" name="next" value="/account/security" />
                 <label class="field">
                   Six-digit code
                   <input
@@ -132,11 +159,31 @@ const state = await requireWorkspace(Astro);
 >
 <script>
   import { post } from "../../scripts/forms";
+  import { authenticatorQrUrl } from "../../lib/authenticator-qr";
+  import { bindAuthenticatorSecret } from "../../scripts/authenticator-secret";
   const button = document.querySelector<HTMLButtonElement>(
     "#enroll-authenticator",
   );
   const message = document.querySelector<HTMLElement>("#enroll-message");
   let pendingFactor: string | undefined;
+  const setup = document.querySelector<HTMLElement>("#authenticator-setup");
+  const discardSetup = () => {
+    if (pendingFactor) {
+      const factor = pendingFactor;
+      pendingFactor = undefined;
+      void post("/api/auth/mfa-cancel", { factor_id: factor }).catch(() => {});
+    }
+    if (setup) {
+      setup.hidden = true;
+      setup
+        .querySelectorAll<HTMLInputElement>("input[name=factor_id]")
+        .forEach((input) => (input.value = ""));
+    }
+    if (button) button.hidden = false;
+  };
+  const secret = setup
+    ? bindAuthenticatorSecret(setup, discardSetup)
+    : undefined;
   button?.addEventListener("click", async () => {
     button.disabled = true;
     try {
@@ -146,17 +193,32 @@ const state = await requireWorkspace(Astro);
         totp: { qr_code: string; secret: string };
       };
       pendingFactor = factor.id;
-      document.querySelector<HTMLImageElement>("#authenticator-qr")!.src =
-        "data:image/svg+xml;base64," + btoa(factor.totp.qr_code);
-      document.querySelector("#authenticator-secret")!.textContent =
-        factor.totp.secret;
+      if (!secret?.set(factor.totp.secret)) {
+        discardSetup();
+        return;
+      }
+      const qr = document.querySelector<HTMLImageElement>("#authenticator-qr")!;
+      const warning = document.querySelector<HTMLElement>("#qr-warning")!;
+      warning.hidden = true;
+      const unavailable = () => {
+        qr.hidden = true;
+        warning.hidden = false;
+        warning.textContent =
+          "QR code unavailable. Enter the setup key manually.";
+      };
+      qr.onerror = unavailable;
+      try {
+        qr.src = authenticatorQrUrl(factor.totp.qr_code);
+        qr.hidden = false;
+      } catch {
+        unavailable();
+      }
       document
         .querySelectorAll<HTMLInputElement>(
           "#authenticator-setup input[name=factor_id]",
         )
         .forEach((input) => (input.value = factor.id));
-      document.querySelector<HTMLElement>("#authenticator-setup")!.hidden =
-        false;
+      setup!.hidden = false;
       button.hidden = true;
     } catch (error) {
       if (message) {

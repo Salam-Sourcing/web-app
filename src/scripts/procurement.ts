@@ -13,6 +13,7 @@ export async function attachFile(
   target: number,
   company: string,
   key?: string,
+  caption = "",
 ) {
   const prepared = key
     ? { key }
@@ -21,6 +22,7 @@ export async function attachFile(
         target_id: String(target),
         company_id: company,
         mime: file.type,
+        ...(kind === "message" ? { caption } : {}),
       });
   const form = new FormData();
   form.set("key", String(prepared.key));
@@ -28,6 +30,7 @@ export async function attachFile(
   form.set("target_id", String(target));
   form.set("company_id", company);
   form.set("file", file);
+  if (kind === "message") form.set("caption", caption);
   const response = await fetch("/api/uploads/attach", {
     method: "POST",
     body: form,
@@ -53,14 +56,12 @@ export function validatePicked(file: File, kind?: string) {
     ) ||
     !file.size ||
     (kind === "deal" && file.type === "image/webp") ||
-    (kind === "deal"
-      ? file.size > 10 * 1024 * 1024
-      : file.size >= 10 * 1024 * 1024)
+    file.size > 10 * 1024 * 1024
   )
     throw new Error(
       kind === "deal"
         ? "Choose PDF, JPEG or PNG files up to 10 MB."
-        : "Choose JPEG, PNG, WebP or PDF files smaller than 10 MB.",
+        : "Choose JPEG, PNG, WebP or PDF files up to 10 MB.",
     );
 }
 export function bindProcurementForms() {
@@ -194,7 +195,9 @@ export function bindProcurementForms() {
     .forEach((form) => {
       if (form.dataset.bound) return;
       form.dataset.bound = "true";
-      let key: string | undefined, chosen: File | undefined;
+      let key: string | undefined,
+        chosen: File | undefined,
+        chosenCaption: string | undefined;
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         if (form.dataset.busy || !form.reportValidity()) return;
@@ -207,19 +210,27 @@ export function bindProcurementForms() {
           say(form, (e as Error).message, true);
           return;
         }
-        if (chosen && chosen !== file) {
+        const captionInput =
+          form.querySelector<HTMLTextAreaElement>('[name="caption"]');
+        const caption = captionInput?.value.trim() ?? "";
+        if (chosen && (chosen !== file || chosenCaption !== caption)) {
           say(
             form,
-            "Retry the original file first, or reload to start a new upload.",
+            "Retry the original file and caption, or reload to start a new upload.",
             true,
           );
           return;
         }
         chosen = file;
+        chosenCaption = caption;
         form.dataset.busy = "true";
         const data = Object.fromEntries(new FormData(form));
         const button = form.querySelector<HTMLButtonElement>("button")!;
         button.disabled = true;
+        if (captionInput) captionInput.readOnly = true;
+        const fileInput =
+          form.querySelector<HTMLInputElement>('input[type="file"]');
+        if (fileInput) fileInput.disabled = true;
         say(form, "Uploading…");
         try {
           if (!key)
@@ -230,6 +241,7 @@ export function bindProcurementForms() {
                   target_id: data.target_id,
                   company_id: data.company_id,
                   mime: file.type,
+                  ...(form.dataset.kind === "message" ? { caption } : {}),
                 })
               ).key,
             );
@@ -239,14 +251,19 @@ export function bindProcurementForms() {
             Number(data.target_id),
             String(data.company_id),
             key,
+            caption,
           );
           key = undefined;
           chosen = undefined;
+          chosenCaption = undefined;
           form.reset();
           say(form, "File attached.");
-          if (form.dataset.kind === "message")
+          if (form.dataset.kind === "message") {
+            form.dispatchEvent(
+              new Event("salam-file-attached", { bubbles: true }),
+            );
             document.dispatchEvent(new Event("salam-messages-refresh"));
-          else location.reload();
+          } else location.reload();
         } catch (e) {
           say(
             form,
@@ -257,6 +274,8 @@ export function bindProcurementForms() {
         } finally {
           delete form.dataset.busy;
           button.disabled = false;
+          if (captionInput) captionInput.readOnly = false;
+          if (fileInput) fileInput.disabled = false;
         }
       });
     });

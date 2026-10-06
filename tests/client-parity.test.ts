@@ -1,0 +1,187 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { authenticatorQrUrl } from "../src/lib/authenticator-qr.ts";
+import { messageImage } from "../src/lib/deals.ts";
+import { quotePayload, type Enquiry } from "../src/lib/procurement.ts";
+const svg =
+  '<svg xmlns="http://www.w3.org/2000/svg"><title>日本語 100%</title></svg>';
+test("authenticator QR normalizes actual Supabase SVG data URLs without double encoding", () => {
+  const normalized = authenticatorQrUrl(svg);
+  for (const input of [
+    svg,
+    "data:image/svg+xml;utf-8," + svg,
+    "data:image/svg+xml," + encodeURIComponent(svg),
+    "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg),
+    "data:image/svg+xml;base64," + Buffer.from(svg).toString("base64"),
+  ]) {
+    assert.equal(authenticatorQrUrl(input), normalized);
+    assert.equal(decodeURIComponent(normalized.split(",")[1]), svg);
+  }
+});
+test("unusable QR responses fail safely while manual setup can remain available", () => {
+  for (const input of [
+    "https://other.example/qr.svg",
+    "data:image/png,aaaa",
+    "data:image/svg+xml,%ZZ",
+    "not SVG",
+  ])
+    assert.throws(() => authenticatorQrUrl(input));
+});
+test("legacy chat photos use the filename only when MIME is absent", () => {
+  for (const name of ["photo.jpg", "photo.JPEG", "日本.png", "picture.webp"])
+    assert.equal(messageImage(null, name), true);
+  assert.equal(messageImage("application/pdf", "spoof.jpg"), false);
+  assert.equal(messageImage("image/svg+xml", "spoof.png"), false);
+  assert.equal(messageImage(null, "contract.pdf"), false);
+});
+test("optional quote lead time stays null without becoming zero or required", () => {
+  for (const lead of ["", null, undefined]) {
+    const payload = quotePayload(
+      {
+        total_price: "25",
+        currency: "USD",
+        valid_until: "2099-01-01T00:00:00Z",
+        lead_time_days: lead,
+      },
+      2,
+      { id: 1 } as Enquiry,
+    );
+    assert.equal(payload.lead_time_days, null);
+  }
+  for (const lead of ["-1", "1.5", "36501", "NaN"])
+    assert.throws(() =>
+      quotePayload(
+        {
+          total_price: "25",
+          currency: "USD",
+          valid_until: "2099-01-01T00:00:00Z",
+          lead_time_days: lead,
+        },
+        2,
+        { id: 1 } as Enquiry,
+      ),
+    );
+});
+
+import { clientErrorEvent } from "../src/lib/client-errors.ts";
+test("browser diagnostics accept only categories and reject private data", () => {
+  assert.equal(
+    clientErrorEvent({ category: "uncaught_error" })?.category,
+    "uncaught_error",
+  );
+  assert.equal(
+    clientErrorEvent({ category: "unhandled_rejection" })?.category,
+    "unhandled_rejection",
+  );
+  for (const event of [
+    { category: "error" },
+    { category: "uncaught_error", message: "private text" },
+    { category: "uncaught_error", stack: "secret" },
+    { category: "uncaught_error", url: "/messages/1" },
+  ])
+    assert.equal(clientErrorEvent(event), null);
+});
+
+import { notificationCanOpen } from "../src/lib/notification-display.ts";
+import {
+  browserDiagnostic,
+  diagnosticGroup,
+  diagnosticAsset,
+} from "../src/lib/client-errors.ts";
+test("SSR/live notice eligibility includes support records without arbitrary navigation metadata", () => {
+  assert.equal(
+    notificationCanOpen({
+      entity_type: null,
+      entity_id: null,
+      data: { case_id: "11111111-1111-4111-8111-111111111111" },
+    }),
+    true,
+  );
+  assert.equal(
+    notificationCanOpen({
+      entity_type: null,
+      entity_id: null,
+      data: { redirect: "/account/support" },
+    }),
+    false,
+  );
+});
+test("browser diagnostics extract known code locations while dropping private error text and URLs", () => {
+  const origin = "https://test.salamsourcing.com",
+    asset = "/_astro/AppLayout.Abcd1234.js";
+  const error = new TypeError("private message and bearer token");
+  error.stack =
+    "TypeError: private message\n at privateUserName (" +
+    origin +
+    asset +
+    ":12:34)\n at private (" +
+    origin +
+    "/messages/99?token=secret:2:3)\n at unknown (" +
+    origin +
+    "/_astro/Unknown.Hijk1234.js:4:5)\nprivate@" +
+    origin +
+    asset +
+    ":13:35";
+  const event = browserDiagnostic(
+    "uncaught_error",
+    error,
+    origin,
+    new Set([asset]),
+  );
+  assert.deepEqual(event.frames, [
+    { asset, line: 12, column: 34 },
+    { asset, line: 13, column: 35 },
+  ]);
+  assert.equal(event.kind, "TypeError");
+  const json = JSON.stringify(event);
+  for (const secret of [
+    "private message",
+    "bearer",
+    "privateUserName",
+    "messages/99",
+    "Unknown",
+    "secret",
+  ])
+    assert.ok(!json.includes(secret));
+  assert.ok(clientErrorEvent(event));
+  assert.equal(diagnosticGroup(event), diagnosticGroup({ ...event }));
+  assert.notEqual(
+    diagnosticGroup(event),
+    diagnosticGroup({ ...event, kind: "RangeError" }),
+  );
+});
+test("browser diagnostics reject foreign code, arbitrary labels, oversized frames and raw stack payloads", () => {
+  const frame = { asset: "/_astro/AppLayout.Abcd1234.js", line: 1, column: 2 };
+  for (const input of [
+    { category: "uncaught_error", kind: "private custom error" },
+    {
+      category: "uncaught_error",
+      frames: [{ ...frame, asset: "/messages/1" }],
+    },
+    {
+      category: "uncaught_error",
+      frames: [{ ...frame, asset: frame.asset + "?token=secret" }],
+    },
+    { category: "uncaught_error", frames: [{ ...frame, line: 0 }] },
+    { category: "uncaught_error", frames: [{ ...frame, column: Infinity }] },
+    { category: "uncaught_error", frames: Array(9).fill(frame) },
+    { category: "uncaught_error", frames: [{ ...frame, message: "secret" }] },
+  ])
+    assert.equal(clientErrorEvent(input), null);
+  assert.equal(
+    diagnosticAsset(
+      "https://evil.invalid" + frame.asset,
+      "https://test.salamsourcing.com",
+    ),
+    null,
+  );
+  assert.deepEqual(
+    browserDiagnostic(
+      "unhandled_rejection",
+      "private rejection text",
+      "https://test.salamsourcing.com",
+      new Set(),
+    ).frames,
+    [],
+  );
+});

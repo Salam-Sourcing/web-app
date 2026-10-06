@@ -105,73 +105,30 @@ export async function enquiryFeed(state: Workspace, params: URLSearchParams) {
   const page = Number(params.get("page") ?? 0);
   if (!Number.isSafeInteger(page) || page < 0 || page > 10000)
     throw new AccessError(400, "invalid_page", "Choose a valid page.");
-  let q = state.client.from("enquiries").select("*");
-  if (tab === "mine") {
-    const c = activeCompany(state);
-    const [quotes, invites] = await Promise.all([
-      state.client
-        .from("quotes")
-        .select("enquiry_id")
-        .eq("supplier_company_id", c.id),
-      state.client
-        .from("enquiry_supplier_invitations")
-        .select("enquiry_id")
-        .eq("supplier_company_id", c.id)
-        .neq("status", "cancelled"),
-    ]);
-    checked(quotes.error);
-    checked(invites.error);
-    const related = [
-      ...new Set(
-        [...(quotes.data ?? []), ...(invites.data ?? [])].map(
-          (x) => x.enquiry_id,
-        ),
-      ),
-    ];
-    q = q.or(
-      "buyer_company_id.eq." +
-        c.id +
-        ",supplier_company_id.eq." +
-        c.id +
-        (related.length ? ",id.in.(" + related.join(",") + ")" : ""),
-    );
-  } else if (tab === "saved") {
-    const saves = await state.client
-      .from("saved_enquiries")
-      .select("enquiry_id")
-      .eq("user_id", state.user.id);
-    checked(saves.error);
-    q = q.in("id", saves.data?.map((x) => x.enquiry_id) ?? []);
-  } else
-    q = q
-      .eq("enquiry_type", "public_rfq")
-      .eq("publication_status", "published")
-      .in("status", ["open", "quoted", "negotiating"]);
-  const term = (params.get("q") ?? "")
-    .trim()
-    .slice(0, 120)
-    .replace(/[\\%_]/g, "");
-  if (term) q = q.ilike("title", "%" + term + "%");
-  const category = params.get("category");
-  if (category && /^[1-9]\d*$/.test(category))
-    q = q.eq("sub_category_id", Number(category));
-  const status = params.get("status");
-  if (
-    [
+  const filters = {
+    tab,
+    ...(tab === "mine" ? { company_id: activeCompany(state).id } : {}),
+    query: (params.get("q") ?? "").trim().slice(0, 120),
+    category: /^[1-9]\d*$/.test(params.get("category") ?? "")
+      ? params.get("category")!
+      : "",
+    status: [
       "open",
       "quoted",
       "negotiating",
       "accepted",
       "closed",
       "cancelled",
-    ].includes(status ?? "")
-  )
-    q = q.eq("status", status!);
-  if (params.get("urgency") === "urgent") q = q.eq("urgency", "urgent");
-  const result = await q
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .range(page * 24, page * 24 + 24);
+    ].includes(params.get("status") ?? "")
+      ? params.get("status")!
+      : "",
+    urgency: params.get("urgency") === "urgent" ? "urgent" : "",
+  };
+  const result = await state.client.rpc("search_enquiries", {
+    p_filters: filters,
+    p_offset: page * 24,
+    p_limit: 25,
+  });
   checked(result.error);
   const rows = (result.data ?? []).slice(0, 24);
   const [companies, saved] = await Promise.all([
@@ -234,7 +191,7 @@ export async function messagePage(
   let q = state.client
     .from("messages")
     .select(
-      "id,sender_user_id,content,message_type,is_deleted,sent_at,message_attachments(id,file_name,file_mime_type,file_size_bytes)",
+      "id,client_message_id,sender_user_id,content,message_type,is_deleted,sent_at,message_attachments(id,file_name,file_mime_type,file_size_bytes)",
     )
     .eq("conversation_id", id);
   const messageId = params.get("message_id");
@@ -290,6 +247,8 @@ export async function messagePage(
   return {
     rows: rows.map((r) => ({
       id: r.id,
+      client_message_id:
+        r.sender_user_id === state.user.id ? r.client_message_id : null,
       sent_at: r.sent_at,
       content: r.is_deleted ? "This message was deleted." : r.content,
       is_deleted: r.is_deleted,
@@ -426,51 +385,15 @@ export async function conversationFeed(
   const page = Number(params.get("page") ?? 0);
   if (!Number.isSafeInteger(page) || page < 0 || page > 10000)
     throw new AccessError(400, "invalid_page", "Choose a valid page.");
-  let q = state.client
-    .from("conversations")
-    .select("*,enquiries(title)")
-    .eq("status", status);
-  const companyFilter =
-    "buyer_company_id.eq." + c.id + ",supplier_company_id.eq." + c.id;
-  let searchFilter = "";
-  const term = (params.get("q") ?? "")
-    .trim()
-    .slice(0, 100)
-    .replace(/[\\%_]/g, "");
-  if (term) {
-    const [companies, enquiries] = await Promise.all([
-      state.client
-        .rpc("get_company_summaries")
-        .ilike("display_name", "%" + term + "%"),
-      state.client
-        .from("enquiries")
-        .select("id")
-        .ilike("title", "%" + term + "%"),
-    ]);
-    checked(companies.error);
-    checked(enquiries.error);
-    const ids = companies.data?.map((x) => x.id) ?? [],
-      es = enquiries.data?.map((x) => x.id) ?? [];
-    if (!ids.length && !es.length)
-      return { rows: [], hasMore: false, page, status };
-    const filters: string[] = [];
-    if (ids.length)
-      filters.push(
-        "buyer_company_id.in.(" + ids.join(",") + ")",
-        "supplier_company_id.in.(" + ids.join(",") + ")",
-      );
-    if (es.length) filters.push("enquiry_id.in.(" + es.join(",") + ")");
-    searchFilter = filters.join(",");
-  }
-  q = q.or(
-    searchFilter
-      ? "and(or(" + companyFilter + "),or(" + searchFilter + "))"
-      : companyFilter,
-  );
-  const result = await q
-    .order("last_message_at", { ascending: false, nullsFirst: false })
-    .order("id", { ascending: false })
-    .range(page * 24, page * 24 + 24);
+  const result = await state.client
+    .rpc("search_conversations", {
+      p_company_id: c.id,
+      p_query: (params.get("q") ?? "").trim().slice(0, 120),
+      p_status: status,
+      p_offset: page * 24,
+      p_limit: 25,
+    })
+    .select("*,enquiries(title)");
   checked(result.error);
   const rows = (result.data ?? []).slice(0, 24);
   const companies = await companySummaries(

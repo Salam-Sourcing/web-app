@@ -153,7 +153,7 @@ export function quotePayload(
     currency,
     total_price: total,
     price_per_unit: numberField(input, "price_per_unit"),
-    lead_time_days: numberField(input, "lead_time_days", true, true),
+    lead_time_days: numberField(input, "lead_time_days", false, true),
     valid_until: futureDate(input.valid_until, true),
     notes: optionalText(input, "notes", 5000),
     payment_terms: optionalText(input, "payment_terms", 1000),
@@ -228,6 +228,7 @@ export const dateLabel = (value: string | null) =>
 
 export type ThreadMessage = {
   id: number;
+  client_message_id?: string | null;
   sent_at: string;
   content: string | null;
   is_deleted: boolean;

@@ -1,4 +1,5 @@
 ---
+import { reportReasons, REPORT_LIMIT } from "../lib/client-contracts";
 import type { CompanyReview } from "../lib/deals";
 import { dateLabel } from "../lib/procurement";
 interface Props {
@@ -16,11 +17,13 @@ const { review: r, company, activeCompany } = Astro.props;
         {r.reviewer_role} · {dateLabel(r.created_at)}
       </p>
     </div><span class="review-rating" aria-label={r.rating + " out of 5 stars"}
-      ><span aria-hidden="true">★</span> {r.rating}/5</span>
+      ><span aria-hidden="true">★</span> {r.rating}/5</span
+    >
   </div>
   <div class="row-actions mt-3">
     <span class="badge success">Verified transaction</span><span
-      class="help-text">{r.product_name}</span>
+      class="help-text">{r.product_name}</span
+    >
   </div>
   <p class="preserve-lines mt-4">{r.review_text}</p>
   {
@@ -70,20 +73,22 @@ const { review: r, company, activeCompany } = Astro.props;
             <select name="reason" required>
               <>
                 <option value="">Choose a reason</option>
-                <option value="spam_scam">Spam</option>
-                <option value="misleading">
-                  Fraud or misleading content
-                </option>
-                <option value="harassment">Harassment</option>
-                <option value="prohibited">Inappropriate content</option>
-                <option value="other">Other</option>
+                {
+                  reportReasons.map(([value, label]) => (
+                    <option value={value}>{label}</option>
+                  ))
+                }
               </>
             </select>
           </label>
           <label class="field">
             Details
-            <textarea name="description" maxlength="2000" rows="3" required
-            ></textarea>
+            <textarea
+              name="description"
+              minlength="5"
+              maxlength={REPORT_LIMIT}
+              rows="3"
+              required></textarea>
           </label>
           <button class="button secondary">Submit report</button>
           <p data-form-message hidden role="status"></p>

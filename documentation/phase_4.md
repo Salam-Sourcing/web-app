@@ -7,9 +7,9 @@ This phase was requested while the earlier release gates were still pending.
 
 - Accepting a quote opens its deal. Enquiry details offer the authorized deal link;
   company deals and the buyer dashboard are accessible from Enquiries/Account.
-- `/app/deals`: selected-company, permission-aware deal list with active/completed/
+- `/deals`: selected-company, permission-aware deal list with active/completed/
   cancelled/disputed/all views and bounded 24-record pages.
-- `/app/deals/:id`: agreed → preparing → shipped → received milestones. Preparation
+- `/deals/:id`: agreed → preparing → shipped → received milestones. Preparation
   and shipment belong to the supplier; receipt belongs to the buyer. The page shows
   shared notes, company actors, timestamps, delivery date and tracking/reference.
 - Milestone forms require confirmation and the current next step. Server checks and
@@ -23,7 +23,7 @@ This phase was requested while the earlier release gates were still pending.
   Published review pages use the existing 20-record pagination contract. Profile and
   Account links expose company reviews; response actions require the selected
   reviewed company and management permission.
-- `/app/enquiries/dashboard` uses the current dashboard RPC for company counts and
+- `/enquiries/dashboard` uses the current dashboard RPC for company counts and
   the next 50 deadline/delivery records, each linked to its correct enquiry/deal.
 
 ## Private files, retries and image embeds

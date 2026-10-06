@@ -263,6 +263,7 @@ for (const path of [
   check(crossSite.status === 403, path + " rejects cross-site mutations");
 }
 for (const path of [
+  "/api/notifications",
   "/api/catalog/search",
   "/api/media/listing/1",
   "/api/media/document/1",
@@ -285,6 +286,33 @@ for (const path of [
     path + " cannot be cached",
   );
 }
+const diagnostic = await mutate("/api/client-error", {
+  category: "uncaught_error",
+});
+check(diagnostic.status === 401, "browser diagnostics require sign-in");
+check(
+  diagnostic.headers.get("cache-control")?.includes("no-store"),
+  "diagnostics responses cannot be cached",
+);
+check(
+  (
+    await mutate(
+      "/api/client-error",
+      { category: "uncaught_error" },
+      { Origin: "https://other.invalid" },
+    )
+  ).status === 403,
+  "diagnostics reject foreign origins",
+);
+check(
+  (
+    await mutate("/api/client-error", {
+      category: "uncaught_error",
+      message: "private text",
+    })
+  ).status === 400,
+  "diagnostics reject private data fields",
+);
 const upload = new FormData();
 upload.set(
   "file",

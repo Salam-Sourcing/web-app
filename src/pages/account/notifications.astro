@@ -3,15 +3,20 @@ import AppLayout from "../../layouts/AppLayout.astro";
 import AccountForm from "../../components/AccountForm.astro";
 import { requireWorkspace } from "../../lib/server/access";
 import { checked } from "../../lib/server/catalog";
+import { notificationCanOpen } from "../../lib/notification-display";
 const state = await requireWorkspace(Astro);
 const r = await state.client
   .from("notifications")
-  .select("id,title,body,is_read,entity_type,entity_id,created_at")
+  .select("id,title,body,is_read,entity_type,entity_id,created_at,data")
   .eq("user_id", state.user.id)
   .order("created_at", { ascending: false })
+  .order("id", { ascending: false })
   .limit(100);
 checked(r.error);
-const items = r.data ?? [];
+const items = (r.data ?? []).map(({ data, ...notice }) => ({
+  ...notice,
+  can_open: notificationCanOpen({ ...notice, data }),
+}));
 const count = await state.client
   .from("notifications")
   .select("id", { count: "exact", head: true })
@@ -24,8 +29,7 @@ checked(count.error);
   title="Notifications"
   active="account"
   state={state}
-  description={(count.count ?? 0) +
-    " unread updates. Your latest 100 updates are shown."}
+  description="Updates about your account and marketplace activity."
 >
   <a slot="actions" class="button secondary" href="/account/preferences"
     >Preferences</a
@@ -35,10 +39,27 @@ checked(count.error);
       >Refresh</button
     ><AccountForm action="notifications-read" submit="Mark all read" />
   </div>
-  <div class="stack">
+  <p data-notification-summary class="help-text">
+    {count.count ?? 0} unread updates. Your latest 100 updates are shown.
+  </p>
+  <button
+    data-notification-updates
+    class="button secondary mb-5"
+    type="button"
+    hidden>Show latest updates</button
+  >
+  <div
+    class="stack"
+    data-notification-list
+    data-notification-revision={JSON.stringify(items)}
+  >
     {
       items.map((n) => (
-        <article class:list={["card", !n.is_read && "notification-unread"]}>
+        <article
+          data-notification-id={n.id}
+          data-notification-signature={JSON.stringify(n)}
+          class:list={["card", !n.is_read && "notification-unread"]}
+        >
           <>
             <>
               <div class="section-heading">
@@ -47,10 +68,13 @@ checked(count.error);
               </div>
               <p class="account-copy">{n.body}</p>
               <time datetime={n.created_at}>
-                {new Date(n.created_at).toLocaleString("en-CA")}
+                {new Date(n.created_at).toLocaleString("en-CA", {
+                  timeZone: "America/Edmonton",
+                  timeZoneName: "short",
+                })}
               </time>
               <div class="row-actions mt-4">
-                {n.entity_type && n.entity_id && (
+                {n.can_open && (
                   <AccountForm
                     action="notification-open"
                     id={n.id}
@@ -76,7 +100,7 @@ checked(count.error);
       ))
     }{
       !items.length && (
-        <section class="card">
+        <section class="card" data-notification-empty>
           <>
             <h2>You’re all caught up</h2>
             <p>No notifications yet.</p>
@@ -85,8 +109,4 @@ checked(count.error);
       )
     }
   </div>
-  <script>
-    import { bindNotificationRefresh } from "../../scripts/account";
-    bindNotificationRefresh();
-  </script>
 </AppLayout>

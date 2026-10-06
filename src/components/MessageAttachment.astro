@@ -14,7 +14,7 @@ const { attachment: a } = Astro.props,
 
 <div class="message-attachment">
   {
-    messageImage(a.file_mime_type) && (
+    messageImage(a.file_mime_type, a.file_name) && (
       <a
         class="message-image-link"
         href={url + "?inline=1"}

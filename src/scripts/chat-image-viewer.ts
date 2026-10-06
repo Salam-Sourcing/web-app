@@ -24,7 +24,9 @@ export function bindChatImageViewer(root: HTMLElement) {
     close = document.createElement("button"),
     frame = document.createElement("div"),
     image = document.createElement("img"),
+    feedback = document.createElement("div"),
     status = document.createElement("p"),
+    retry = document.createElement("button"),
     footer = document.createElement("footer"),
     previous = document.createElement("button"),
     counter = document.createElement("span"),
@@ -41,12 +43,104 @@ export function bindChatImageViewer(root: HTMLElement) {
   download.textContent = "Download";
   download.className = "button secondary";
   frame.className = "chat-photo-frame";
+  feedback.className = "chat-photo-feedback";
   status.setAttribute("role", "status");
+  retry.type = "button";
+  retry.textContent = "Retry photo";
+  retry.className = "button secondary";
+  retry.hidden = true;
   counter.setAttribute("aria-live", "polite");
+  const tools = document.createElement("div");
+  tools.className = "chat-photo-tools";
+  const zoomOut = document.createElement("button"),
+    zoomIn = document.createElement("button"),
+    reset = document.createElement("button"),
+    zoomLabel = document.createElement("span");
+  for (const button of [zoomOut, zoomIn, reset]) button.type = "button";
+  zoomOut.textContent = "−";
+  zoomOut.ariaLabel = "Zoom out";
+  zoomIn.textContent = "+";
+  zoomIn.ariaLabel = "Zoom in";
+  reset.textContent = "Reset";
+  zoomLabel.setAttribute("aria-live", "polite");
+  tools.append(zoomOut, zoomLabel, zoomIn, reset);
+  let scale = 1,
+    x = 0,
+    y = 0;
+  const pointers = new Map<number, { x: number; y: number }>();
+  const paint = () => {
+    const bounds = frame.getBoundingClientRect();
+    x = Math.max(
+      (-bounds.width * (scale - 1)) / 2,
+      Math.min((bounds.width * (scale - 1)) / 2, x),
+    );
+    y = Math.max(
+      (-bounds.height * (scale - 1)) / 2,
+      Math.min((bounds.height * (scale - 1)) / 2, y),
+    );
+    image.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    zoomLabel.textContent = Math.round(scale * 100) + "%";
+    zoomOut.disabled = scale <= 1;
+    zoomIn.disabled = scale >= 5;
+  };
+  const setScale = (value: number) => {
+    scale = Math.max(1, Math.min(5, value));
+    paint();
+  };
+  const resetPhoto = () => {
+    scale = 1;
+    x = y = 0;
+    pointers.clear();
+    paint();
+  };
+  zoomOut.addEventListener("click", () => setScale(scale - 0.5));
+  zoomIn.addEventListener("click", () => setScale(scale + 0.5));
+  reset.addEventListener("click", resetPhoto);
+  image.draggable = false;
+  frame.addEventListener("pointerdown", (event) => {
+    if (image.hidden) return;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    frame.setPointerCapture(event.pointerId);
+  });
+  frame.addEventListener("pointermove", (event) => {
+    const old = pointers.get(event.pointerId);
+    if (!old) return;
+    const points = Array.from(pointers.values());
+    const other =
+      pointers.size === 2 ? points.find((point) => point !== old) : undefined;
+    if (other) {
+      const before = Math.hypot(old.x - other.x, old.y - other.y),
+        after = Math.hypot(event.clientX - other.x, event.clientY - other.y);
+      if (before > 0) setScale((scale * after) / before);
+    } else if (pointers.size === 1 && scale > 1) {
+      x += event.clientX - old.x;
+      y += event.clientY - old.y;
+      paint();
+    }
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  });
+  for (const type of ["pointerup", "pointercancel", "lostpointercapture"])
+    frame.addEventListener(type, (event) =>
+      pointers.delete((event as PointerEvent).pointerId),
+    );
+  frame.addEventListener(
+    "wheel",
+    (event) => {
+      if (image.hidden) return;
+      event.preventDefault();
+      setScale(scale + (event.deltaY < 0 ? 0.25 : -0.25));
+    },
+    { passive: false },
+  );
+  frame.addEventListener("dblclick", () =>
+    scale > 1 ? resetPhoto() : setScale(2),
+  );
+  resetPhoto();
   header.append(title, close);
-  frame.append(image, status);
+  feedback.append(status, retry);
+  frame.append(image, feedback);
   footer.append(previous, counter, next, download);
-  dialog.append(header, frame, footer);
+  dialog.append(header, tools, frame, footer);
   root.append(dialog);
   const privateContent = root.closest<HTMLElement>("#private-content") ?? root;
   let current: HTMLAnchorElement | undefined;
@@ -57,11 +151,14 @@ export function bindChatImageViewer(root: HTMLElement) {
   const allowed = () =>
     !document.hidden && !privateContent.hidden && root.isConnected;
   const clear = () => {
+    resetPhoto();
     image.removeAttribute("src");
     image.alt = "";
     download.removeAttribute("href");
     title.textContent = status.textContent = counter.textContent = "";
     current = undefined;
+    retry.hidden = true;
+    feedback.hidden = true;
   };
   const dismiss = () => {
     if (dialog.open) dialog.close();
@@ -70,10 +167,13 @@ export function bindChatImageViewer(root: HTMLElement) {
   const show = (link: HTMLAnchorElement) => {
     const url = chatPhotoUrl(link.href, location.origin);
     if (!url || !allowed()) return;
+    resetPhoto();
     current = link;
     title.textContent = link.querySelector("img")?.alt || "Chat photo";
     image.alt = title.textContent;
     image.hidden = true;
+    retry.hidden = true;
+    feedback.hidden = false;
     status.hidden = false;
     status.textContent = "Loading photo…";
     download.href = url.download;
@@ -87,16 +187,26 @@ export function bindChatImageViewer(root: HTMLElement) {
     if (!dialog.open) dialog.showModal();
   };
   image.addEventListener("load", () => {
-    if (!dialog.open || !current) return;
+    if (!dialog.open || !current || !allowed()) return;
+    resetPhoto();
     image.hidden = false;
     status.hidden = true;
+    feedback.hidden = true;
   });
   image.addEventListener("error", () => {
-    if (!dialog.open || !current) return;
+    if (!dialog.open || !current || !allowed()) return;
     image.hidden = true;
+    feedback.hidden = false;
     status.hidden = false;
-    status.textContent =
-      "Photo unavailable. Close and reopen to retry, or use Download.";
+    status.textContent = "Photo unavailable. Retry or use Download.";
+    retry.hidden = false;
+  });
+  retry.addEventListener("click", () => {
+    if (!current || !dialog.open || !allowed()) return;
+    const link = current;
+    image.removeAttribute("src");
+    show(link);
+    close.focus();
   });
   const move = (offset: number) => {
     if (!current) return;
@@ -145,6 +255,12 @@ export function bindChatImageViewer(root: HTMLElement) {
   close.addEventListener("click", dismiss);
   dialog.addEventListener("close", clear);
   dialog.addEventListener("keydown", (event) => {
+    if (["+", "=", "-", "0"].includes(event.key)) {
+      event.preventDefault();
+      if (event.key === "0") resetPhoto();
+      else setScale(scale + (event.key === "-" ? -0.5 : 0.5));
+    }
+
     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
       move(event.key === "ArrowLeft" ? -1 : 1);

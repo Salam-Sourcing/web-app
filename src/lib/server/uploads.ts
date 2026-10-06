@@ -2,6 +2,11 @@ import { editableDeal, dealBundle } from "./deals";
 import { dealFileTypes } from "../deals";
 import { enquiry, buyer, conversation, sendText } from "./procurement";
 import { requestId, openEnquiry } from "../procurement";
+import {
+  messageCaption,
+  captionHash,
+  sameAttachmentMessage,
+} from "../message-caption";
 import type { APIContext } from "astro";
 import { parseCookieHeader } from "@supabase/ssr";
 import { AccessError, json, positiveId, textField } from "../security";
@@ -21,6 +26,7 @@ type Intent = {
   mime: string;
   created: number;
   key: string;
+  caption_hash?: string;
 };
 const cookieName = (key: string) => "ss-upload-" + key;
 const options = (context: APIContext) => ({
@@ -40,6 +46,11 @@ export function ownedIntent(value: unknown, user: string): value is Intent {
     !Number.isFinite(i.created) ||
     i.created > Date.now() ||
     !/^[a-f0-9-]{36}$/.test(i.key)
+  )
+    return false;
+  if (
+    i.caption_hash !== undefined &&
+    (i.kind !== "message" || !/^[a-f0-9]{64}$/.test(i.caption_hash))
   )
     return false;
   if (
@@ -194,6 +205,9 @@ export async function prepareUpload(
       extension,
     mime,
     created: Date.now(),
+    ...(kind === "message"
+      ? { caption_hash: await captionHash(messageCaption(input.caption)) }
+      : {}),
   };
   // Intent reaches the browser before any file is uploaded, including lost responses.
   context.cookies.set(
@@ -257,6 +271,17 @@ export async function attachUpload(context: APIContext, form: FormData) {
     throw new AccessError(400, "invalid_upload", "Choose one file.");
   const kind = form.get("kind"),
     id = Number(form.get("target_id"));
+  const caption = kind === "message" ? messageCaption(form.get("caption")) : "";
+  const hash = kind === "message" ? await captionHash(caption) : undefined;
+  if (
+    recorded?.kind === "message" &&
+    (recorded.caption_hash ? recorded.caption_hash !== hash : caption !== "")
+  )
+    throw new AccessError(
+      409,
+      "retry_changed",
+      "Retry the original file and caption, or reload to start a new upload.",
+    );
   const extension =
     file.type === "application/pdf"
       ? "pdf"
@@ -272,6 +297,7 @@ export async function attachUpload(context: APIContext, form: FormData) {
     key,
     mime: file.type,
     created: Date.now(),
+    ...(kind === "message" ? { caption_hash: hash } : {}),
     path:
       (kind === "listing"
         ? state.user.id + "/" + id
@@ -332,7 +358,9 @@ export async function attachUpload(context: APIContext, form: FormData) {
           : intent.kind === "message"
             ? await state.client
                 .from("message_attachments")
-                .select("id")
+                .select(
+                  "id,message_id,file_name,file_mime_type,file_size_bytes",
+                )
                 .eq("file_url", intent.path)
                 .maybeSingle()
             : await state.client
@@ -343,6 +371,39 @@ export async function attachUpload(context: APIContext, form: FormData) {
                 .maybeSingle();
   checked(existing.error);
   if (existing.data) {
+    if (intent.kind === "message") {
+      const attachment = existing.data as {
+        message_id?: number;
+        file_name?: string;
+        file_mime_type?: string;
+        file_size_bytes?: number;
+      };
+      const message = await state.client
+        .from("messages")
+        .select(
+          "conversation_id,sender_user_id,sender_company_id,client_message_id,message_type,content",
+        )
+        .eq("id", attachment.message_id!)
+        .maybeSingle();
+      checked(message.error);
+      sameAttachmentMessage(message.data, {
+        conversation: intent.target,
+        user: state.user.id,
+        company: positiveId(form.get("company_id")),
+        key: requestId(intent.key),
+        caption,
+      });
+      if (
+        attachment.file_name !== file.name ||
+        attachment.file_mime_type !== intent.mime ||
+        attachment.file_size_bytes !== bytes.length
+      )
+        throw new AccessError(
+          409,
+          "attachment_unconfirmed",
+          "Retry must use the original file and caption.",
+        );
+    }
     if (intent.kind === "deal") {
       const row = existing.data as {
         deal_id?: number;
@@ -457,7 +518,7 @@ export async function attachUpload(context: APIContext, form: FormData) {
       intent.target,
       form.get("company_id"),
       requestId(intent.key),
-      "",
+      caption,
       "attachment",
     );
     // Same upload key identifies both the message and attachment across a partial failure.
@@ -471,19 +532,17 @@ export async function attachUpload(context: APIContext, form: FormData) {
   } else if (intent.kind === "deal") {
     checked(
       (
-        await state.client
-          .from("deal_documents")
-          .upsert(
-            {
-              deal_id: intent.target,
-              uploaded_by_user_id: state.user.id,
-              storage_path: intent.path,
-              file_name: file.name,
-              file_mime_type: intent.mime,
-              file_size_bytes: bytes.length,
-            },
-            { onConflict: "storage_path", ignoreDuplicates: true },
-          )
+        await state.client.from("deal_documents").upsert(
+          {
+            deal_id: intent.target,
+            uploaded_by_user_id: state.user.id,
+            storage_path: intent.path,
+            file_name: file.name,
+            file_mime_type: intent.mime,
+            file_size_bytes: bytes.length,
+          },
+          { onConflict: "storage_path", ignoreDuplicates: true },
+        )
       ).error,
     );
     const confirmed = await state.client
@@ -732,7 +791,6 @@ export async function removeEnquiryFile(
     } else cleaned = ["gone", "retained"].includes(claim.data ?? "");
   } catch {}
   return json({
-    redirect:
-      "/enquiries/" + e.id + (cleaned ? "" : "?notice=storage-cleanup"),
+    redirect: "/enquiries/" + e.id + (cleaned ? "" : "?notice=storage-cleanup"),
   });
 }

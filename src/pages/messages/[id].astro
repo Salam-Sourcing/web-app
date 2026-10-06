@@ -1,5 +1,6 @@
 ---
 import MessageAttachment from "../../components/MessageAttachment.astro";
+import Icon from "../../components/Icon.astro";
 import AppLayout from "../../layouts/AppLayout.astro";
 import { requireWorkspace } from "../../lib/server/access";
 import {
@@ -8,8 +9,9 @@ import {
   messagePage,
   companySummaries,
 } from "../../lib/server/procurement";
-import { quantityLabel } from "../../lib/procurement";
+import { dateLabel, quantityLabel } from "../../lib/procurement";
 import { positiveId } from "../../lib/security";
+import { MESSAGE_LIMIT } from "../../lib/client-contracts";
 const state = await requireWorkspace(Astro),
   id = positiveId(Astro.params.id),
   cv = await conversation(state, id),
@@ -29,9 +31,16 @@ const companies = otherId ? await companySummaries(state, [otherId]) : [],
   state={state}
   description={"Enquiry #" + e.id}
 >
-  <a slot="actions" class="button secondary" href="/messages"
-    >All messages</a
-  >
+  <div slot="actions" class="row-actions">
+    {
+      other && (
+        <a class="button secondary" href={"/suppliers/" + otherId}>
+          View company profile
+        </a>
+      )
+    }
+    <a class="button secondary" href="/messages">All messages</a>
+  </div>
   <section
     class="card thread"
     data-thread
@@ -73,18 +82,25 @@ const companies = otherId ? await companySummaries(state, [otherId]) : [],
             data-sent-at={m.sent_at}
           >
             {m.content && <p class="preserve-lines">{m.content}</p>}
-            {m.attachments.map(a => <MessageAttachment attachment={a}/>)}
+            {m.attachments.map((a) => (
+              <MessageAttachment attachment={a} />
+            ))}
             {!m.content && !m.attachments.length && (
               <p class="muted">Attachment processing or unavailable.</p>
             )}
             <small>
-              <time datetime={m.sent_at}>
-                {new Date(m.sent_at).toLocaleString("en-CA", {
-                  timeZone: "America/Edmonton",
-                })}{" "}
-                MT
-              </time>
+              <time datetime={m.sent_at}>{dateLabel(m.sent_at)}</time>
               {m.outgoing ? " · " + (m.seen ? "Seen" : "Sent") : ""}
+              {!m.outgoing && (
+                <a
+                  class="chat-icon-button message-report"
+                  href={"/account/report?type=message&id=" + m.id}
+                  aria-label="Report message"
+                  title="Report message"
+                >
+                  <Icon name="flag" size={18} />
+                </a>
+              )}
             </small>
           </article>
         ))
@@ -103,37 +119,72 @@ const companies = otherId ? await companySummaries(state, [otherId]) : [],
           <>
             <form data-send-form class="form-stack">
               <>
-                <label class="field">
+                <label class="sr-only" for="chat-message">
                   Message
-                  <textarea
-                    name="content"
-                    maxlength="8000"
-                    rows="3"
-                    required
-                    placeholder="Write a message…"
-                  />
                 </label>
-                <div class="row-actions">
+                <div class="chat-composer-input">
                   <>
-                    <button class="button" type="submit" data-send>
-                      Send message
-                    </button>
                     <button
-                      class="button secondary"
+                      class="chat-icon-button attachment-trigger"
                       type="button"
-                      data-retry
-                      hidden
+                      data-attachment-open
+                      aria-label="Attach a file"
+                      title="Attach a file"
+                      aria-haspopup="dialog"
+                      aria-controls="chat-attachment-dialog"
                     >
-                      Retry same message
+                      <Icon name="paperclip" size={22} />
+                    </button>
+                    <textarea
+                      id="chat-message"
+                      name="content"
+                      maxlength={MESSAGE_LIMIT}
+                      rows="1"
+                      required
+                      placeholder="Message…"
+                    />
+                    <button
+                      class="chat-icon-button chat-send-button"
+                      type="submit"
+                      data-send
+                      disabled
+                      aria-label="Send message"
+                      title="Send message"
+                    >
+                      <Icon name="send" size={22} />
                     </button>
                   </>
                 </div>
+                <button
+                  class="button secondary chat-retry-button"
+                  type="button"
+                  data-retry
+                  hidden
+                >
+                  Retry same message
+                </button>
                 <p data-form-message hidden role="status" />
               </>
             </form>
-            <details class="attachment-composer">
+            <dialog
+              id="chat-attachment-dialog"
+              class="chat-attachment-dialog"
+              data-attachment-dialog
+              aria-labelledby="chat-attachment-title"
+            >
               <>
-                <summary>Send a file</summary>
+                <header class="chat-attachment-header">
+                  <h2 id="chat-attachment-title">Send an attachment</h2>
+                  <button
+                    type="button"
+                    class="chat-icon-button"
+                    data-attachment-close
+                    aria-label="Close attachment popup"
+                    title="Close"
+                  >
+                    <Icon name="close" />
+                  </button>
+                </header>
                 <form class="form" data-file-form data-kind="message">
                   <>
                     <input type="hidden" name="target_id" value={id} />
@@ -150,15 +201,26 @@ const companies = otherId ? await companySummaries(state, [otherId]) : [],
                         required
                       />
                     </label>
+                    <label class="field">
+                      Caption (optional)
+                      <textarea
+                        name="caption"
+                        maxlength={MESSAGE_LIMIT}
+                        rows="2"
+                        placeholder="Add a message about this file…"
+                      />
+                    </label>
                     <p class="help-text">
-                      JPEG, PNG, WebP or PDF, under 10 MB.
+                      JPEG, PNG, WebP or PDF, up to 10 MB.
                     </p>
-                    <button class="button secondary">Send file</button>
+                    <button type="submit" class="button">
+                      Send attachment
+                    </button>
                     <p data-form-message hidden role="status" />
                   </>
                 </form>
               </>
-            </details>
+            </dialog>
           </>
         </div>
       ) : (

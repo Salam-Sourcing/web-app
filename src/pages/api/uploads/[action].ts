@@ -25,7 +25,10 @@ export const POST: APIRoute = async (context) => {
       await requireWorkspace(context);
       return await attachUpload(context, await readMultipart(context.request));
     }
-    const input = await readMutation(context.request);
+    const input = await readMutation(
+      context.request,
+      context.params.action === "prepare" ? 65536 : 16384,
+    );
     if (context.params.action === "prepare")
       return await prepareUpload(context, input);
     if (context.params.action === "recover")

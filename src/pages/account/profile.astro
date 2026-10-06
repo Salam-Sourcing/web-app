@@ -3,10 +3,13 @@ import AppLayout from "../../layouts/AppLayout.astro";
 import AccountForm from "../../components/AccountForm.astro";
 import { requireWorkspace } from "../../lib/server/access";
 import { checked } from "../../lib/server/catalog";
+import { fieldMaximum } from "../../lib/client-contracts";
 const state = await requireWorkspace(Astro);
 const r = await state.client
   .from("profiles")
-  .select("contact_number,country")
+  .select(
+    "contact_number,country,status,email_verified_at,last_login_at,created_at,updated_at",
+  )
   .eq("id", state.user.id)
   .single();
 checked(r.error);
@@ -35,7 +38,7 @@ checked(r.error);
             name="first_name"
             value={state.profile.first_name}
             required
-            maxlength="80"
+            maxlength={fieldMaximum(80, state.profile.first_name)}
             autocomplete="given-name"
           /></label
         ><label class="field"
@@ -43,7 +46,7 @@ checked(r.error);
             name="last_name"
             value={state.profile.last_name}
             required
-            maxlength="80"
+            maxlength={fieldMaximum(80, state.profile.last_name)}
             autocomplete="family-name"
           /></label
         >
@@ -67,7 +70,7 @@ checked(r.error);
           type="tel"
           name="contact_number"
           value={r.data?.contact_number}
-          maxlength="60"
+          maxlength={fieldMaximum(60, r.data?.contact_number)}
           autocomplete="tel"
         /></label
       >
@@ -75,10 +78,38 @@ checked(r.error);
         >Country<input
           name="country"
           value={r.data?.country}
-          maxlength="100"
+          maxlength={fieldMaximum(100, r.data?.country)}
           autocomplete="country-name"
         /></label
       >
     </AccountForm>
+    <h2 class="mt-6">Account information</h2>
+    <dl class="mt-3">
+      {
+        [
+          ["Status", r.data?.status],
+          ["Email verified", r.data?.email_verified_at],
+          ["Last login", r.data?.last_login_at],
+          ["Created", r.data?.created_at],
+          ["Updated", r.data?.updated_at],
+        ].map(([label, value]) => (
+          <div class="info-row">
+            <>
+              <dt>{label}</dt>
+              <dd>
+                {label === "Status"
+                  ? value
+                  : value
+                    ? new Date(value).toLocaleString("en-CA", {
+                        timeZone: "America/Edmonton",
+                        timeZoneName: "short",
+                      })
+                    : "Not available"}
+              </dd>
+            </>
+          </div>
+        ))
+      }
+    </dl>
   </section>
 </AppLayout>

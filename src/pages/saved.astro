@@ -2,7 +2,22 @@
 import AppLayout from "../layouts/AppLayout.astro";
 import CatalogFeed from "../components/CatalogFeed.astro";
 import { requireWorkspace } from "../lib/server/access";
+import SaveButton from "../components/SaveButton.astro";
+import { checked } from "../lib/server/catalog";
+import { AccessError } from "../lib/security";
 const state = await requireWorkspace(Astro);
+const unavailable = Astro.url.searchParams.get("tab") === "unavailable";
+const offset = Number(Astro.url.searchParams.get("offset") ?? 0);
+if (!Number.isSafeInteger(offset) || offset < 0 || offset > 240000)
+  throw new AccessError(400, "invalid_page", "Choose a valid page.");
+const result = unavailable
+  ? await state.client.rpc("get_unavailable_saved_listings", {
+      p_offset: offset,
+      p_limit: 25,
+    })
+  : null;
+checked(result?.error ?? null);
+const rows = result?.data?.slice(0, 24) ?? [];
 ---
 
 <AppLayout
@@ -14,5 +29,65 @@ const state = await requireWorkspace(Astro);
   <a slot="actions" class="button secondary" href="/discover"
     >Back to Discover</a
   >
-  <CatalogFeed state={state} saved={true} />
+  {
+    unavailable ? (
+      <>
+        <nav class="tab-row" aria-label="Saved item type">
+          <>
+            <a href="/saved">Listings</a>
+            <a href="/saved?tab=suppliers">Suppliers</a>
+            <a href="/saved?tab=unavailable" aria-current="page">
+              Unavailable
+            </a>
+          </>
+        </nav>
+        <p class="help-text mb-5">
+          These listings are no longer available to your account. You can remove
+          them from your shortlist.
+        </p>
+        <div class="stack">
+          {rows.map((row) => (
+            <article
+              class="card"
+              data-record-id={row.listing_id}
+              data-remove-on-unsave
+            >
+              <h2>Listing unavailable</h2>
+              <SaveButton
+                id={row.listing_id}
+                kind="listing"
+                saved={true}
+                name="unavailable listing"
+              />
+            </article>
+          ))}
+          {!rows.length && (
+            <section class="card">
+              <h2>No unavailable listings</h2>
+            </section>
+          )}
+        </div>
+        <nav class="actions mt-5" aria-label="Unavailable listings pages">
+          {offset > 0 && (
+            <a
+              class="button secondary"
+              href={"/saved?tab=unavailable&offset=" + Math.max(0, offset - 24)}
+            >
+              Previous
+            </a>
+          )}
+          {(result?.data?.length ?? 0) > 24 && (
+            <a
+              class="button secondary"
+              href={"/saved?tab=unavailable&offset=" + (offset + 24)}
+            >
+              Next
+            </a>
+          )}
+        </nav>
+      </>
+    ) : (
+      <CatalogFeed state={state} saved={true} />
+    )
+  }
 </AppLayout>

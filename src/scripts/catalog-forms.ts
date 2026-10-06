@@ -1,4 +1,5 @@
 import { post, ApiError } from "./forms";
+import { prepareListingImage } from "./listing-images";
 type Prepared = { key: string; target: number };
 const plans = new WeakMap<File, Prepared>();
 function display(form: HTMLFormElement, value: string, error = false) {
@@ -67,11 +68,9 @@ function validFiles(
     !document && files.length + existing > 5
       ? "Choose at most five images including existing ones."
       : files.some(
-            (f) => f.size === 0 || f.size >= (document ? 10 : 5) * 1024 * 1024,
+            (f) => f.size === 0 || f.size > (document ? 10 : 50) * 1024 * 1024,
           )
-        ? "Choose nonempty files smaller than " +
-          (document ? "10" : "5") +
-          " MB."
+        ? "Choose nonempty files up to " + (document ? "10" : "50") + " MB."
         : files.some(
               (f) =>
                 !(
@@ -99,24 +98,35 @@ export function bindListingForms() {
       const specs = form.querySelector<HTMLElement>("[data-specs]")!,
         images = form.querySelector<HTMLInputElement>('input[name="images"]')!;
       const previewURLs: string[] = [];
+      let previewGeneration = 0;
       const clearPreviews = () => {
+        previewGeneration++;
         previewURLs.splice(0).forEach(URL.revokeObjectURL);
         form.querySelector("[data-upload-previews]")?.replaceChildren();
       };
-      images.addEventListener("change", () => {
+      images.addEventListener("change", async () => {
         clearPreviews();
+        const generation = previewGeneration;
         const files = validFiles(
           images,
           Number(form.dataset.existingImages ?? 0),
         );
         if (!images.reportValidity()) return;
-        for (const file of files) {
-          const image = document.createElement("img");
-          image.alt = file.name;
-          const url = URL.createObjectURL(file);
-          previewURLs.push(url);
-          image.src = url;
-          form.querySelector("[data-upload-previews]")!.append(image);
+        try {
+          for (const file of files) {
+            const prepared = await prepareListingImage(file);
+            if (generation !== previewGeneration || !form.isConnected) return;
+            const image = document.createElement("img");
+            image.alt = file.name;
+            const url = URL.createObjectURL(prepared);
+            previewURLs.push(url);
+            image.src = url;
+            form.querySelector("[data-upload-previews]")!.append(image);
+          }
+        } catch (error) {
+          if (generation !== previewGeneration) return;
+          images.setCustomValidity((error as Error).message);
+          display(form, (error as Error).message, true);
         }
       });
       specs.addEventListener("click", (event) => {
@@ -191,16 +201,23 @@ export function bindListingForms() {
           form.querySelectorAll<HTMLButtonElement>("button"),
         );
         buttons.forEach((button) => (button.disabled = true));
+        images.disabled = true;
         const company = String(new FormData(form).get("company_id"));
         let draftId = form.dataset.listingId;
         let uploaded = 0;
+        let creationStarted = false;
         try {
+          display(form, "Preparing your images…");
+          const prepared = new Map<File, File>();
+          for (const file of files)
+            prepared.set(file, await prepareListingImage(file));
           const data = Object.fromEntries(
             Array.from(new FormData(form)).filter(([key]) => key !== "images"),
           );
           data.specifications = JSON.stringify(specification);
           if (draftId) data.listing_id = draftId;
           display(form, "Saving your draft…");
+          creationStarted = true;
           const result = await post(
             "/api/catalog/listing-" + (draftId ? "update" : "create"),
             data,
@@ -223,7 +240,12 @@ export function bindListingForms() {
                 pending.length +
                 "…",
             );
-            await upload(file, "listing", Number(draftId), company);
+            await upload(
+              prepared.get(file)!,
+              "listing",
+              Number(draftId),
+              company,
+            );
             completedFiles.add(file);
             uploaded++;
             form.dataset.existingImages = String(
@@ -250,6 +272,7 @@ export function bindListingForms() {
           );
         } catch (error) {
           if (
+            creationStarted &&
             !draftId &&
             (!(error instanceof ApiError) || error.status >= 500)
           ) {
@@ -274,6 +297,7 @@ export function bindListingForms() {
             );
         } finally {
           form.dataset.busy = "false";
+          images.disabled = false;
           form.removeAttribute("aria-busy");
           buttons.forEach(
             (button) =>

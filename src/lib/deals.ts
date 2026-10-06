@@ -72,6 +72,11 @@ export const dealFileTypes = [
   "image/jpeg",
   "image/png",
 ] as const;
-export function messageImage(mime: string | null | undefined): boolean {
-  return ["image/jpeg", "image/png", "image/webp"].includes(mime ?? "");
+export function messageImage(
+  mime: string | null | undefined,
+  name?: string | null,
+): boolean {
+  return mime
+    ? ["image/jpeg", "image/png", "image/webp"].includes(mime.toLowerCase())
+    : /\.(jpe?g|png|webp)$/i.test(name ?? "");
 }

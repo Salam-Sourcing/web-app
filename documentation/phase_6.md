@@ -18,8 +18,8 @@ extra path segments, query strings, fragments and invalid IDs. Existing custom
 scheme/manual-code acceptance remains compatible. Flutter shows/copies the
 website link with haptic feedback on the added tappable text.
 
-The prepared invitation email includes website and app links. The source handler
-was tested but not redeployed or enabled. HTTPS parsing does not itself configure
+The prepared invitation email includes website and app links. Hosted version 2 is deliberately locked off; this follow-up did not redeploy
+or enable the sender. HTTPS parsing does not itself configure
 iOS universal links, Android app associations or deferred installation; opening
 the website remains the supported fallback until those are deliberately added.
 
@@ -84,15 +84,20 @@ gRPC server. See the [maintainer's patched-version advisory](https://github.com/
 - The release runner starts a built production preview, exercises public/private
   routes, no-store headers, CSP, logged-out API rejection and cross-origin mutation
   rejection, then stops its preview. CI now runs check, tests, build and this runner.
-- Latest checks: 125 web tests; Astro check with zero errors/warnings (six hints:
-  one existing callback hint plus five SDK compatibility deprecations); successful
-  production build; 327 production HTTP assertions and 309 development assertions.
-- Flutter: clean analysis, all 95 tests passing and two build-config tests passing.
-- Shared backend: 378 isolated database assertions and nine push/email handler
+- Latest parity follow-up: 137 web tests; Astro check with zero errors/warnings
+  (six existing hints); successful production build; 378 production HTTP assertions.
+- Flutter: clean analysis and all 120 tests passing, including native form/layout,
+  PDF retry and selected-company chat regressions.
+- Shared backend: 406 isolated database assertions and nine push/email handler
   tests passing. No real recipient delivery is inferred from these checks.
 - New account surfaces were inspected with labelled fixture controls and no
   document overflow at 320/390 and desktop 1280 pixels. RTL/enlarged root-text
   billing also fits. This does not replace the full accessibility/device matrix.
+
+Current non-deferred corrections and the applied invoker-query migration are
+recorded in the [parity correction report](client_parity_fixes_2026-10-06.md).
+The original viewport checks above predate this follow-up; its new interaction
+fixtures provide desktop evidence, with native widget layout checks separately.
 
 ## Shared launch dependencies
 

@@ -54,11 +54,23 @@ export async function handleCatalogAction(
   }
   if (action === "company-update") {
     const company = companyManager(state, input.company_id);
+    const existing = await state.client
+      .from("companies")
+      .select("*")
+      .eq("id", company.id)
+      .single();
+    checked(existing.error);
+    if (!existing.data)
+      throw new AccessError(
+        404,
+        "company_unavailable",
+        "Company unavailable. Refresh before editing.",
+      );
     checked(
       (
         await state.client.rpc("update_company_profile", {
           p_company_id: company.id,
-          p_profile: companyPayload(input),
+          p_profile: companyPayload(input, existing.data),
         })
       ).error,
     );

@@ -5,18 +5,18 @@ cross-client acceptance remains open. Browser push is deferred separately.
 
 ## Features
 
-| Route                        | Behavior                                                                                                                                                     |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/app/account/profile`       | Own name, contact number, country and Auth email change. Confirmation stays bound to the originating browser and existing MFA checks.                        |
-| `/app/account/team`          | Actual members/pending invitations, create/revoke, role changes/removal and manual code/website link. Defaults new invitations to member.                    |
-| `/app/account/team/:userId`  | Owner permission restrictions; role defaults and an explicit empty custom restriction are distinct.                                                          |
-| `/app/invitations/:uuid`     | Company, assigned role and expiry preview; verified invited email, issuer authority, expiry/revocation and seat limits remain guarded by the shared backend. |
-| `/app/account/billing`       | Actual plans, active subscription/limits, latest 50 invoices and pending requests. Start/change/cancel use existing RPCs and explicit confirmation.          |
-| `/app/account/notifications` | Latest 100 own updates, exact unread count, explicit refresh, read/all-read/delete and exact record navigation.                                              |
-| `/app/account/preferences`   | Message, enquiry, quote, deal, listing-review and saved-search preferences. Browser push stays disabled without configuration.                               |
-| `/app/account/searches`      | Up to 25 private saved listing/RFQ searches, create/edit/delete, hourly/daily alert opt-in and current matches.                                              |
-| `/app/account/insights`      | Current company aggregates for 7/30/90 days and latest 100 listing metrics; unavailable ratios/reply times are shown honestly.                               |
-| `/app/account/support`       | Own support requests, versioned replies, appeals, ownership recovery using eligible existing team members, and private personal-data download.               |
+| Route                    | Behavior                                                                                                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/account/profile`       | Own name, contact number, country, account metadata and Auth email change. Confirmation stays bound to the originating browser and existing MFA checks.      |
+| `/account/team`          | Actual members/pending invitations, create/revoke, role changes/removal and copyable code/website link. Defaults new invitations to member.                  |
+| `/account/team/:userId`  | Owner permission restrictions; role defaults and an explicit empty custom restriction are distinct.                                                          |
+| `/invitations/:uuid`     | Company, assigned role and expiry preview; verified invited email, issuer authority, expiry/revocation and seat limits remain guarded by the shared backend. |
+| `/account/billing`       | Actual plans, active subscription/limits, latest 50 invoices and pending requests. Start/change/cancel use existing RPCs and explicit confirmation.          |
+| `/account/notifications` | Latest 100 own updates, global unread indicator, nonblocking automatic polling, explicit refresh, read/all-read/delete and exact record navigation.          |
+| `/account/preferences`   | Message, enquiry, quote, deal, listing-review and saved-search preferences. Browser push stays disabled without configuration.                               |
+| `/account/searches`      | Up to 25 private saved listing/RFQ searches, create/edit/delete, hourly/daily alert opt-in and current matches.                                              |
+| `/account/insights`      | Current company aggregates for 7/30/90 days and latest 100 listing metrics; unavailable ratios/reply times are shown honestly.                               |
+| `/account/support`       | Own support requests, versioned replies, appeals, ownership recovery using eligible existing team members, and private personal-data download.               |
 
 Company profile/verification and the selected-company buyer dashboard reuse their
 earlier phase implementation. Discover and enquiry filters now offer named saved

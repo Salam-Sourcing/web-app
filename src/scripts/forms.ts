@@ -1,3 +1,4 @@
+import { bindFieldControls } from "./field-controls";
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -207,6 +208,7 @@ function message(
   element.setAttribute("role", state === "error" ? "alert" : "status");
 }
 export function bindForms() {
+  bindFieldControls();
   document
     .querySelectorAll<HTMLFormElement>("form[data-api-form]")
     .forEach((form) => {

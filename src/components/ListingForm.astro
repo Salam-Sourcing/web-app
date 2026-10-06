@@ -113,7 +113,8 @@ const val = (key: keyof Listing) => String(listing?.[key] ?? "");
           ))
         }
       </div><button class="button secondary mt-3" type="button" data-spec-add
-        >Add specification</button>
+        >Add specification</button
+      >
     </div>
   </fieldset>
   <fieldset data-wizard-step="1" hidden>
@@ -151,7 +152,8 @@ const val = (key: keyof Listing) => String(listing?.[key] ?? "");
           min="0"
           step="1"
           value={val("estimated_lead_time_days")}
-        /></label>
+        /></label
+      >
     </div><label class="field"
       >Origin country (optional)<input
         name="origin_country"
@@ -168,8 +170,8 @@ const val = (key: keyof Listing) => String(listing?.[key] ?? "");
       /></label
     ><p class="help-text">
       Up to five images including the {listing?.listing_images.length ?? 0} existing
-      images. JPEG, PNG or WebP, each smaller than 5 MB. Existing images and their
-      cover order are retained.
+      images. JPEG, PNG or WebP. Photos are prepared automatically; each upload must
+      be up to 5 MB. Existing images and their cover order are retained.
     </p><div class="upload-previews" data-upload-previews></div>
   </fieldset>
   <fieldset data-wizard-step="2" hidden>
@@ -202,7 +204,8 @@ const val = (key: keyof Listing) => String(listing?.[key] ?? "");
       data-wizard-submit
       name="finish"
       value="submit"
-      hidden>Submit for review</button>
+      hidden>Submit for review</button
+    >
   </div>
 </form>
 <script>

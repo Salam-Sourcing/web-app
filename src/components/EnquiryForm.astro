@@ -136,8 +136,6 @@ const direct = !!supplier || e?.enquiry_type === "direct";
     <label class="field"
       >Currency<input
         name="currency"
-        readonly={!!e}
-        title={e ? "Currency is fixed after creation." : undefined}
         pattern="[A-Za-z]{3}"
         minlength="3"
         maxlength="3"

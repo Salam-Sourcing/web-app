@@ -86,13 +86,12 @@ const q = result?.data;
           value={q?.currency ?? e.currency}
         /></label
       ><label class="field"
-        >Lead time (days)<input
+        >Lead time (days, optional)<input
           type="number"
           name="lead_time_days"
           min="0"
           max="36500"
           step="1"
-          required
           value={q?.lead_time_days}
         /></label
       >
@@ -103,7 +102,8 @@ const q = result?.data;
         name="valid_until"
         required
         data-date-field
-        data-iso={q?.valid_until ?? ""}
+        data-iso={q?.valid_until ??
+          new Date(Date.now() + 30 * 86400000).toISOString()}
       /></label
     >
     <label class="field"

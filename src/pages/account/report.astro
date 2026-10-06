@@ -2,6 +2,7 @@
 import AppLayout from "../../layouts/AppLayout.astro";
 import { requireWorkspace } from "../../lib/server/access";
 import { positiveId } from "../../lib/security";
+import { reportReasons, REPORT_LIMIT } from "../../lib/client-contracts";
 const state = await requireWorkspace(Astro);
 const type = Astro.url.searchParams.get("type");
 let id: number | undefined;
@@ -10,14 +11,6 @@ try {
 } catch {}
 const valid =
   type && ["company", "listing", "message", "review"].includes(type) && id;
-const reasons = [
-  ["spam_scam", "Spam or scam"],
-  ["misleading", "Misleading information"],
-  ["harassment", "Harassment"],
-  ["prohibited", "Prohibited content"],
-  ["impersonation", "Impersonation"],
-  ["other", "Other"],
-];
 ---
 
 <AppLayout title="Report a concern" active="account" state={state}
@@ -36,7 +29,7 @@ const reasons = [
             <label class="field">
               Reason
               <select name="reason">
-                {reasons.map(([value, label]) => (
+                {reportReasons.map(([value, label]) => (
                   <option value={value}>{label}</option>
                 ))}
               </select>
@@ -46,7 +39,7 @@ const reasons = [
               <textarea
                 name="description"
                 minlength="5"
-                maxlength="4000"
+                maxlength={REPORT_LIMIT}
                 required
               />
             </label>

@@ -1,5 +1,10 @@
 import { AccessError, positiveId, textField } from "./security";
 import type { Database, Json } from "./database.types";
+import {
+  companyLimits,
+  preservedText,
+  unchangedText,
+} from "./client-contracts";
 export const PAGE_SIZE = 24;
 export const listingStatuses = [
   "draft",
@@ -97,7 +102,10 @@ export function website(value: unknown): string | null {
     );
   return url.href;
 }
-export function companyPayload(data: Record<string, unknown>) {
+export function companyPayload(
+  data: Record<string, unknown>,
+  existing?: Record<string, unknown>,
+) {
   const type = textField(data, "company_type", 30);
   if (!["buyer", "supplier", "buyer_supplier"].includes(type))
     throw new AccessError(
@@ -105,31 +113,44 @@ export function companyPayload(data: Record<string, unknown>) {
       "invalid_type",
       "Choose buyer, supplier, or both.",
     );
-  const email = textField(data, "email", 254).toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+  const field = (key: keyof typeof companyLimits, required = false) =>
+    preservedText(
+      { ...data, [key]: data[key] ?? "" },
+      key,
+      companyLimits[key],
+      existing?.[key],
+      required ? 1 : 0,
+    );
+  const email = field("email", !existing);
+  if (
+    (!existing || email) &&
+    !unchangedText(email, existing?.email) &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  )
     throw new AccessError(
       400,
       "invalid_email",
       "Enter a valid business email.",
     );
   return {
-    legal_name: textField(data, "legal_name", 200),
-    display_name: textField(data, "display_name", 200),
+    legal_name: field("legal_name", true),
+    display_name: field("display_name", true),
     company_type: type,
-    country: textField(data, "country", 100),
-    description: optional(data, "description", 4000),
-    business_registration_number: optional(
-      data,
-      "business_registration_number",
-    ),
-    tax_number: optional(data, "tax_number"),
-    province_state: optional(data, "province_state", 100),
-    city: optional(data, "city", 100),
-    address: optional(data, "address", 500),
-    postal_code: optional(data, "postal_code", 30),
-    contact_number: optional(data, "contact_number", 50),
-    email,
-    website: website(data.website),
+    country: field("country", true),
+    description: field("description") || null,
+    business_registration_number: field("business_registration_number") || null,
+    tax_number: field("tax_number") || null,
+    province_state: field("province_state") || null,
+    city: field("city") || null,
+    address: field("address") || null,
+    postal_code: field("postal_code") || null,
+    contact_number: field("contact_number") || null,
+    email:
+      (unchangedText(email, existing?.email) ? email : email.toLowerCase()) ||
+      null,
+    website: unchangedText(data.website, existing?.website)
+      ? (existing!.website as string)
+      : website(data.website),
   };
 }
 export function listingPayload(data: Record<string, unknown>) {
@@ -292,16 +313,11 @@ export function validateFile(
   kind: "listing" | "document" | "enquiry" | "message" | "deal",
 ) {
   const max = kind === "listing" ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
-  if (
-    bytes.length === 0 ||
-    (kind === "deal" ? bytes.length > max : bytes.length >= max)
-  )
+  if (bytes.length === 0 || bytes.length > max)
     throw new AccessError(
       400,
       "file_size",
-      "Choose a file smaller than " +
-        (kind === "listing" ? "5" : "10") +
-        " MB.",
+      "Choose a file up to " + (kind === "listing" ? "5" : "10") + " MB.",
     );
   const prefix = Array.from(bytes.subarray(0, 12));
   const matches =

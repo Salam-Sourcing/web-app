@@ -5,10 +5,33 @@ import type { Workspace } from "../src/lib/server/access.ts";
 import { notificationTarget } from "../src/lib/server/notification-target.ts";
 import { AccessError } from "../src/lib/security.ts";
 
-function fixture(notification: any, rpcError = false) {
+function fixture(
+  notification: any,
+  rpcError = false,
+  options: { verification?: any; companies?: any[]; role?: string } = {},
+) {
+  const companies = options.companies ?? [
+    { id: 4, role: options.role ?? "owner" },
+  ];
   const calls: any[] = [],
     cookies: any[] = [];
   const client = {
+    auth: {
+      getUser: async () => ({
+        data: { user: { id: "current-user", is_anonymous: false } },
+        error: null,
+      }),
+      mfa: {
+        listFactors: async () => ({
+          data: { all: [], totp: [], phone: [] },
+          error: null,
+        }),
+        getAuthenticatorAssuranceLevel: async () => ({
+          data: { currentLevel: "aal1" },
+          error: null,
+        }),
+      },
+    },
     from: (table: string) => {
       calls.push(["from", table]);
       const query: any = {
@@ -20,14 +43,22 @@ function fixture(notification: any, rpcError = false) {
           calls.push(["eq", column, value]);
           return query;
         },
-        maybeSingle: async () => ({ data: notification, error: null }),
+        maybeSingle: async () => ({
+          data:
+            table === "notifications"
+              ? notification
+              : table === "company_verifications"
+                ? (options.verification ?? null)
+                : { id: "current-user", status: "active" },
+          error: null,
+        }),
       };
       return query;
     },
     rpc: async (name: string, args: unknown) => {
       calls.push(["rpc", name, args]);
       return {
-        data: [],
+        data: name === "get_my_companies" ? companies : [],
         error: rpcError
           ? { code: "P0001", message: "Search unavailable" }
           : null,
@@ -37,8 +68,8 @@ function fixture(notification: any, rpcError = false) {
   const state = {
     client,
     user: { id: "current-user" },
-    company: { id: 4 },
-    companies: [{ id: 4 }],
+    company: companies[0],
+    companies,
     permissions: [],
   } as unknown as Workspace;
   const context = {
@@ -102,5 +133,117 @@ test("saved-search notification resolves its owned record and ignores untrusted 
 test("deleted saved-search notifications cannot reopen a stale destination", async () => {
   const f = fixture({ entity_type: "saved_search", entity_id: 12 }, true);
   await assert.rejects(() => notificationTarget(f.context, f.state, 73));
+  assert.equal(f.cookies.length, 0);
+});
+
+test("support notice without entity fields opens only the fixed support destination", async () => {
+  const f = fixture({
+    entity_type: null,
+    entity_id: null,
+    data: {
+      case_id: "11111111-1111-4111-8111-111111111111",
+      redirect: "https://evil.invalid",
+    },
+  });
+  assert.deepEqual(await notificationTarget(f.context, f.state, 73), {
+    redirect: "/account/support",
+    companyChanged: false,
+  });
+  assert.ok(f.calls.some((c) => c[0] === "select" && c[1].includes("data")));
+});
+test("invalid support metadata cannot create a navigation destination", async () => {
+  for (const case_id of ["", "../account/security", {}, null]) {
+    const f = fixture({
+      data: { case_id },
+      entity_type: null,
+      entity_id: null,
+    });
+    assert.equal(
+      (await notificationTarget(f.context, f.state, 73)).redirect,
+      "/account/notifications",
+    );
+  }
+});
+test("verification notice resolves its authorized company and selects it", async () => {
+  const f = fixture(
+    {
+      entity_type: "company_verification",
+      entity_id: 9,
+      recipient_company_id: 8,
+    },
+    false,
+    {
+      verification: { company_id: 8 },
+      companies: [
+        { id: 4, role: "owner" },
+        { id: 8, role: "admin" },
+      ],
+    },
+  );
+  assert.deepEqual(await notificationTarget(f.context, f.state, 73), {
+    redirect: "/company",
+    companyChanged: true,
+  });
+  assert.equal(f.cookies.length, 1);
+  assert.equal(f.cookies[0][1], "8");
+  assert.ok(
+    f.calls.some((c) => c[0] === "from" && c[1] === "company_verifications"),
+  );
+});
+test("legacy verification notice without recipient company uses the owned verification record", async () => {
+  const f = fixture(
+    { entity_type: "company_verification", entity_id: 9 },
+    false,
+    {
+      verification: { company_id: 8 },
+      companies: [
+        { id: 4, role: "owner" },
+        { id: 8, role: "owner" },
+      ],
+    },
+  );
+  assert.deepEqual(await notificationTarget(f.context, f.state, 73), {
+    redirect: "/company",
+    companyChanged: true,
+  });
+});
+test("missing, unrelated and mismatched verification targets never update company selection", async () => {
+  for (const verification of [null, { company_id: 99 }]) {
+    const f = fixture(
+      { entity_type: "company_verification", entity_id: 9 },
+      false,
+      { verification },
+    );
+    await assert.rejects(() => notificationTarget(f.context, f.state, 73));
+    assert.equal(f.cookies.length, 0);
+  }
+  const f = fixture(
+    {
+      entity_type: "company_verification",
+      entity_id: 9,
+      recipient_company_id: 4,
+    },
+    false,
+    {
+      verification: { company_id: 8 },
+      companies: [
+        { id: 4, role: "owner" },
+        { id: 8, role: "owner" },
+      ],
+    },
+  );
+  await assert.rejects(() => notificationTarget(f.context, f.state, 73));
+  assert.equal(f.cookies.length, 0);
+});
+test("verification notification cannot bypass company-manager access", async () => {
+  const f = fixture(
+    { entity_type: "company_verification", entity_id: 9 },
+    false,
+    { verification: { company_id: 4 }, role: "member" },
+  );
+  await assert.rejects(
+    () => notificationTarget(f.context, f.state, 73),
+    (e: any) => e instanceof AccessError && e.status === 403,
+  );
   assert.equal(f.cookies.length, 0);
 });

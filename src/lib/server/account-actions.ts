@@ -1,4 +1,5 @@
 import type { APIContext } from "astro";
+import { preservedText } from "../client-contracts";
 import { requireWorkspace } from "./access";
 import { activeCompany, checked } from "./catalog";
 import { teamCompany } from "./account";
@@ -25,11 +26,36 @@ export async function handleAccountAction(
   if (action === "notification-open")
     return json(await notificationTarget(context, state, positiveId(input.id)));
   if (action === "profile") {
-    const first = textField(input, "first_name", 80),
-      last = textField(input, "last_name", 80),
+    const existing = await client
+      .from("profiles")
+      .select("first_name,last_name,contact_number,country")
+      .eq("id", state.user.id)
+      .single();
+    checked(existing.error);
+    if (!existing.data)
+      throw new AccessError(
+        404,
+        "profile_unavailable",
+        "Profile unavailable. Refresh before editing.",
+      );
+    const first = preservedText(
+        input,
+        "first_name",
+        80,
+        existing.data.first_name,
+      ),
+      last = preservedText(input, "last_name", 80, existing.data.last_name),
       target = email(input.email);
-    const contact = textField(input, "contact_number", 60, 0) || null,
-      country = textField(input, "country", 100, 0) || null;
+    const contact =
+        preservedText(
+          input,
+          "contact_number",
+          60,
+          existing.data.contact_number,
+          0,
+        ) || null,
+      country =
+        preservedText(input, "country", 100, existing.data.country, 0) || null;
     // Email is changed only through Auth, never by writing the profile email column.
     const update: { data: Record<string, string>; email?: string } = {
       data: { first_name: first, last_name: last },

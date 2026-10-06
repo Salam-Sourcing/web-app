@@ -41,10 +41,7 @@ const destinations = [
       <a class="skip-link" href="#main">Skip to content</a>
       <header class="workspace-header">
         <div class="container header-row">
-          <a
-            class="brand"
-            href="/"
-            aria-label="Salam Sourcing Discover"
+          <a class="brand" href="/" aria-label="Salam Sourcing Discover"
             ><img
               src="/images/salam-sourcing.png"
               alt=""
@@ -66,6 +63,16 @@ const destinations = [
               ))
             }
           </nav>
+          <a
+            href="/account/notifications"
+            class="notification-bell"
+            data-notification-bell
+            aria-label="Notifications"
+            ><Icon name="bell" /><span
+              data-notification-count
+              class="notification-count"
+              hidden></span></a
+          >
           {
             state.companies.length > 1 && (
               <form
@@ -152,6 +159,10 @@ const destinations = [
   import { bindForms } from "../scripts/forms";
   import { bindSavedActions } from "../scripts/catalog";
   import { bindBoundary } from "../scripts/boundary";
+  import { bindNotifications } from "../scripts/notifications";
+  import { bindClientErrorReporting } from "../scripts/client-errors";
+  bindClientErrorReporting();
+  bindNotifications();
   bindForms();
   bindPushLogout();
   bindBoundary();

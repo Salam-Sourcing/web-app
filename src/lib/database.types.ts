@@ -2573,6 +2573,37 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      search_enquiries: {
+        Args: { p_filters?: Json; p_offset?: number; p_limit?: number };
+        Returns: Database["public"]["Tables"]["enquiries"]["Row"][];
+        SetofOptions: {
+          from: "*";
+          to: "enquiries";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+      search_conversations: {
+        Args: {
+          p_company_id: number;
+          p_query?: string;
+          p_status?: string;
+          p_offset?: number;
+          p_limit?: number;
+        };
+        Returns: Database["public"]["Tables"]["conversations"]["Row"][];
+        SetofOptions: {
+          from: "*";
+          to: "conversations";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+      get_unavailable_saved_listings: {
+        Args: { p_offset?: number; p_limit?: number };
+        Returns: { listing_id: number }[];
+      };
+
       get_marketplace_categories: {
         Args: { p_company_id?: number; p_saved?: boolean };
         Returns: { name: string }[];

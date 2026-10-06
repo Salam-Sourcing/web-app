@@ -127,6 +127,6 @@ export async function personalExport(
   throw new AccessError(
     413,
     "export_limit",
-    "Your export exceeds the website download limit. Contact support for a complete export.",
+    "Your export exceeds the download limit. Contact support for a complete export.",
   );
 }

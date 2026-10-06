@@ -7,7 +7,9 @@ import {
   activeCompany,
   publicListing,
   publicCompany,
+  companyManager,
 } from "./catalog";
+import { supportNotice } from "../notification-display";
 import { conversation, enquiry, quoteBundle } from "./procurement";
 import { dealBundle } from "./deals";
 
@@ -20,7 +22,7 @@ export async function notificationTarget(
 ) {
   const result = await state.client
     .from("notifications")
-    .select("id,entity_type,entity_id,recipient_company_id")
+    .select("id,entity_type,entity_id,recipient_company_id,data")
     .eq("id", id)
     .eq("user_id", state.user.id)
     .maybeSingle();
@@ -42,8 +44,10 @@ export async function notificationTarget(
       );
     selected = await workspace(state.client, String(n.recipient_company_id));
   }
-  let path = "/account/notifications";
-  if (n.entity_id) {
+  let path = supportNotice(n.data)
+    ? "/account/support"
+    : "/account/notifications";
+  if (!supportNotice(n.data) && n.entity_id) {
     const entity = n.entity_id;
     if (n.entity_type === "conversation") {
       await conversation(selected, entity);
@@ -83,6 +87,31 @@ export async function notificationTarget(
         await publicListing(selected, entity);
         path = "/listings/" + entity;
       }
+    } else if (
+      n.entity_type === "company_verification" ||
+      n.entity_type === "verification"
+    ) {
+      const record = await selected.client
+        .from("company_verifications")
+        .select("company_id")
+        .eq("id", entity)
+        .maybeSingle();
+      checked(record.error);
+      const companyId = record.data?.company_id;
+      if (
+        !companyId ||
+        !state.companies.some((c) => c.id === companyId) ||
+        (n.recipient_company_id && n.recipient_company_id !== companyId)
+      )
+        throw new AccessError(
+          404,
+          "record_unavailable",
+          "This verification is unavailable.",
+        );
+      if (selected.company?.id !== companyId)
+        selected = await workspace(state.client, String(companyId));
+      companyManager(selected);
+      path = "/company";
     } else if (n.entity_type === "company") {
       if (entity === selected.company?.id) path = "/company";
       else {

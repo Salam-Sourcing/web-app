@@ -15,6 +15,108 @@ push is prepared but disabled and deferred at the user’s request.
 Complete and verify one phase before starting the next; an implemented screen
 alone does not satisfy its completion gate.
 
+## Deep parity audit follow-up — 2026-10-06
+
+The **seven additional S01–S07 workflow/contract gaps are implemented and locally
+verified in both clients**. Current details, shared limits and fresh evidence:
+[Functional parity corrections](documentation/functional_parity_fixes_2026-10-06.md).
+The [source follow-up](documentation/flutter_web_parity_followup_2026-10-06.md)
+retains its historical pre-fix observations. Earlier W/C/R corrections remain
+implemented. Full live 1:1 acceptance is still open; browser push stays deferred.
+
+### Latest corrections — locally verified
+
+- [x] Chat UI follow-up: flag report icons, web paperclip attachment/caption
+      popup and explicit Flutter caption review with haptics. See
+      [chat update and verification](documentation/chat_composer_update_2026-10-06.md).
+- [x] S01: Add an incoming-message Report action to web SSR and live/older history.
+- [x] S02: Support attachment captions on web with immutable caption/upload retry recovery.
+- [x] S03: Add the authorized counterparty company-profile action in web chat;
+      keep verification badges off chat.
+- [x] S04: Align company/profile/message validation across clients and preserve
+      safe unchanged legacy values when editing.
+- [x] S05: Include Impersonation in inline web review reporting and reconcile
+      explanation minimum/maximum validation with Flutter and hosted contracts.
+- [x] S06: Reconcile listing image preprocessing and the exact upload-size boundary.
+- [x] S07: Match complete personal exports at 100 page requests/10 MiB in both
+      clients, rejecting incomplete downloads with explicit support guidance.
+- [x] Keep web chat/inbox timestamp formatting stable through automatic refresh.
+
+The **post-fix recheck corrections are implemented and locally verified**. All 37 native screens have
+web counterparts, but that does not establish complete 1:1 behavior. Current
+evidence and refreshed screen coverage:
+[Post-fix parity recheck](documentation/flutter_web_parity_recheck_2026-10-06.md).
+
+Fix details and validation: [Recheck corrections](documentation/parity_recheck_fixes_2026-10-06.md).
+
+### Recheck findings and release gates
+
+- [x] R01: Web notification destinations for support notices with `data.case_id`
+      and authorized company-verification records; include SSR and automatic updates.
+- [x] R06: Flutter conversation notification opening selects an authorized
+      participating company when another company is currently selected.
+- [x] R07: Flutter inbox pages/searches complete conversations and derives actual
+      latest previews/exact unread counts instead of sampling 1,000 messages globally.
+- [x] R08: Flutter notification badge uses a full unread count independent of the
+      newest 100 displayed notices; Mark all read must work for older unread notices.
+- [x] R02: Web MFA key initially concealed, with reveal/hide and copy/fallback controls.
+- [x] R03: Explicit Retry photo control inside the web chat viewer.
+- [x] R05 code: Bounded diagnostic grouping, fixed error kinds and compiled code locations;
+      endpoint receipt and rejection of private/raw fields verified locally.
+- [ ] R05 operations: Configure/verify production log retention, alert routing and receipt.
+- [ ] Complete live cross-client/role/device acceptance after these corrections.
+- [ ] R04: Browser push remains deferred; preserve the existing rollout lock.
+
+The A/B checked items below describe the **earlier corrections**, not completion
+of the release acceptance gates above.
+
+**Full live parity acceptance is not established.** The source/contract audit covered
+all 37 Flutter screens and 21 repositories, web actions, dynamic RPCs and selected
+hosted contracts. The earlier W/C corrections below are implemented and locally
+verified; S01–S07 are also implemented, while staging/device acceptance remains open.
+Evidence, priorities, field differences and the complete screen/acceptance matrix:
+[Flutter/web parity audit](documentation/flutter_web_parity_audit_2026-10-06.md).
+
+### A — Correctness and cross-client continuation
+
+- [x] Fix web authenticator QR double encoding of the SDK SVG data URL (W01).
+- [x] Preserve RFQ country/currency/invited visibility and structured location when
+      editing a web-created record in Flutter; reconcile the currency edit rule
+      with the actual hosted draft RPC (C01).
+- [x] Fix Flutter listing dropdowns for valid web custom units/arbitrary lead days,
+      display actual stored currency, and align existing-record validation (C02/C03).
+- [x] Allow web quotes without lead time as Flutter/hosted DB currently do; align
+      Flutter quote currency/terms and validity behavior (W08/C03).
+- [x] Fix Flutter PDF generation Retry returning a Future from `setState` (C04).
+
+### B — Remaining web capabilities and interactions
+
+- [x] RFQ search: requirements, buyer name and delivery location (W03).
+- [x] Conversation search: latest message preview, retaining company/enquiry search (W04).
+- [x] Remove unavailable saved listings without exposing hidden listing information (W05).
+- [x] Global unread notification indicator and nonblocking automatic freshness (W02).
+- [x] Chat photo zoom/pan/reset and safe legacy missing-MIME image embedding (W06/W07).
+- [x] Personal profile account metadata, signup/password-update visibility toggles,
+      and one-click invitation link/code copying with fallback (W09–W11).
+- [x] Align RFQ tabs, selected-company inbox/thread/sender scope and explicit date/time presentation (C05).
+- [x] Add categorical browser error reporting without private text; production alert routing remains acceptance work.
+
+### C — Verify and reconcile release evidence
+
+- [ ] Complete the cross-client staging, role/permission, failure/concurrency and
+      device/layout acceptance matrix in the audit; phase completion stays open.
+- [x] Refresh legacy phase route references and the outdated draft-currency assumption.
+- [ ] Browser push stays deferred by user request (W12): the hosted web token RPC
+      is absent and the prepared payload/configuration changes still need rollout.
+- [ ] Invitation email is deployed with a deliberate rollout lock; sender enablement
+      and a web send action are future work, not a current working Flutter feature.
+
+The original audit changed documentation only. The subsequent authorized fixes
+also align direct-enquiry currency/text bounds, listing specifications and narrow
+native form layouts. The query migration is deployed, without rolling out browser
+push or invitation email. Current evidence and remaining live gates:
+[Corrections and verification](documentation/client_parity_fixes_2026-10-06.md).
+
 ## Public website follow-up — implemented locally
 
 - [x] Make `/` the public marketplace preview and preserve the marketing homepage at `/platform`.
@@ -912,3 +1014,11 @@ Category/photo follow-up (2026-10-06):
 - [ ] Deploy the updated web client and distribute a new Flutter build; verify a real cross-client photo conversation on devices.
 
 Details: [category filters and Flutter photos](documentation/category_filters_and_chat_photos.md).
+
+Chat feedback follow-up (2026-10-06):
+
+- [x] Both text composers disable gray Send for blank drafts. Flutter also matches the rounded web composer and has extra bottom spacing.
+- [x] Outgoing text appears immediately with sending/confirmed/unconfirmed feedback, merges by the existing request ID and retains safe retries. Verified with 161 web tests, 143 Flutter tests and a delayed local browser fixture.
+- [ ] Verify the updated clients together on real devices after deployment/distribution.
+
+Details: [chat composer and immediate messages](documentation/chat_composer_update_2026-10-06.md#immediate-text-message-feedback).

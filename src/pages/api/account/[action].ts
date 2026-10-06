@@ -6,7 +6,10 @@ export const POST: APIRoute = async (context) => {
   try {
     return await handleAccountAction(
       context,
-      await readMutation(context.request, 65536),
+      await readMutation(
+        context.request,
+        context.params.action === "profile" ? 1024 * 1024 : 65536,
+      ),
       context.params.action,
       callbackUrl,
     );

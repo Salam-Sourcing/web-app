@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { requireWorkspace } from "../../../lib/server/access";
+import { reportPayload } from "../../../lib/client-contracts";
 import {
   readMutation,
   positiveId,
@@ -71,19 +72,7 @@ export const POST: APIRoute = async (context) => {
     if (action === "report") {
       const type = textField(input, "target_type", 10);
       const id = positiveId(input.target_id);
-      const reason = textField(input, "reason", 20);
-      if (
-        ![
-          "spam_scam",
-          "misleading",
-          "harassment",
-          "prohibited",
-          "impersonation",
-          "other",
-        ].includes(reason)
-      )
-        throw new AccessError(400, "invalid_reason", "Choose a report reason.");
-      const description = textField(input, "description", 4000, 5);
+      const { reason, description } = reportPayload(input);
       if (type === "review")
         checked(
           (

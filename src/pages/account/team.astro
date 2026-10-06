@@ -69,12 +69,29 @@ const allowedRoles = [...teamRoles]
                     Invitation link
                     <input
                       readonly
+                      aria-label="Invitation link"
                       value={new URL("/invite/" + i.id, Astro.url.origin).href}
                     />
+                    <button
+                      type="button"
+                      class="button secondary"
+                      data-copy-value
+                    >
+                      Copy link
+                    </button>
+                    <span class="help-text" data-copy-message role="status" />
                   </label>
                   <label class="field">
                     Invitation code
-                    <input readonly value={i.id} />
+                    <input readonly aria-label="Invitation code" value={i.id} />
+                    <button
+                      type="button"
+                      class="button secondary"
+                      data-copy-value
+                    >
+                      Copy code
+                    </button>
+                    <span class="help-text" data-copy-message role="status" />
                   </label>
                   <AccountForm
                     action="revoke-invitation"

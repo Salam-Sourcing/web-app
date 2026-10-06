@@ -5,7 +5,10 @@ export const POST: APIRoute = async (context) => {
   try {
     return await handleCatalogAction(
       context,
-      await readMutation(context.request),
+      await readMutation(
+        context.request,
+        context.params.action === "company-update" ? 1024 * 1024 : 16384,
+      ),
       context.params.action,
     );
   } catch (error) {

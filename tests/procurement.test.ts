@@ -22,6 +22,7 @@ import {
   sendText,
   messagePage,
   conversationFeed,
+  enquiryFeed,
   quoteBundle,
 } from "../src/lib/server/procurement.ts";
 import { procurementAction } from "../src/lib/server/procurement-actions.ts";
@@ -525,6 +526,7 @@ test("timestamp/ID pagination removes private sender identity and exposes only g
       {
         id: 1,
         sender_user_id: "u1",
+        client_message_id: "own-request",
         content: "text",
         message_type: "text",
         is_deleted: false,
@@ -549,6 +551,7 @@ test("timestamp/ID pagination removes private sender identity and exposes only g
     new URLSearchParams("before=2026-01-02T00%3A00%3A00Z&before_id=3"),
   );
   assert.equal(page.rows[0].seen, true);
+  assert.equal(page.rows[0].client_message_id, "own-request");
   assert.equal("sender_user_id" in page.rows[0], false);
   assert.ok(
     c.calls.some(
@@ -558,6 +561,26 @@ test("timestamp/ID pagination removes private sender identity and exposes only g
   assert.equal(page.rows[0].attachments[0].id, 4);
   assert.equal(page.rows[0].attachments[0].file_mime_type, "image/png");
   assert.ok(!("file_url" in page.rows[0].attachments[0]));
+});
+test("message history does not expose another sender's retry identity", async () => {
+  const c = client({
+    conversations: { id: 3, buyer_company_id: 10, supplier_company_id: 30 },
+    messages: [
+      {
+        id: 1,
+        sender_user_id: "u2",
+        client_message_id: "other-request",
+        content: "Incoming",
+        is_deleted: false,
+        sent_at: "2026-10-06T12:00:00Z",
+        message_attachments: [],
+      },
+    ],
+    conversation_participants: [],
+  });
+  const page = await messagePage(state(c), 3, new URLSearchParams());
+  assert.equal(page.rows[0].outgoing, false);
+  assert.equal(page.rows[0].client_message_id, null);
 });
 test("Phase 3 upload journals preserve immutable owner-scoped paths and bucket limits", () => {
   for (const kind of ["enquiry", "message"] as const) {
@@ -606,49 +629,88 @@ test("quote PDF embeds the brand font and paginates long notes without omitting 
   assert.equal(doc.getTitle(), "Quotes for enquiry #5");
 });
 
-test("conversation search combines company and search restrictions in one logical filter", async () => {
-  const sdk = client({ enquiries: [{ id: 5 }], conversations: [] });
-  const searchSdk = {
-    ...sdk,
-    rpc: () => ({ ilike: async () => ({ data: [{ id: 30 }], error: null }) }),
+test("conversation search sends selected company and latest-preview filtering to the paginated RPC", async () => {
+  const calls: unknown[] = [];
+  const sdk = {
+    rpc: (name: string, args: unknown) => {
+      calls.push([name, args]);
+      return { select: async () => ({ data: [], error: null }) };
+    },
   };
-  await conversationFeed(state(searchSdk), new URLSearchParams({ q: "steel" }));
-  const filters = sdk.calls.filter(
-    (c) => c.table === "conversations" && c.method === "or",
+  await conversationFeed(
+    state(sdk),
+    new URLSearchParams({ q: "steel_%", page: "2" }),
   );
-  assert.equal(filters.length, 1);
-  assert.match(
-    String(filters[0].args[0]),
-    /^and\(or\(buyer_company_id.eq.10,supplier_company_id.eq.10\),or\(/,
-  );
+  assert.deepEqual(calls, [
+    [
+      "search_conversations",
+      {
+        p_company_id: 10,
+        p_query: "steel_%",
+        p_status: "open",
+        p_offset: 48,
+        p_limit: 25,
+      },
+    ],
+  ]);
 });
-test("draft currency edits are rejected instead of silently ignored by the existing RPC", async () => {
-  let called = false;
+test("RFQ search filters before pagination without truncating matching related IDs", async () => {
+  const sdk = client({ saved_enquiries: [] });
+  const calls: unknown[] = [];
+  sdk.rpc = async (name, args) => {
+    calls.push([name, args]);
+    return { data: [], error: null };
+  };
+  await enquiryFeed(
+    state(sdk),
+    new URLSearchParams({ q: "requirements", tab: "mine", page: "1" }),
+  );
+  assert.deepEqual(calls[0], [
+    "search_enquiries",
+    {
+      p_filters: {
+        tab: "mine",
+        company_id: 10,
+        query: "requirements",
+        category: "",
+        status: "",
+        urgency: "",
+      },
+      p_offset: 24,
+      p_limit: 25,
+    },
+  ]);
+});
+
+test("authorized draft edits pass the selected currency to the current database contract", async () => {
+  let changes: unknown;
   const sdk = client(
     { enquiries: { ...e, publication_status: "draft" } },
-    () => {
-      called = true;
+    (name, args: any) => {
+      if (name === "update_enquiry_draft") changes = args.p_changes;
       return { data: null, error: null };
     },
   );
-  await assert.rejects(
-    procurementAction(
-      ctx(state(sdk)),
-      {
-        enquiry_id: 5,
-        company_id: 10,
-        enquiry_type: "public_rfq",
-        title: "Steel",
-        message: "Requirements",
-        currency: "USD",
-        quote_deadline: future,
-      },
-      "save-enquiry",
-    ),
-    /Currency is fixed/,
+  await procurementAction(
+    ctx(state(sdk)),
+    {
+      enquiry_id: 5,
+      company_id: 10,
+      enquiry_type: "public_rfq",
+      title: "Steel",
+      message: "Requirements",
+      currency: "USD",
+      delivery_country: "USA",
+      visibility: "invited",
+      quote_deadline: future,
+    },
+    "save-enquiry",
   );
-  assert.equal(called, false);
+  assert.equal((changes as any).currency, "USD");
+  assert.equal((changes as any).delivery_country, "USA");
+  assert.equal((changes as any).visibility, "invited");
 });
+
 test("quote comparison loads beyond the first database response page", async () => {
   let page = 0;
   const sdk = client({

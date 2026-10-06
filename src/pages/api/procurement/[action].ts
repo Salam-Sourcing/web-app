@@ -5,7 +5,10 @@ export const POST: APIRoute = async (context) => {
   try {
     return await procurementAction(
       context,
-      await readMutation(context.request),
+      await readMutation(
+        context.request,
+        context.params.action === "send" ? 65536 : 16384,
+      ),
       context.params.action,
     );
   } catch (e) {

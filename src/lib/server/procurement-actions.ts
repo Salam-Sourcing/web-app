@@ -79,12 +79,6 @@ export async function procurementAction(
           "draft_locked",
           "This enquiry is no longer editable.",
         );
-      if (payload.currency !== e.currency)
-        throw new AccessError(
-          409,
-          "currency_locked",
-          "Currency is fixed after creation.",
-        );
       checked(
         (
           await state.client.rpc("update_enquiry_draft", {

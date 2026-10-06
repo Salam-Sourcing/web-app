@@ -1,8 +1,11 @@
 import { messageImage } from "../lib/deals";
 import { post, ApiError } from "./forms";
 import { bindChatImageViewer } from "./chat-image-viewer";
+import { bindChatAttachmentComposer } from "./chat-attachment-composer";
+import { ChatOutbox } from "../lib/chat-outbox";
 import {
   mergeMessages,
+  dateLabel,
   pendingText,
   type ThreadMessage,
 } from "../lib/procurement";
@@ -18,6 +21,7 @@ export function bindThread() {
   if (!root || root.dataset.bound) return;
   root.dataset.bound = "true";
   bindChatImageViewer(root);
+  bindChatAttachmentComposer(root);
   const id = root.dataset.conversation!,
     company = root.dataset.company!,
     history = root.querySelector<HTMLElement>("[data-history]")!,
@@ -42,6 +46,27 @@ export function bindThread() {
       (x) => Number(x.dataset.messageId),
     ),
   );
+  const outbox = new ChatOutbox();
+  let onConfirmed: (key: string) => void = () => {};
+  const renderOutbox = () => {
+    history
+      .querySelectorAll("[data-local-message]")
+      .forEach((el) => el.remove());
+    if (outbox.messages.size)
+      root.querySelector("[data-empty-thread]")?.remove();
+    for (const message of outbox.messages.values()) {
+      const bubble = document.createElement("article"),
+        text = document.createElement("p"),
+        state = document.createElement("small");
+      bubble.className = "message-bubble outgoing";
+      bubble.dataset.localMessage = message.client_message_id;
+      text.className = "preserve-lines";
+      text.textContent = message.content;
+      state.textContent = message.status;
+      bubble.append(text, state);
+      history.append(bubble);
+    }
+  };
   history.addEventListener(
     "error",
     (event) => {
@@ -93,6 +118,10 @@ export function bindThread() {
         history.scrollHeight - history.scrollTop - history.clientHeight < 70,
       oldHeight = history.scrollHeight;
     rows = mergeMessages(rows, incoming);
+    outbox.reconcile(incoming);
+    for (const message of incoming)
+      if (message.outgoing && message.client_message_id)
+        onConfirmed(message.client_message_id);
     for (const m of rows) {
       let el = history.querySelector<HTMLElement>(
         '[data-message-id="' + m.id + '"]',
@@ -116,7 +145,7 @@ export function bindThread() {
       for (const a of m.attachments) {
         const attachment = document.createElement("div");
         attachment.className = "message-attachment";
-        if (messageImage(a.file_mime_type)) {
+        if (messageImage(a.file_mime_type, a.file_name)) {
           const open = document.createElement("a"),
             img = document.createElement("img"),
             fallback = document.createElement("span");
@@ -160,10 +189,37 @@ export function bindThread() {
         time = document.createElement("time");
       time.dateTime = m.sent_at;
       time.textContent =
-        new Date(m.sent_at).toLocaleString() +
+        dateLabel(m.sent_at) +
         " " +
         (m.outgoing ? (m.seen ? "· Seen" : "· Sent") : "");
       small.append(time);
+      if (!m.outgoing) {
+        const report = document.createElement("a");
+        report.className = "chat-icon-button message-report";
+        report.href = "/account/report?type=message&id=" + m.id;
+        report.ariaLabel = report.title = "Report message";
+        const icon = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "svg",
+          ),
+          path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        for (const [name, value] of Object.entries({
+          width: "18",
+          height: "18",
+          viewBox: "0 0 24 24",
+          fill: "none",
+          stroke: "currentColor",
+          "stroke-width": "1.7",
+          "stroke-linecap": "round",
+          "stroke-linejoin": "round",
+          "aria-hidden": "true",
+        }))
+          icon.setAttribute(name, value);
+        path.setAttribute("d", "M5 21V3 M5 4c4-3 8 3 14 0v10c-6 3-10-3-14 0");
+        icon.append(path);
+        report.append(icon);
+        small.append(report);
+      }
       el.append(small);
       ids.add(m.id);
       // Insert relative to all existing nodes, including SSR history not yet fetched.
@@ -185,6 +241,7 @@ export function bindThread() {
       );
       history.insertBefore(el, next ?? null);
     }
+    renderOutbox();
     lastSeen = history.querySelector<HTMLElement>(
       "[data-message-id]:last-of-type",
     )?.dataset;
@@ -319,42 +376,89 @@ export function bindThread() {
   if (form && retry && send) {
     const input = form.querySelector<HTMLTextAreaElement>("textarea")!,
       note = form.querySelector<HTMLElement>("[data-form-message]")!;
+    const syncSendState = () => {
+      send.disabled = sending || !!pending || !input.value.trim();
+    };
+    const fitComposer = () => {
+      syncSendState();
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 180) + "px";
+      if (document.activeElement === input)
+        input.closest(".chat-composer-input")?.scrollIntoView({
+          block: "nearest",
+          inline: "nearest",
+        });
+    };
+    input.addEventListener("input", fitComposer);
+    fitComposer();
+    onConfirmed = (key) => {
+      if (pending?.client_message_id !== key) return;
+      if (input.value.trim() === pending.content) input.value = "";
+      pending = undefined;
+      retry.hidden = true;
+      note.hidden = false;
+      note.setAttribute("role", "status");
+      note.textContent = "Message sent.";
+      fitComposer();
+    };
     const sendPending = async () => {
       if (sending || !pending) return;
+      const attempted = pending;
+      outbox.start(attempted);
+      renderOutbox();
+      history.scrollTop = history.scrollHeight;
       sending = true;
       send.disabled = true;
       retry.disabled = true;
       note.hidden = false;
       note.setAttribute("role", "status");
       note.textContent = "Sending…";
-      const attempted = pending;
       try {
         await post("/api/procurement/send", {
           conversation_id: id,
           company_id: company,
           ...attempted,
         });
-        if (input.value.trim() === attempted.content) input.value = "";
+        if (input.value.trim() === attempted.content) {
+          input.value = "";
+          fitComposer();
+        }
         pending = undefined;
+        outbox.status(attempted.client_message_id, "Sent");
+        renderOutbox();
         retry.hidden = true;
-        send.disabled = false;
         note.textContent = "Message sent.";
         void refresh();
       } catch (e) {
-        retry.hidden = false;
-        note.textContent =
-          (e as Error).message +
-          " Retry sends the same text once. Your current draft is kept.";
-        note.setAttribute("role", "alert");
+        if (outbox.messages.has(attempted.client_message_id)) {
+          outbox.status(attempted.client_message_id, "Not confirmed · Retry");
+          renderOutbox();
+          retry.hidden = false;
+          note.textContent =
+            (e as Error).message +
+            " Retry sends the same text once. Your current draft is kept.";
+          note.setAttribute("role", "alert");
+        } else {
+          // History confirmed this exact request before its response was lost.
+          if (input.value.trim() === attempted.content) {
+            input.value = "";
+            fitComposer();
+          }
+          pending = undefined;
+          retry.hidden = true;
+          note.textContent = "Message sent.";
+        }
+        void refresh();
       } finally {
         sending = false;
         retry.disabled = false;
-        send.disabled = !!pending;
+        syncSendState();
       }
     };
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      if (pending || sending || !form.reportValidity()) return;
+      if (pending || sending || !input.value.trim() || !form.reportValidity())
+        return;
       try {
         pending = pendingText(input.value);
         void sendPending();
@@ -381,10 +485,20 @@ export function bindThread() {
   });
   document.addEventListener("salam-messages-refresh", () => void refresh());
   const polling = setInterval(() => void refresh(), 30000);
+  const discardOutbox = () => {
+    outbox.messages.clear();
+    pending = undefined;
+    history
+      .querySelectorAll("[data-local-message]")
+      .forEach((el) => el.remove());
+  };
+  window.addEventListener("salam-logout", discardOutbox);
   window.addEventListener(
     "pagehide",
     () => {
       disposed = true;
+      discardOutbox();
+      window.removeEventListener("salam-logout", discardOutbox);
       source?.close();
       clearInterval(polling);
       if (reconnect) clearTimeout(reconnect);
@@ -468,7 +582,7 @@ export function bindConversationActivity() {
           activity.className = "conversation-time";
           const time = document.createElement("time");
           time.dateTime = c.time;
-          time.textContent = new Date(c.time).toLocaleString();
+          time.textContent = dateLabel(c.time);
           activity.append(time);
           if (c.unread > 0) {
             const badge = document.createElement("span");

@@ -1,5 +1,6 @@
 ---
 import type { Row } from "../lib/catalog";
+import { fieldMaximum, companyLimits } from "../lib/client-contracts";
 interface Props {
   company?: Row<"companies">;
   email: string;
@@ -7,6 +8,11 @@ interface Props {
 }
 const { company, email, intent } = Astro.props;
 const val = (key: keyof Row<"companies">) => company?.[key] ?? "";
+const max = (key: keyof typeof companyLimits) =>
+  fieldMaximum(companyLimits[key], val(key));
+const businessEmail = company ? String(val("email")) : email;
+const legacyEmail =
+  company && businessEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(businessEmail);
 const type =
   company?.company_type ??
   (intent === "buy"
@@ -46,16 +52,17 @@ const fields = [
         >Legal company name<input
           name="legal_name"
           value={val("legal_name")}
-          maxlength="200"
+          maxlength={max("legal_name")}
           required
         /></label
       ><label class="field"
         >Public display name<input
           name="display_name"
           value={val("display_name")}
-          maxlength="200"
+          maxlength={max("display_name")}
           required
-        /></label>
+        /></label
+      >
     </div><label class="field"
       >Company type<select name="company_type" required
         ><option value="buyer" selected={type === "buyer"}>Buyer</option><option
@@ -69,44 +76,50 @@ const fields = [
       >Business registration number (optional)<input
         name="business_registration_number"
         value={val("business_registration_number")}
-        maxlength="200"
+        maxlength={max("business_registration_number")}
       /></label
     >{
       company && (
         <label class="field">
           Tax number (optional)
-          <input name="tax_number" value={val("tax_number")} maxlength="200" />
+          <input
+            name="tax_number"
+            value={val("tax_number")}
+            maxlength={max("tax_number")}
+          />
         </label>
       )
     }<label class="field"
       >Description (optional)<textarea
         name="description"
-        maxlength="4000"
+        maxlength={max("description")}
         rows="4">{val("description")}</textarea
-      ></label>
+      ></label
+    >
   </fieldset>
   <fieldset data-wizard-step="1" hidden>
     <legend>Contact and location</legend><label class="field"
-      >Business email<input
-        type="email"
+      >Business email{company ? " (optional)" : ""}<input
+        type={legacyEmail ? "text" : "email"}
+        inputmode="email"
         name="email"
-        value={company?.email ?? email}
-        maxlength="254"
-        required
+        value={businessEmail}
+        maxlength={max("email")}
+        required={!company}
       /></label
     ><label class="field"
       >Country<input
         name="country"
         value={company?.country ?? "Canada"}
-        maxlength="100"
+        maxlength={max("country")}
         required
       /></label
     ><div class="form-row">
       {
-        fields.map(([key, label, max]) => (
+        fields.map(([key, label]) => (
           <label class="field">
             {label}
-            <input name={key} value={val(key)} maxlength={max} />
+            <input name={key} value={val(key)} maxlength={max(key)} />
           </label>
         ))
       }
@@ -136,7 +149,8 @@ const fields = [
       >Back</button
     ><button type="button" class="button" data-wizard-next>Continue</button
     ><button type="submit" class="button" data-wizard-submit hidden
-      >{company ? "Save company profile" : "Create company"}</button>
+      >{company ? "Save company profile" : "Create company"}</button
+    >
   </div>
 </form>
 <script>

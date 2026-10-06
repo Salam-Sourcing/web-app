@@ -1,4 +1,5 @@
 import type { APIContext } from "astro";
+import { reportPayload } from "../client-contracts";
 import { requireWorkspace } from "./access";
 import { activeCompany, checked } from "./catalog";
 import { dealBundle, dealReviewState, reviewResponseTarget } from "./deals";
@@ -12,12 +13,13 @@ export async function dealAction(
   const state = await requireWorkspace(context);
   if (action === "report") {
     const company = positiveId(input.reviewed_company_id);
+    const report = reportPayload(input);
     checked(
       (
         await state.client.rpc("report_company_review", {
           p_review_id: positiveId(input.review_id),
-          p_reason: textField(input, "reason", 100),
-          p_description: textField(input, "description", 2000),
+          p_reason: report.reason,
+          p_description: report.description,
         })
       ).error,
     );

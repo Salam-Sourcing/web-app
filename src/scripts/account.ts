@@ -120,10 +120,3 @@ export function bindAccountTools() {
       }
     });
 }
-export function bindNotificationRefresh() {
-  // Keep the list stable while reading or using its controls. Explicit refresh
-  // retrieves current RLS-filtered rows without a blocking account overlay.
-  document
-    .querySelector("[data-notification-refresh]")
-    ?.addEventListener("click", () => location.reload());
-}
