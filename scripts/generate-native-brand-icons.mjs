@@ -1,4 +1,4 @@
-// Render the existing web emblem and outlined Inter wordmark as native app assets.
+// Render the existing emblem and Inter wordmark with MARKETPLACE below the full lockup.
 // Usage: node scripts/generate-native-brand-icons.mjs --native /path/to/Flutter/repo
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -31,14 +31,42 @@ function word(text, x, baseline, size, weight, color, letterSpacing = 0) {
     })
     .join("");
 }
+function wordWidth(text, size, weight, letterSpacing = 0) {
+  const face = font.getVariation({ wght: weight }),
+    run = face.layout(text);
+  return (
+    (run.positions.reduce((sum, position) => sum + position.xAdvance, 0) *
+      size) /
+      face.unitsPerEm +
+    (run.glyphs.length - 1) * letterSpacing
+  );
+}
+const brandWidth = 240,
+  brandHeight = 132,
+  marketplaceSpacing = 0.8,
+  marketplaceSize =
+    (226 - ("MARKETPLACE".length - 1) * marketplaceSpacing) /
+    wordWidth("MARKETPLACE", 1, 650),
+  marketplaceX =
+    (brandWidth -
+      wordWidth("MARKETPLACE", marketplaceSize, 650, marketplaceSpacing)) /
+    2;
 const brand =
   `<image x="0" y="0" width="100" height="100" href="data:image/png;base64,${emblem}"/>` +
   word("Salam", 108, 48, 40, 750, "#37505c") +
   word("Sourcing", 108, 78, 28, 600, "#9c272e") +
-  word("MARKETPLACE", 108, 97, 13, 650, "#37505c", 0.8);
+  word(
+    "MARKETPLACE",
+    marketplaceX,
+    127,
+    marketplaceSize,
+    650,
+    "#37505c",
+    marketplaceSpacing,
+  );
 function artwork(size, width, opaque) {
-  const scale = width / 240,
-    height = 100 * scale;
+  const scale = width / brandWidth,
+    height = brandHeight * scale;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${opaque ? `<rect width="${size}" height="${size}" fill="#fff"/>` : ""}<g transform="translate(${(size - width) / 2} ${(size - height) / 2}) scale(${scale})">${brand}</g></svg>`;
 }
 const output = path.join(native, "assets/branding");
