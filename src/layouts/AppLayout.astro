@@ -234,6 +234,12 @@ const destinations = [
 </script>
 
 <script>
+  import {
+    bindListingPrices,
+    bindCurrencyPreview,
+  } from "../scripts/listing-currency";
+  bindListingPrices();
+  bindCurrencyPreview();
   import { bindLoading } from "../scripts/loading";
   import { bindAccountMenus } from "../scripts/account-menu";
   bindLoading();

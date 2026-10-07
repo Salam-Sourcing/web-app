@@ -1,0 +1,27 @@
+---
+import { listingMoney } from "../lib/listing-currency";
+interface Props {
+  amount: number | null;
+  currency: string;
+  unit?: string | null;
+  large?: boolean;
+}
+const { amount, currency, unit, large = false } = Astro.props;
+---
+
+<div
+  class:list={["listing-price-display", large && "listing-price-large"]}
+  data-listing-price={amount === null ? undefined : ""}
+  data-amount={amount}
+  data-currency={currency}
+  data-unit={unit || "unit"}
+>
+  <strong data-price-value
+    >{
+      amount === null
+        ? "Price on enquiry"
+        : listingMoney(amount, currency, true) + " / " + (unit || "unit")
+    }</strong
+  >
+  {amount !== null && <small data-price-note class="help-text" hidden />}
+</div>

@@ -132,8 +132,8 @@ const val = (key: keyof Listing) => String(listing?.[key] ?? "");
   </fieldset>
   <fieldset data-wizard-step="1" hidden>
     <legend>Terms and images</legend><p class="help-text">
-      Currency: <strong>{listing?.currency ?? "CAD"}</strong>. No currency
-      conversion is applied.
+      Currency: <strong>{listing?.currency ?? "CAD"}</strong>. The supplier
+      price is saved in this currency. Display conversion does not change it.
     </p><div class="form-row">
       <label class="field"
         >Price per unit (optional)<input

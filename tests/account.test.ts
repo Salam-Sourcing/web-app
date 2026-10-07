@@ -49,6 +49,7 @@ function fixture(
         "select",
         "order",
         "limit",
+        "single",
       ])
         q[method] = (...args: any[]) => {
           calls.push({ name: table + "." + method, args });
@@ -79,6 +80,35 @@ function fixture(
   } as unknown as APIContext;
   return { context, calls, cookies };
 }
+test("display currency writes only the signed-in user's preference", async () => {
+  for (const choice of ["USD", "PKR", ""]) {
+    const f = fixture();
+    const response = await handleAccountAction(
+      f.context,
+      { currency: choice, user_id: invitation },
+      "currency",
+    );
+    assert.deepEqual(await response.json(), { redirect: "/account/currency" });
+    assert.deepEqual(
+      f.calls.find((c) => c.name === "listing_currency_preferences.upsert")
+        ?.args,
+      [{ user_id: member, currency: choice || null }],
+    );
+    assert.ok(
+      f.calls.every((c) => c.name.startsWith("listing_currency_preferences")),
+    );
+  }
+});
+test("invalid display currencies are rejected before any write", async () => {
+  for (const choice of [undefined, "usd", "XXX", 42]) {
+    const f = fixture();
+    await assert.rejects(
+      () => handleAccountAction(f.context, { currency: choice }, "currency"),
+      (error: any) => error instanceof AccessError && error.status === 400,
+    );
+    assert.equal(f.calls.length, 0);
+  }
+});
 test("team actions deny an effective scope override even to an owner", async () => {
   const f = fixture("owner", []);
   await assert.rejects(

@@ -45,7 +45,13 @@ try {
     "browser-layout",
     web,
     "npm",
-    ["run", "test:browser", "--", "tests/browser/public.spec.ts"],
+    [
+      "run",
+      "test:browser",
+      "--",
+      "tests/browser/public.spec.ts",
+      "tests/browser/currency.spec.ts",
+    ],
     { PARITY_UI_CONFIG: configPath },
   );
   await copyFile(

@@ -1,3 +1,4 @@
+import { bindListingPrices } from "./listing-currency";
 import { bindImageLoading } from "./loading";
 import { toast } from "./toast";
 import { post } from "./forms";
@@ -63,18 +64,24 @@ function listingCard(row: ListingCardData) {
   body.append(title);
   if (row.category) body.append(el("p", "help-text", row.category));
   const facts = el("div", "listing-facts");
-  if (row.price_per_unit !== null)
-    facts.append(
-      el(
-        "strong",
-        "",
-        row.currency +
-          " " +
-          row.price_per_unit.toLocaleString("en") +
-          " / " +
-          row.unit_of_measure,
-      ),
+  if (row.price_per_unit !== null) {
+    const price = el("div", "listing-price-display");
+    price.dataset.listingPrice = "";
+    price.dataset.amount = String(row.price_per_unit);
+    price.dataset.currency = row.currency;
+    price.dataset.unit = row.unit_of_measure || "unit";
+    const value = el(
+      "strong",
+      "",
+      row.currency + " " + row.price_per_unit + " / " + price.dataset.unit,
     );
+    value.dataset.priceValue = "";
+    const note = el("small", "help-text");
+    note.dataset.priceNote = "";
+    note.hidden = true;
+    price.append(value, note);
+    facts.append(price);
+  }
   if (row.minimum_order_quantity !== null)
     facts.append(
       el(
@@ -87,6 +94,7 @@ function listingCard(row: ListingCardData) {
   body.append(facts, saveButton(row.id, "listing", row.saved, row.name));
   card.append(picture, body);
   bindImageLoading(card);
+  bindListingPrices(card);
   return card;
 }
 function supplierCard(row: {

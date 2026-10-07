@@ -1,3 +1,4 @@
+import { preferredCurrency } from "../listing-currency";
 import type { APIContext } from "astro";
 import { preservedText } from "../client-contracts";
 import { requireWorkspace } from "./access";
@@ -25,6 +26,25 @@ export async function handleAccountAction(
   const done = (redirect: string) => json({ redirect });
   if (action === "notification-open")
     return json(await notificationTarget(context, state, positiveId(input.id)));
+  if (action === "currency") {
+    let currency: string | null;
+    try {
+      currency = preferredCurrency(input.currency);
+    } catch {
+      throw new AccessError(
+        400,
+        "invalid_currency",
+        "Choose a supported display currency.",
+      );
+    }
+    const result = await client
+      .from("listing_currency_preferences")
+      .upsert({ user_id: state.user.id, currency })
+      .select("currency")
+      .single();
+    checked(result.error);
+    return done("/account/currency");
+  }
   if (action === "profile") {
     const existing = await client
       .from("profiles")

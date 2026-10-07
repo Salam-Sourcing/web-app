@@ -1,4 +1,5 @@
 ---
+import ListingPrice from "./ListingPrice.astro";
 import MediaImage from "./MediaImage.astro";
 import type { ListingCardData } from "../lib/catalog";
 import SaveButton from "./SaveButton.astro";
@@ -33,10 +34,11 @@ const { listing } = Astro.props;
     <div class="listing-facts">
       {
         listing.price_per_unit !== null && (
-          <strong>
-            {listing.currency} {listing.price_per_unit.toLocaleString("en")} /{" "}
-            {listing.unit_of_measure}
-          </strong>
+          <ListingPrice
+            amount={listing.price_per_unit}
+            currency={listing.currency}
+            unit={listing.unit_of_measure}
+          />
         )
       }{
         listing.minimum_order_quantity !== null && (

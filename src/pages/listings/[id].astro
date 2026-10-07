@@ -1,4 +1,5 @@
 ---
+import ListingPrice from "../../components/ListingPrice.astro";
 import MediaImage from "../../components/MediaImage.astro";
 import AppLayout from "../../layouts/AppLayout.astro";
 import SupplierSummary from "../../components/SupplierSummary.astro";
@@ -132,16 +133,14 @@ const specs =
                   listing.sub_categories?.categories?.name ??
                   ""}
               </p>
-              <p class="listing-price mt-5">
-                {listing.price_per_unit === null
-                  ? "Price on enquiry"
-                  : listing.currency +
-                    " " +
-                    listing.price_per_unit.toLocaleString("en")}{" "}
-                {listing.price_per_unit !== null && (
-                  <span>/ {listing.unit_of_measure ?? "unit"}</span>
-                )}
-              </p>
+              <div class="mt-5">
+                <ListingPrice
+                  amount={listing.price_per_unit}
+                  currency={listing.currency}
+                  unit={listing.unit_of_measure}
+                  large
+                />
+              </div>
               <dl>
                 <>
                   <div class="info-row">

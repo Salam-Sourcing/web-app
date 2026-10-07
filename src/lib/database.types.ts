@@ -14,6 +14,18 @@ export type Database = {
   };
   public: {
     Tables: {
+      listing_currency_preferences: {
+        Row: { user_id: string; currency: string | null };
+        Insert: { user_id: string; currency?: string | null };
+        Update: { user_id?: string; currency?: string | null };
+        Relationships: [];
+      };
+      listing_exchange_rates: {
+        Row: { singleton: boolean; fetched_at: string; rates: Json };
+        Insert: { singleton?: boolean; fetched_at: string; rates: Json };
+        Update: { singleton?: boolean; fetched_at?: string; rates?: Json };
+        Relationships: [];
+      };
       account_deletion_audit: {
         Row: {
           attempt_count: number;

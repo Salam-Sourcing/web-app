@@ -1,0 +1,65 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import AccountForm from "../../components/AccountForm.astro";
+import Icon from "../../components/Icon.astro";
+import ListingPrice from "../../components/ListingPrice.astro";
+import { currencies } from "../../lib/listing-currency";
+import { currencyPreference } from "../../lib/server/listing-currency";
+import { requireWorkspace } from "../../lib/server/access";
+const state = await requireWorkspace(Astro);
+const selected = await currencyPreference(state);
+---
+
+<AppLayout
+  title="Display currency"
+  active="account"
+  state={state}
+  description="Browse listing prices in the currency you know best."
+>
+  <section class="card currency-settings">
+    <div class="currency-heading">
+      <span class="settings-icon"><Icon name="billing" size={26} /></span><div>
+        <h2>Your listing prices</h2><p class="help-text">
+          This preference syncs with your account on web, iOS and Android.
+        </p>
+      </div>
+    </div>
+    <AccountForm action="currency" submit="Save currency">
+      <label class="field"
+        >Display currency<select name="currency" data-currency-select>
+          <option value="" selected={!selected}
+            >Original supplier currency</option
+          >
+          {
+            currencies.map((c) => (
+              <option value={c.code} selected={selected === c.code}>
+                {c.code} · {c.name}
+              </option>
+            ))
+          }
+        </select></label
+      >
+      <div class="currency-preview" data-currency-preview>
+        <p class="eyebrow">Example · CAD 39.00 per roll</p><ListingPrice
+          amount={39}
+          currency="CAD"
+          unit="roll"
+          large
+        />
+      </div>
+      <p class="help-text">
+        Converted listing prices are estimates using daily <a
+          class="text-link"
+          href="https://frankfurter.dev/"
+          target="_blank"
+          rel="noopener noreferrer">Frankfurter reference rates</a
+        >. We show the original supplier price and the rate date.
+      </p>
+      <p class="help-text">
+        Quotes, deals and payments keep their agreed currency. Price filters and
+        sorting use original listing currencies.
+      </p>
+      <a slot="actions" class="text-link" href="/account">Back to Account</a>
+    </AccountForm>
+  </section>
+</AppLayout>

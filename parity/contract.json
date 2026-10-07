@@ -473,6 +473,17 @@
         "web": "unverified",
         "flutter": "unverified"
       }
+    },
+    {
+      "id": "listing-currency",
+      "title": "Listing display currency",
+      "required": true,
+      "outcomes": "Choose original supplier currency or a preferred display currency in Account. Sync after refresh or resume on web and Flutter; convert listing cards, saved and supplier catalogues, related listings and details, retaining units, original price and rate date. Quotes, deals, stored supplier prices and filters retain original currencies. Handle unavailable or stale rates, fractional unit prices, zero and three-decimal currencies, and account switching. Native selector, save and retry taps give haptics.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
     }
   ],
   "webPages": [
@@ -480,6 +491,7 @@
     "about.astro",
     "account/billing.astro",
     "account/block.astro",
+    "account/currency.astro",
     "account/index.astro",
     "account/insights.astro",
     "account/notifications.astro",
