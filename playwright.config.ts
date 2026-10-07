@@ -36,18 +36,22 @@ export default defineConfig({
     { name: "phone", use: { ...devices["iPhone 13"] } },
   ],
   webServer: {
-    command: "npm run dev -- --host 127.0.0.1 --port 4341",
+    command: "npm run dev -- --host 127.0.0.1 --port 4341 --ignore-lock",
     url: origin + "/login",
     reuseExistingServer: false,
     timeout: 120000,
-    env: fixture
-      ? {
-          SUPABASE_URL: fixture.SUPABASE_URL,
-          SUPABASE_PUBLISHABLE_KEY: fixture.SUPABASE_PUBLISHABLE_KEY,
-          SALAM_UI_TEST_BACKEND: "true",
-          AUTH_CAPTCHA_ENABLED: "false",
-          SITE_URL: origin,
-        }
-      : undefined,
+    // Keep the test server in the foreground, separate from any local preview.
+    env: {
+      ASTRO_DEV_BACKGROUND: "1",
+      ...(fixture
+        ? {
+            SUPABASE_URL: fixture.SUPABASE_URL,
+            SUPABASE_PUBLISHABLE_KEY: fixture.SUPABASE_PUBLISHABLE_KEY,
+            SALAM_UI_TEST_BACKEND: "true",
+            AUTH_CAPTCHA_ENABLED: "false",
+            SITE_URL: origin,
+          }
+        : {}),
+    },
   },
 });
