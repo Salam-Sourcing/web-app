@@ -2,10 +2,10 @@
 
 Reviewed: **2026-10-06**.
 
-This document captures the two in-depth comparisons and the read-only Flutter,
+This document captures the successive in-depth comparisons and the read-only Flutter,
 visual, and hosted-backend review in this conversation. It is the reference
 checklist for making the website a complete web client for Salam Sourcing.
-Unchecked items are outstanding web work or acceptance checks, not claims that
+Unchecked items are outstanding client work or acceptance checks, not claims that
 the corresponding Flutter implementation is missing.
 
 The work below is organized into **six dependency-ordered phases**. Phases 1–5 code
@@ -15,7 +15,125 @@ push is prepared but disabled and deferred at the user’s request.
 Complete and verify one phase before starting the next; an implemented screen
 alone does not satisfy its completion gate.
 
+## Repeatable parity and release gates — 2026-10-06
+
+- [x] Shared [machine-readable contract](parity/contract.json): 37 native screens,
+      web route inventory, common field/numeric fixtures and 18 acceptance scenarios.
+- [x] Both client suites verify the shared boundaries and require inventory updates
+      for new screens/pages. The paired runner requires identical contracts.
+- [x] F01–F06 fixes with persistent regression cases, including lost acknowledgements,
+      independent section failures, capped results and safe verification cleanup.
+- [x] Paired automated verification runner and source/revision-bound release gate;
+      missing, skipped, failed, stale and unverified evidence block release.
+- [x] Authored browser projects (Chromium, Firefox, WebKit, phone viewport) and a
+      generated-data web/Flutter procurement/chat/photo/deal/PDF acceptance journey.
+- [x] CI configuration for shared contracts, browser gating/layout and real database
+      concurrency; manual paired acceptance checks both selected repositories.
+- [ ] Execute the paired browser/Android journey with a disposable Supabase stack.
+      Local Docker is unavailable; CI needs read-only companion checkout access.
+- [ ] Execute the remaining acceptance scenarios on selected paired revisions,
+      including physical devices, roles, failure states and launch content.
+- [ ] Record current acceptance evidence and pass `gate:parity` before release.
+      A passing unit suite or screen inventory does not close this gate.
+- [ ] Review existing Cloudflare/sharp development dependency advisories before launch.
+
+Run instructions and exact coverage/limits: [parity runbook](parity/README.md).
+Browser push stays deferred. No commit/push/deployment occurred in this task.
+
 ## Deep parity audit follow-up — 2026-10-06
+
+### Fresh audit after the D/E fixes — F corrections implemented
+
+All 37 native screens have web counterparts, but full functional parity is not
+established. The [fresh post-fix audit](documentation/flutter_web_parity_post_fix_audit_2026-10-06.md)
+confirmed six additional findings. Both existing suites passed again (173 web,
+157 Flutter); six isolated native diagnostics and one web diagnostic reproduced
+the defects. The audit was read-only. The subsequent authorized task implemented F01–F06
+and the shared release system; see the [correction and verification report](documentation/parity_release_system_2026-10-06.md).
+
+- [x] F03: Confirm native verification-document metadata removal before file
+      cleanup; use owner-aware claimed cleanup and persistent recovery.
+- [x] F05: Load native blocked-company/deletion states independently, show
+      errors/retry and retain a successfully fetched pending deletion's Cancel action.
+- [x] F01: Resolve web quote notifications through the actual quote and its
+      parent enquiry, with recipient-company and effective permission checks.
+- [x] F02: Retain native listing draft IDs before uploads/review; resume partial
+      work safely and reconcile uncertain outcomes instead of creating again.
+- [x] F06: Stop/reconcile native company creation after a lost acknowledgement;
+      transparent automatic retry would need shared backend request deduplication.
+- [x] F04: Retrieve complete native saved IDs under response caps and paginate
+      supplier-profile listings, with explicit completeness/error states.
+- [ ] Complete live multi-company/role/device/failure acceptance after the F fixes.
+      Browser push stays deferred. New native taps must include haptic feedback.
+
+**Fix status:** All D01–D07/E01–E06 implementation findings below are addressed.
+The shared integrity migration is applied. See the [fix and verification report](documentation/parity_integrity_fixes_2026-10-06.md)
+for the implementation, deployment evidence, tests and remaining acceptance limits.
+Web: 173 tests; Flutter: 157 tests; disposable PostgreSQL: 425 checks, including
+simultaneous request replay; local HTTP: 354 assertions. Browser push stays deferred.
+Application changes remain local until committed, pushed and released.
+
+### Independent second pass — historical findings
+
+The [second-pass report](documentation/flutter_web_parity_second_pass_2026-10-06.md)
+confirms four additional issues and strengthens two earlier findings using six
+native diagnostics, five web diagnostic groups and fresh hosted metadata/arithmetic
+reads. The audit itself made no application or backend changes; the subsequent fixes above did. The earlier full suites passed
+on the same application commits; they were not rerun in this documentation-only pass.
+
+- [x] E01: Retain a successfully created native RFQ draft ID before requesting
+      review. Retry the known draft after partial failure and stop/reconcile an
+      uncertain create instead of blindly creating another record.
+- [x] E02 (refines D05): Align prices, MOQ and RFQ quantities with the hosted
+      `numeric(14,2)` precision/range. Reject or explain rounding, preserve positive
+      totals after storage, and enforce representable bounds. Sub-cent quantities
+      are rejected, preserving the existing schema.
+- [x] E03: Prevent native listing edits from silently replacing an unavailable
+      stored category with the first active choice. Agree how both clients handle
+      retired selections while editing unrelated fields.
+- [x] E04: Align listing lead-time bounds and numeric input syntax across clients;
+      preserve supported existing values. New values use 0–36,500 whole days;
+      an unchanged authorized older value can be retained.
+- [x] E05: Page complete native quote histories and decouple normal web enquiry
+      detail from comparison bounds. Both clients handle capped responses using exact counts, with bounded comparisons/exports and individual navigation.
+- [x] E06: Show an error/retry for failed native enquiry related-data loads;
+      do not report a load failure as “No quotes received yet.” Add haptics to
+      any new native Retry tap.
+
+### First recheck — historical findings
+
+**Historical pre-fix baseline:** The fresh comparison covered all
+37 native screens and 21 repositories, web actions and selected hosted contracts.
+The existing suites pass (161 web / 143 Flutter), while isolated diagnostics
+confirm gaps outside that coverage. Full findings, reproductions, backend impact
+and the refreshed screen matrix:
+[Current parity recheck](documentation/flutter_web_parity_current_recheck_2026-10-06.md).
+
+Fix in this order, keeping earlier corrections intact:
+
+- [x] D01: Add participating-supplier enquiry attachment upload and own-file
+      removal to web controls and server authorization. Existing hosted policies
+      already support scoped supplier access; retain company/permission checks.
+- [x] D06: Make Flutter enquiry file removal confirm metadata deletion before
+      claimed Storage cleanup, with safe retry after partial failure.
+- [x] D02: Increase bounded per-action web request envelopes to accommodate
+      valid listing specifications, RFQ requirements, quote terms and company
+      creation fields, including UTF-8 and JSON escaping.
+- [x] D03: Preserve RFQ category IDs through Flutter dashboard/detail/edit and
+      alternative entry points; test unavailable existing categories in both
+      clients instead of silently clearing them.
+- [x] D04: Align signup/password-update bounds and preserve supported existing
+      login credentials across native and web. Verify hosted Auth constraints.
+- [x] D05: Reconcile fractional quantity input, persistence and presentation;
+      the second-pass hosted type inspection expands this to E02 above.
+- [x] D07: Remove the web Sell verification badge outside company profiles and
+      reconcile native badge placement with the requested rule. Profile marks
+      must explain verification; any new native tap interaction needs haptics.
+- [x] Reconcile large quote-history retrieval/export completeness and bounded
+      feedback; the second-pass E05 reproduction details this gate above.
+- [ ] Run cross-client buyer/supplier, permission/session, failure/concurrency
+      and real-device/browser acceptance after these fixes. Browser push remains
+      deferred; it is not closed by the current in-app notification features.
 
 The **seven additional S01–S07 workflow/contract gaps are implemented and locally
 verified in both clients**. Current details, shared limits and fresh evidence:
@@ -515,7 +633,9 @@ permission checks, retry IDs and account/company invalidation from Phase 1.
       deadline, urgency, and existing currency/location defaults.
 - [x] Implement manual server drafts, editing/resubmission, review/publication states,
       and rejection feedback.
-- [x] Implement supplier invitations and enquiry attachment upload/open/delete actions.
+- [x] Implement supplier invitations and buyer enquiry attachment upload/open/delete actions.
+- [x] Complete participating-supplier enquiry attachment upload/own-file removal
+      on web (D01) and safe native removal cleanup (D06).
 - [x] Implement close/cancel actions with the existing confirmation and access rules.
 - [x] Preserve verified-party requirements, quote deadlines, blocked-company rules,
       role restrictions, and monthly limits.
@@ -1022,3 +1142,56 @@ Chat feedback follow-up (2026-10-06):
 - [ ] Verify the updated clients together on real devices after deployment/distribution.
 
 Details: [chat composer and immediate messages](documentation/chat_composer_update_2026-10-06.md#immediate-text-message-feedback).
+
+Marketplace UI and company photo follow-up (2026-10-06):
+
+- [x] Public web browse cards match the signed-in layout, with private price/order details still gated.
+- [x] Flutter guest Browse allows typing and drafting filters, then asks for sign-in before submitted search/filter or product access. Protected login resumes the intended query/product.
+- [x] Both product pages show supplier avatar/info and actual five-star rating, plus related products below.
+- [x] Both clients support manager-only company photo upload/update; the private photo migration is applied and permissions checked on the shared backend.
+- [x] Web company workspace uses consistent permission-aware tiles; Flutter combines company settings into one workspace and uses a heart for saved items. New Flutter taps include haptics.
+- [x] Web saves use a disappearing toast. Chat hides routine connection/sent/sending notices; errors/retry remain visible. Enter sends, Shift Enter adds a line and IME is guarded.
+- [x] Paired automation passes: 198 web tests, 191 Flutter tests, 436 real PostgreSQL security checks and 378 HTTP assertions, with clean analysis/types/build.
+- [ ] Distribute updated clients and execute physical-device photo upload/replacement, real cross-client workflows and the remaining revision-bound release checklist.
+
+Details: [marketplace UI polish and shared company photos](documentation/marketplace_ui_polish_2026-10-06.md).
+
+Profile/loading/enquiry follow-up (2026-10-06):
+
+- [x] Correct the enquiry detail saved-state query to the real composite-key schema; preserve the failed page for Retry and distinguish page-load errors from account-access errors.
+- [x] Improve personal Profile information on web and Flutter, add private personal photo upload/replacement to both and show the photo on Account. Shared backend migration is applied and owner/concurrency/cleanup permissions are checked.
+- [x] Put a larger web account avatar beside Notifications with a dropdown, and keep signed-out Log in as a direct button without a dropdown (updated per user request).
+- [x] Add compact activity indicators and photo spinners; reveal missing-photo fallbacks only after actual load failure. New Flutter taps include haptics.
+- [ ] Complete personal-photo upload/replacement on Android and iOS and confirm the same photo in web after distributing updated clients; keep the broader paired release gate open until its required scenarios have current execution evidence.
+
+Details: [personal profile photos, loading and enquiry recovery](documentation/profile_loading_enquiry_fix_2026-10-06.md).
+
+Notifications/Sell/security follow-up (2026-10-06):
+
+- [x] Modern compact notifications on both clients show the original authorized message/resource preview, sender company and context, with safe read/delete actions. Shared invoker feed migration is applied; minimized storage and push payloads are retained.
+- [x] Both Sell workspaces have company summaries, counted status filters and one permission-aware floating Post an item button above navigation/safe areas. New Flutter taps include haptics.
+- [x] Web Account highlights a combined Security & password page with existing authenticator settings, password visibility and conditional email reauthentication. Legacy security links redirect there.
+- [ ] Distribute updated clients and execute device notification/deep-link, keyboard/safe-area and authenticator acceptance; keep revision-bound release scenarios open until executed.
+
+Details: [notifications, Sell and security UI](documentation/notifications_sell_security_polish_2026-10-06.md).
+
+Branding/navigation/footer/chat polish (2026-10-06):
+
+- [x] Clarify informational guest feature labels; add branded responsive footer to both public and signed-in web layouts.
+- [x] Add category/navigation hover and keyboard focus states, a saved-items heart, styled file-selection buttons and red circular Sell icons in web navigation.
+- [x] Web messages show pending/confirmed/seen icons with accessible labels and backend-derived state.
+- [x] Flutter home/guest/auth use the web-style two-line brand; iOS and Android launcher icons and store artwork are generated from the existing logo.
+- [ ] Install updated native builds to check launcher icon shapes and legibility; finish phone/browser/device acceptance before release.
+
+Details: [branding, navigation, footer and chat receipts](documentation/brand_navigation_footer_chat_polish_2026-10-06.md).
+
+Review status and public audience pages (2026-10-06):
+
+- [x] Modernize web listing management; amber timer review state, private-visibility explanation and grouped actions. Flutter uses the same review explanation and a narrow-screen-safe title/status layout.
+- [x] Format visible workflow statuses in Title Case across web/Flutter and quote/deal PDFs; retain raw status values for database/API/filter decisions. Hide stale rejection notes after resubmission.
+- [x] Add Buyers and Vendors pages explaining implemented discovery, RFQ, quote, messaging, deal, review, insights and team capabilities; rename About Salam Sourcing in navigation and link all pages in the footer/sitemap.
+- [x] Keep Get the app visible across web layouts and add the iOS/Android availability page. The user confirmed the app is not public; both stores honestly say Coming Soon.
+- [ ] After public release, replace Coming Soon with the real App Store and Google Play links.
+- [ ] Complete signed-in web moderation walkthrough and installed iOS/Android acceptance against the updated paired revision before launch.
+
+Details and source inventory: [review states and audience pages](documentation/review_status_and_audience_pages_2026-10-06.md).

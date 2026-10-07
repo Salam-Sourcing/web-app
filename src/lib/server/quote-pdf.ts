@@ -1,3 +1,4 @@
+import { statusLabel } from "../status-label";
 import { pdfWriter } from "./business-pdf";
 import type { Enquiry, Quote } from "../procurement";
 import { money, dateLabel, location, expired } from "../procurement";
@@ -40,7 +41,8 @@ export async function quotePdf(
     );
     field(
       "Status",
-      q.status + (expired(q.valid_until, now.getTime()) ? " (expired)" : ""),
+      statusLabel(q.status) +
+        (expired(q.valid_until, now.getTime()) ? " (Expired)" : ""),
     );
     field(
       "Total price / unit price",

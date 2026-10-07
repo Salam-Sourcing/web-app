@@ -1,5 +1,9 @@
 ---
+import AppDownloadBanner from "../components/AppDownloadBanner.astro";
 import "../styles/globals.css";
+import ProfileAvatar from "../components/ProfileAvatar.astro";
+import Footer from "../components/Footer.astro";
+import { profilePhoto } from "../lib/server/profile-photo";
 import Icon from "../components/Icon.astro";
 import type { Workspace } from "../lib/server/access";
 import { fingerprint } from "../lib/server/access";
@@ -10,6 +14,11 @@ interface Props {
   description?: string;
 }
 const { title, active, state, description } = Astro.props;
+const avatar = await profilePhoto(state).catch(() => null);
+const accountName =
+  [state.profile.first_name, state.profile.last_name]
+    .filter(Boolean)
+    .join(" ") || "Your account";
 const destinations = [
   ["discover", "Discover"],
   ["enquiries", "Enquiries"],
@@ -39,7 +48,7 @@ const destinations = [
   <body class="workspace-body">
     <div id="private-content" data-fingerprint={fingerprint(state)}>
       <a class="skip-link" href="#main">Skip to content</a>
-      <header class="workspace-header">
+      <AppDownloadBanner /><header class="workspace-header">
         <div class="container header-row">
           <a class="brand" href="/" aria-label="Salam Sourcing Discover"
             ><img
@@ -52,27 +61,72 @@ const destinations = [
           >
           <nav class="workspace-nav" aria-label="Marketplace navigation">
             {
-              destinations.map(([key, label]) => (
-                <a
-                  href={"/" + key}
-                  aria-current={key === active ? "page" : undefined}
-                >
-                  <Icon name={key} />
-                  {label}
-                </a>
-              ))
+              destinations
+                .filter(([key]) => key !== "account")
+                .map(([key, label]) => (
+                  <a
+                    class:list={{ "nav-sell": key === "sell" }}
+                    href={"/" + key}
+                    aria-current={key === active ? "page" : undefined}
+                  >
+                    <span class="nav-icon">
+                      <Icon name={key} />
+                    </span>
+                    {label}
+                  </a>
+                ))
             }
           </nav>
-          <a
-            href="/account/notifications"
-            class="notification-bell"
-            data-notification-bell
-            aria-label="Notifications"
-            ><Icon name="bell" /><span
-              data-notification-count
-              class="notification-count"
-              hidden></span></a
-          >
+          <div class="workspace-account-actions">
+            <a
+              href="/account/notifications"
+              class="notification-bell"
+              data-notification-bell
+              aria-label="Notifications"
+              ><Icon name="bell" /><span
+                data-notification-count
+                class="notification-count"
+                hidden></span></a
+            >
+            <details class="account-menu" data-account-menu>
+              <summary
+                role="button"
+                aria-label="Open account menu"
+                aria-expanded="false"
+                ><ProfileAvatar
+                  name={accountName}
+                  photo={Boolean(avatar)}
+                /><span class="account-menu-chevron" aria-hidden="true">⌄</span
+                ></summary
+              >
+              <div class="account-dropdown">
+                <div class="dropdown-identity">
+                  <strong>{accountName}</strong><span
+                    >{state.profile.email}</span
+                  >
+                </div>
+                <nav aria-label="Account navigation">
+                  <a href="/account"><Icon name="account" />Account</a>
+                  <a href="/account/profile"
+                    ><Icon name="account" />Profile information</a
+                  >
+                  <a href="/saved"
+                    ><Icon name="heart" />Saved listings &amp; suppliers</a
+                  >
+                  <a href="/account/team"
+                    ><Icon name="team" />Company workspace</a
+                  >
+                  <a href="/account/security"><Icon name="shield" />Security</a>
+                  <a href="/account/support"><Icon name="help" />Support</a>
+                </nav>
+                <form data-api-form action="/api/auth/logout" method="post">
+                  <button type="submit" class="dropdown-signout"
+                    >Sign out</button
+                  ><p data-form-message role="status" hidden></p>
+                </form>
+              </div>
+            </details>
+          </div>
           {
             state.companies.length > 1 && (
               <form
@@ -126,15 +180,19 @@ const destinations = [
           }
         </div><slot />
       </main>
+      <Footer />
       <nav class="mobile-dock" aria-label="Marketplace mobile navigation">
         {
           destinations.map(([key, label]) => (
             <a
+              class:list={{ "nav-sell": key === "sell" }}
               href={"/" + key}
               aria-current={key === active ? "page" : undefined}
             >
               <>
-                <Icon name={key} />
+                <span class="nav-icon">
+                  <Icon name={key} />
+                </span>
                 <span>{label}</span>
               </>
             </a>
@@ -167,4 +225,11 @@ const destinations = [
   bindPushLogout();
   bindBoundary();
   bindSavedActions();
+</script>
+
+<script>
+  import { bindLoading } from "../scripts/loading";
+  import { bindAccountMenus } from "../scripts/account-menu";
+  bindLoading();
+  bindAccountMenus();
 </script>

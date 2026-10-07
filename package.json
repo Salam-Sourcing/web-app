@@ -12,7 +12,11 @@
     "format:check": "prettier --check .",
     "test": "node --import tsx --test tests/*.test.ts",
     "test:http": "node tests/http-smoke.mjs",
-    "test:release": "node tests/http-release.mjs"
+    "test:release": "node tests/http-release.mjs",
+    "verify:parity": "node scripts/verify-parity.mjs",
+    "gate:parity": "node scripts/release-gate.mjs",
+    "test:browser": "playwright test",
+    "test:paired-ui": "node scripts/run-paired-ui.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "14.3.3",
@@ -33,6 +37,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@playwright/test": "1.63.0",
     "@types/node": "24.19.1",
     "prettier": "^3.5.0",
     "prettier-plugin-astro": "^0.14.1",

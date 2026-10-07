@@ -1,0 +1,8 @@
+---
+const { ...props } = Astro.props;
+---
+
+<img {...props} data-loading-image /><span
+  class="media-loading-indicator"
+  aria-hidden="true"><span class="ui-spinner"></span></span
+>

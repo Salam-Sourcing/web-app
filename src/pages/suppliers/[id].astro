@@ -1,4 +1,6 @@
 ---
+import CompanyAvatar from "../../components/CompanyAvatar.astro";
+import { companyPhoto } from "../../lib/server/company-photo";
 import VerifiedBadge from "../../components/VerifiedBadge.astro";
 import AppLayout from "../../layouts/AppLayout.astro";
 import CatalogFeed from "../../components/CatalogFeed.astro";
@@ -20,6 +22,7 @@ try {
 } catch (e) {
   error = e instanceof Error ? e.message : "This supplier is unavailable.";
 }
+const photo = profile ? await companyPhoto(state, id).catch(() => null) : null;
 const saved = profile
   ? await state.client
       .from("saved_companies")
@@ -48,7 +51,19 @@ try {
           <section class="card supplier-overview">
             <>
               <div>
-                <h2>About this company</h2>
+                <>
+                  <div class="company-identity-heading">
+                    <>
+                      <CompanyAvatar
+                        id={id}
+                        name={profile.display_name}
+                        photo={Boolean(photo)}
+                      />
+                      <h2>{profile.display_name}</h2>
+                    </>
+                  </div>
+                  <h3>About this company</h3>
+                </>
                 <p class="help-text mt-3">
                   {[profile.city, profile.province_state, profile.country]
                     .filter(Boolean)

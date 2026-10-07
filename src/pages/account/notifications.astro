@@ -1,27 +1,20 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
 import AccountForm from "../../components/AccountForm.astro";
+import NotificationCard from "../../components/NotificationCard.astro";
+import Icon from "../../components/Icon.astro";
 import { requireWorkspace } from "../../lib/server/access";
 import { checked } from "../../lib/server/catalog";
-import { notificationCanOpen } from "../../lib/notification-display";
+import { notificationFeed } from "../../lib/server/notification-feed";
 const state = await requireWorkspace(Astro);
-const r = await state.client
-  .from("notifications")
-  .select("id,title,body,is_read,entity_type,entity_id,created_at,data")
-  .eq("user_id", state.user.id)
-  .order("created_at", { ascending: false })
-  .order("id", { ascending: false })
-  .limit(100);
-checked(r.error);
-const items = (r.data ?? []).map(({ data, ...notice }) => ({
-  ...notice,
-  can_open: notificationCanOpen({ ...notice, data }),
-}));
-const count = await state.client
-  .from("notifications")
-  .select("id", { count: "exact", head: true })
-  .eq("user_id", state.user.id)
-  .eq("is_read", false);
+const [items, count] = await Promise.all([
+  notificationFeed(state),
+  state.client
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", state.user.id)
+    .eq("is_read", false),
+]);
 checked(count.error);
 ---
 
@@ -29,84 +22,60 @@ checked(count.error);
   title="Notifications"
   active="account"
   state={state}
-  description="Updates about your account and marketplace activity."
+  description="Messages and updates from your business connections."
 >
-  <a slot="actions" class="button secondary" href="/account/preferences"
-    >Preferences</a
+  <a
+    slot="actions"
+    class="button secondary notification-preferences"
+    href="/account/preferences"><Icon name="settings" />Preferences</a
   >
-  <div class="actions mb-5">
-    <button class="button secondary" data-notification-refresh type="button"
-      >Refresh</button
-    ><AccountForm action="notifications-read" submit="Mark all read" />
-  </div>
-  <p data-notification-summary class="help-text">
-    {count.count ?? 0} unread updates. Your latest 100 updates are shown.
-  </p>
-  <button
-    data-notification-updates
-    class="button secondary mb-5"
-    type="button"
-    hidden>Show latest updates</button
-  >
-  <div
-    class="stack"
-    data-notification-list
-    data-notification-revision={JSON.stringify(items)}
-  >
-    {
-      items.map((n) => (
-        <article
-          data-notification-id={n.id}
-          data-notification-signature={JSON.stringify(n)}
-          class:list={["card", !n.is_read && "notification-unread"]}
+  <section class="notification-center">
+    <div class="notification-toolbar">
+      <div>
+        <strong data-notification-summary>{count.count ?? 0} unread</strong
+        ><span class="help-text">Latest 100 updates</span>
+      </div>
+      <div class="notification-tools">
+        <button
+          class="icon-button"
+          data-notification-refresh
+          type="button"
+          aria-label="Refresh notifications"
+          title="Refresh notifications"><Icon name="refresh" /></button
         >
-          <>
+        <AccountForm
+          class="notification-action"
+          action="notifications-read"
+          submit="Mark all read"
+        />
+      </div>
+    </div>
+    <p data-notification-feedback class="help-text" role="status" hidden></p>
+    <button
+      data-notification-updates
+      class="button secondary notification-update-banner"
+      type="button"
+      hidden>Show latest updates</button
+    >
+    <div
+      class="notification-list"
+      data-notification-list
+      data-notification-revision={JSON.stringify(items)}
+    >
+      {items.map((n) => <NotificationCard notice={n} />)}
+      {
+        !items.length && (
+          <section class="notification-empty" data-notification-empty>
             <>
-              <div class="section-heading">
-                <h2>{n.title}</h2>
-                {!n.is_read && <span class="badge">Unread</span>}
-              </div>
-              <p class="account-copy">{n.body}</p>
-              <time datetime={n.created_at}>
-                {new Date(n.created_at).toLocaleString("en-CA", {
-                  timeZone: "America/Edmonton",
-                  timeZoneName: "short",
-                })}
-              </time>
-              <div class="row-actions mt-4">
-                {n.can_open && (
-                  <AccountForm
-                    action="notification-open"
-                    id={n.id}
-                    submit="Open update"
-                  />
-                )}
-                {!n.is_read && (
-                  <AccountForm
-                    action="notification-read"
-                    id={n.id}
-                    submit="Mark read"
-                  />
-                )}
-                <AccountForm
-                  action="notification-delete"
-                  id={n.id}
-                  submit="Delete"
-                />
-              </div>
+              <span class="notification-symbol">
+                <Icon name="bell" size={28} />
+              </span>
+              <h2>You’re all caught up</h2>
+              <p>New messages and marketplace updates will appear here.</p>
             </>
-          </>
-        </article>
-      ))
-    }{
-      !items.length && (
-        <section class="card" data-notification-empty>
-          <>
-            <h2>You’re all caught up</h2>
-            <p>No notifications yet.</p>
-          </>
-        </section>
-      )
-    }
-  </div>
+          </section>
+        )
+      }
+    </div>
+  </section>
 </AppLayout>

@@ -24,12 +24,16 @@ import {
   conversationFeed,
   enquiryFeed,
   quoteBundle,
+  quotePage,
+  enquiryFileParty,
 } from "../src/lib/server/procurement.ts";
+import { handleCatalogAction } from "../src/lib/server/catalog-actions.ts";
 import { procurementAction } from "../src/lib/server/procurement-actions.ts";
 import {
   ownedIntent,
   uploadBucket,
   attachMessageMetadata,
+  removeEnquiryFile,
 } from "../src/lib/server/uploads.ts";
 import { validateFile } from "../src/lib/catalog.ts";
 import { quotePdf } from "../src/lib/server/quote-pdf.ts";
@@ -89,6 +93,7 @@ function state(
 function client(
   tables: Record<string, unknown>,
   rpc?: (name: string, args: unknown) => unknown,
+  counts: Record<string, number> = {},
 ) {
   const calls: { table: string; method: string; args: unknown[] }[] = [];
   return {
@@ -122,6 +127,7 @@ function client(
           return query;
         };
       const result = () => ({
+        count: counts[table] ?? null,
         data:
           typeof tables[table] === "function"
             ? (tables[table] as Function)(filters)
@@ -711,7 +717,7 @@ test("authorized draft edits pass the selected currency to the current database 
   assert.equal((changes as any).visibility, "invited");
 });
 
-test("quote comparison loads beyond the first database response page", async () => {
+test("quote comparison reports its bound without returning truncated quotes", async () => {
   let page = 0;
   const sdk = client({
     enquiries: e,
@@ -721,7 +727,8 @@ test("quote comparison loads beyond the first database response page", async () 
         : [{ ...q, id: 501 }],
   });
   const result = await quoteBundle(state(sdk), 5);
-  assert.equal(result.quotes.length, 501);
+  assert.equal(result.quotes.length, 0);
+  assert.equal(result.tooLarge, true);
   assert.deepEqual(
     sdk.calls
       .filter((c) => c.table === "quotes" && c.method === "range")
@@ -744,6 +751,274 @@ test("invalid calendar dates cannot normalize into a different future deadline",
           quote_deadline: "2099-02-31T12:00:00Z",
         },
         10,
+      ),
+    AccessError,
+  );
+});
+
+test("quote history stays paged even beyond the comparison and API limits", async () => {
+  const sdk = client({ enquiries: e, quotes: [{ ...q, id: 6001 }] });
+  const result = await quotePage(state(sdk), 5, "6000");
+  assert.equal(result.quotes[0].id, 6001);
+  assert.equal(result.offset, 6000);
+  assert.deepEqual(
+    sdk.calls.find((c) => c.table === "quotes" && c.method === "range")?.args,
+    [6000, 6023],
+  );
+  await assert.rejects(() => quotePage(state(sdk), 5, "-1"), AccessError);
+});
+
+test("supplier file actions require an actual party relationship and sales permission", async () => {
+  assert.equal(
+    await enquiryFileParty(state(client({}), 30), {
+      ...e,
+      supplier_company_id: 30,
+    }),
+    "supplier",
+  );
+  assert.equal(
+    await enquiryFileParty(
+      state(
+        client({ enquiry_supplier_invitations: [{ id: 1 }], quotes: [] }),
+        30,
+      ),
+      e,
+    ),
+    "supplier",
+  );
+  assert.equal(
+    await enquiryFileParty(
+      state(
+        client({ enquiry_supplier_invitations: [], quotes: [{ id: 2 }] }),
+        30,
+      ),
+      e,
+    ),
+    "supplier",
+  );
+  await assert.rejects(
+    () =>
+      enquiryFileParty(
+        state(client({ enquiry_supplier_invitations: [], quotes: [] }), 30),
+        e,
+      ),
+    AccessError,
+  );
+  await assert.rejects(
+    () =>
+      enquiryFileParty(state(client({}), 30, ["procurement"]), {
+        ...e,
+        supplier_company_id: 30,
+      }),
+    AccessError,
+  );
+  await assert.rejects(
+    () =>
+      enquiryFileParty(
+        state(client({}), 30),
+        { ...e, supplier_company_id: 30 },
+        "10",
+      ),
+    AccessError,
+  );
+});
+
+test("comparison and export load all rows when Data API caps each response below 500", async () => {
+  let offset = 0;
+  const rows = Array.from({ length: 5 }, (_, i) => ({ ...q, id: i + 1 }));
+  const sdk = client(
+    {
+      enquiries: e,
+      quotes: () => {
+        const page = rows.slice(offset, offset + 2);
+        offset += page.length;
+        return page;
+      },
+    },
+    undefined,
+    { quotes: 5 },
+  );
+  const result = await quoteBundle(state(sdk), 5, false);
+  assert.equal(result.tooLarge, false);
+  assert.deepEqual(
+    result.quotes.map((q) => q.id),
+    [1, 2, 3, 4, 5],
+  );
+  assert.deepEqual(
+    sdk.calls
+      .filter((c) => c.table === "quotes" && c.method === "range")
+      .map((c) => c.args[0]),
+    [0, 2, 4],
+  );
+});
+test("normal quote pages report full counts independent of comparison size", async () => {
+  const sdk = client({ enquiries: e, quotes: [{ ...q }] }, undefined, {
+    quotes: 6001,
+  });
+  const result = await quotePage(state(sdk), 5, "6000");
+  assert.equal(result.count, 6001);
+  assert.equal(result.hasMore, false);
+  assert.equal(result.nextOffset, 6001);
+});
+
+test("lost review acknowledgement reconciles to the saved pending enquiry without another write", async () => {
+  const sdk = client({
+    enquiries: { ...e, publication_status: "pending_review" },
+  });
+  const response = await procurementAction(
+    ctx(state(sdk)),
+    { company_id: "10", enquiry_id: "5", reconcile_review: "true" },
+    "save-enquiry",
+  );
+  assert.deepEqual(await response.json(), {
+    id: 5,
+    submitted: true,
+    redirect: "/enquiries/5",
+  });
+  assert.equal(
+    sdk.calls.some((c) => ["insert", "upsert", "delete"].includes(c.method)),
+    false,
+  );
+});
+
+test("supplier attachment removal is scoped to its uploader and detaches before cleanup", async () => {
+  const row = {
+    id: 9,
+    enquiry_id: 5,
+    uploaded_by_user_id: "u1",
+    storage_path: "5/u1/file.pdf",
+  };
+  let sdk: ReturnType<typeof client>;
+  sdk = client(
+    {
+      enquiries: { ...e, supplier_company_id: 30 },
+      enquiry_attachments: () =>
+        sdk.calls.some(
+          (c) => c.table === "enquiry_attachments" && c.method === "delete",
+        )
+          ? [{ id: 9 }]
+          : row,
+    },
+    (name) => {
+      assert.equal(name, "claim_upload_cleanup");
+      assert.ok(sdk.calls.some((c) => c.method === "delete"));
+      return { data: "retained", error: null };
+    },
+  );
+  assert.equal(
+    (
+      await removeEnquiryFile(ctx(state(sdk, 30)), {
+        company_id: "30",
+        attachment_id: "9",
+        confirm: "REMOVE",
+      })
+    ).status,
+    200,
+  );
+  const foreign = client({
+    enquiries: { ...e, supplier_company_id: 30 },
+    enquiry_attachments: { ...row, uploaded_by_user_id: "u2" },
+  });
+  await assert.rejects(
+    () =>
+      removeEnquiryFile(ctx(state(foreign, 30)), {
+        company_id: "30",
+        attachment_id: "9",
+        confirm: "REMOVE",
+      }),
+    AccessError,
+  );
+  assert.equal(
+    foreign.calls.some((c) => c.method === "delete"),
+    false,
+  );
+});
+
+test("RFQ editing preserves its retired category but refuses a new inactive selection", async () => {
+  const sdk = client({
+    enquiries: { ...e, publication_status: "draft", sub_category_id: 42 },
+    sub_categories: null,
+  });
+  const input = {
+    company_id: "10",
+    enquiry_id: "5",
+    enquiry_type: "public_rfq",
+    title: "Parts",
+    message: "Requirements",
+    currency: "CAD",
+    quote_deadline: future,
+    sub_category_id: "42",
+  };
+  assert.equal(
+    (await procurementAction(ctx(state(sdk)), input, "save-enquiry")).status,
+    200,
+  );
+  await assert.rejects(
+    () =>
+      procurementAction(
+        ctx(state(sdk)),
+        { ...input, sub_category_id: "43" },
+        "save-enquiry",
+      ),
+    AccessError,
+  );
+  await assert.rejects(
+    () => procurementAction(ctx(state(sdk, 30)), input, "save-enquiry"),
+    AccessError,
+  );
+});
+
+test("listing edits preserve authorized retired categories and unchanged legacy lead days", async () => {
+  let changes: any;
+  const sdk = client(
+    {
+      listings: {
+        id: 6,
+        company_id: 10,
+        status: "draft",
+        sub_category_id: 42,
+        estimated_lead_time_days: 36501,
+      },
+      categories: [],
+    },
+    (name, args: any) => {
+      assert.equal(name, "update_listing");
+      changes = args.p_changes;
+      return { data: null, error: null };
+    },
+  );
+  const input = {
+    company_id: "10",
+    listing_id: "6",
+    listing_type: "product",
+    name: "Parts",
+    description: "Requirements",
+    unit_of_measure: "unit",
+    sub_category_id: "42",
+    estimated_lead_time_days: "36501",
+  };
+  const workspace = state(sdk, 10, ["listings"]);
+  assert.equal(
+    (await handleCatalogAction(ctx(workspace), input, "listing-update")).status,
+    200,
+  );
+  assert.equal(changes.sub_category_id, 42);
+  assert.equal(changes.estimated_lead_time_days, 36501);
+  await assert.rejects(
+    () =>
+      handleCatalogAction(
+        ctx(workspace),
+        { ...input, sub_category_id: "43" },
+        "listing-update",
+      ),
+    AccessError,
+  );
+  await assert.rejects(
+    () =>
+      handleCatalogAction(
+        ctx(workspace),
+        { ...input, estimated_lead_time_days: "36502" },
+        "listing-update",
       ),
     AccessError,
   );

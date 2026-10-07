@@ -1,4 +1,5 @@
 ---
+import { statusLabel } from "../lib/status-label";
 import type { DealBundle, ReviewState } from "../lib/deals";
 import { stages, nextMilestone } from "../lib/deals";
 import { money, dateLabel } from "../lib/procurement";
@@ -32,7 +33,8 @@ const actor = (id: number) =>
         }
       </p><h2>{d.product_name}</h2>
     </div><span class:list={["badge", { success: d.status === "completed" }]}
-      >{d.status.replaceAll("_", " ")}</span>
+      >{statusLabel(d.status)}</span
+    >
   </div>
   <dl class="deal-facts">
     <div><dt>Buyer</dt><dd>{bundle.buyer}</dd></div><div>
@@ -49,7 +51,9 @@ const actor = (id: number) =>
   <div class="stack">
     <section class="card">
       <div class="section-heading">
-        <h2>Delivery progress</h2><span class="badge">{p.stage}</span>
+        <h2>Delivery progress</h2><span class="badge"
+          >{statusLabel(p.stage)}</span
+        >
       </div>
       <ol class="deal-milestones" aria-label="Delivery milestones">
         {
@@ -65,7 +69,7 @@ const actor = (id: number) =>
             >
               <>
                 <span aria-hidden="true">{index + 1}</span>
-                <strong>{stage[0].toUpperCase() + stage.slice(1)}</strong>
+                <strong>{statusLabel(stage)}</strong>
                 <small>
                   {stage === "received"
                     ? "Buyer"
@@ -164,9 +168,7 @@ const actor = (id: number) =>
             {bundle.events.map((event) => (
               <li>
                 <div class="section-heading">
-                  <strong>
-                    {event.stage[0].toUpperCase() + event.stage.slice(1)}
-                  </strong>
+                  <strong>{statusLabel(event.stage)}</strong>
                   <time datetime={event.created_at}>
                     {dateLabel(event.created_at)}
                   </time>
@@ -201,14 +203,16 @@ const actor = (id: number) =>
               d.buyer_completed_at
                 ? "Confirmed " + dateLabel(d.buyer_completed_at)
                 : "Awaiting confirmation"
-            }</span>
+            }</span
+          >
         </li><li>
           <strong>{bundle.supplier}</strong><span
             >{
               d.supplier_completed_at
                 ? "Confirmed " + dateLabel(d.supplier_completed_at)
                 : "Awaiting confirmation"
-            }</span>
+            }</span
+          >
         </li>
       </ul>
       {
@@ -355,9 +359,9 @@ const actor = (id: number) =>
     <section class="card">
       <h2>Business record</h2><p class="help-text mt-3">
         This summary is not a payment invoice, receipt or proof of delivery.
-      </p><a
-        class="button secondary mt-4"
-        href={"/deals/" + d.id + "/export"}>Preview & export PDF</a>
+      </p><a class="button secondary mt-4" href={"/deals/" + d.id + "/export"}
+        >Preview & export PDF</a
+      >
     </section>
   </aside>
 </div>

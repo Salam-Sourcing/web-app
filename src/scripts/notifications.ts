@@ -1,4 +1,8 @@
 import { bindForms } from "./forms";
+import {
+  notificationPresentation,
+  notificationIconPaths,
+} from "../lib/notification-display";
 type Notice = {
   id: number;
   title: string;
@@ -8,6 +12,10 @@ type Notice = {
   entity_id: number | null;
   created_at: string;
   can_open: boolean;
+  notification_type: string;
+  source_name: string | null;
+  preview: string | null;
+  context_name: string | null;
 };
 function node<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -20,7 +28,7 @@ function node<K extends keyof HTMLElementTagNameMap>(
   return element;
 }
 function action(id: number, kind: string, label: string) {
-  const form = node("form", undefined, "form");
+  const form = node("form", undefined, "form notification-action");
   form.method = "post";
   form.action = "/api/account/" + kind;
   form.dataset.apiForm = "";
@@ -38,30 +46,71 @@ function action(id: number, kind: string, label: string) {
   return form;
 }
 function card(n: Notice) {
+  const view = notificationPresentation(n);
   const row = node(
     "article",
     undefined,
-    "card" + (!n.is_read ? " notification-unread" : ""),
+    "notification-card" + (!n.is_read ? " notification-unread" : ""),
   );
   row.dataset.notificationId = String(n.id);
-  const heading = node("div", undefined, "section-heading");
-  heading.append(node("h2", n.title));
-  if (!n.is_read) heading.append(node("span", "Unread", "badge"));
+  const symbol = node("span", undefined, "notification-symbol");
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  for (const [key, value] of Object.entries({
+    viewBox: "0 0 24 24",
+    width: "22",
+    height: "22",
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-width": "1.7",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    "aria-hidden": "true",
+  }))
+    svg.setAttribute(key, value);
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", notificationIconPaths[view.icon]);
+  svg.append(path);
+  symbol.append(svg);
+  const content = node("div", undefined, "notification-content");
+  const heading = node("div", undefined, "notification-heading");
+  heading.append(node("h2", view.title));
+  if (!n.is_read) {
+    const dot = node("span", undefined, "notification-dot");
+    dot.ariaLabel = "Unread";
+    heading.append(dot);
+  }
+  content.append(
+    heading,
+    node("p", view.source, "notification-source"),
+    node("p", view.preview, "notification-preview"),
+  );
+  if (view.context && view.context !== view.preview)
+    content.append(node("p", view.context, "notification-context"));
+  const footer = node("div", undefined, "notification-footer");
   const time = node(
     "time",
     new Date(n.created_at).toLocaleString("en-CA", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
       timeZone: "America/Edmonton",
-      timeZoneName: "short",
     }),
   );
   time.dateTime = n.created_at;
-  const actions = node("div", undefined, "row-actions mt-4");
+  footer.append(time);
   if (n.can_open)
-    actions.append(action(n.id, "notification-open", "Open update"));
+    footer.append(action(n.id, "notification-open", view.openLabel));
+  content.append(footer);
+  const more = node("details", undefined, "notification-more"),
+    summary = node("summary", "⋯");
+  summary.ariaLabel = "More actions for " + view.title;
+  const options = node("div", undefined, "notification-options");
   if (!n.is_read)
-    actions.append(action(n.id, "notification-read", "Mark read"));
-  actions.append(action(n.id, "notification-delete", "Delete"));
-  row.append(heading, node("p", n.body ?? "", "account-copy"), time, actions);
+    options.append(action(n.id, "notification-read", "Mark read"));
+  options.append(action(n.id, "notification-delete", "Delete"));
+  more.append(summary, options);
+  row.append(symbol, content, more);
   return row;
 }
 /** Background reads never lock the workspace or interrupt an active form. */
@@ -117,18 +166,21 @@ export function bindNotifications() {
     });
     for (const row of existing.values()) row.remove();
     if (!rows.length) {
-      const empty = node("section", undefined, "card");
+      const empty = node("section", undefined, "notification-empty");
       empty.dataset.notificationEmpty = "";
       empty.append(
         node("h2", "You’re all caught up"),
-        node("p", "No notifications yet."),
+        node("p", "New messages and marketplace updates will appear here."),
       );
       list.append(empty);
     }
     if (banner) banner.hidden = !pending;
     bindForms();
   };
-  const refresh = async () => {
+  const feedback = content.querySelector<HTMLElement>(
+    "[data-notification-feedback]",
+  );
+  const refresh = async (manual = false) => {
     if (!allowed() || controller) return;
     const request = new AbortController();
     controller = request;
@@ -139,8 +191,10 @@ export function bindNotifications() {
         cache: "no-store",
         signal: request.signal,
       });
-      if (!response.ok) return;
+      if (!response.ok)
+        throw new Error("Notifications could not be refreshed. Please retry.");
       const data = await response.json();
+      if (manual && feedback) feedback.hidden = true;
       if (
         !allowed() ||
         request.signal.aborted ||
@@ -155,8 +209,7 @@ export function bindNotifications() {
       const description = content.querySelector<HTMLElement>(
         "[data-notification-summary]",
       );
-      if (description)
-        description.textContent = `${data.unread} unread updates. Your latest 100 updates are shown.`;
+      if (description) description.textContent = `${data.unread} unread`;
       if (list && Array.isArray(data.rows)) {
         const next = JSON.stringify(data.rows);
         if (next !== revision) {
@@ -167,7 +220,23 @@ export function bindNotifications() {
           list
             .querySelectorAll<HTMLElement>("[data-notification-id]")
             .forEach((row) => {
-              if (!ids.has(row.dataset.notificationId)) row.remove();
+              if (!ids.has(row.dataset.notificationId)) {
+                row.remove();
+                return;
+              }
+              const next = data.rows.find(
+                (n: Notice) => String(n.id) === row.dataset.notificationId,
+              ) as Notice;
+              let previous: Notice | undefined;
+              try {
+                previous = JSON.parse(row.dataset.notificationSignature ?? "");
+              } catch {}
+              if (previous?.preview && !next.preview) {
+                const replacement = card(next);
+                replacement.dataset.notificationSignature =
+                  JSON.stringify(next);
+                row.replaceWith(replacement);
+              }
             });
           if (banner) {
             banner.hidden = false;
@@ -176,7 +245,11 @@ export function bindNotifications() {
         }
       }
     } catch {
-      /* The next poll or Refresh retries without blocking other actions. */
+      if (manual && feedback) {
+        feedback.textContent =
+          "Notifications could not be refreshed. Please retry.";
+        feedback.hidden = false;
+      }
     } finally {
       clearTimeout(timeout);
       if (controller === request) controller = undefined;
@@ -186,8 +259,22 @@ export function bindNotifications() {
   content
     .querySelector("[data-notification-refresh]")
     ?.addEventListener("click", async () => {
-      await refresh();
-      render();
+      const button = content.querySelector<HTMLButtonElement>(
+        "[data-notification-refresh]",
+      );
+      if (button) {
+        button.disabled = true;
+        button.setAttribute("aria-busy", "true");
+      }
+      try {
+        await refresh(true);
+        render();
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.removeAttribute("aria-busy");
+        }
+      }
     });
   const visibility = () => {
     if (!allowed()) controller?.abort();

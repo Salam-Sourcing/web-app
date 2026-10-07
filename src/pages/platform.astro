@@ -28,7 +28,7 @@ const audiences = [
 ];
 ---
 
-<MainLayout title="Better sourcing starts with a conversation"
+<MainLayout title="About Salam Sourcing"
   ><section class="hero">
     <div class="container hero-grid">
       <div>
@@ -41,7 +41,8 @@ const audiences = [
         </p><div class="actions">
           <a class="button" href="/signup">Join free <Icon name="arrow" /></a><a
             class="button secondary"
-            href="/about">How it works</a>
+            href="/about">How it works</a
+          >
         </div><p class="help-text mt-5">
           One account for Salam Sourcing on web and in the app.
         </p>
@@ -49,7 +50,8 @@ const audiences = [
       <div class="journey-card">
         <div class="journey-header">
           <h2>A clearer way to source</h2><span class="badge"
-            >Buy · Sell · Both</span>
+            >Buy · Sell · Both</span
+          >
         </div>{
           steps.map(([title, text], index) => (
             <div class="journey-step">
@@ -76,6 +78,11 @@ const audiences = [
         Whether you're looking for supply, sharing what you sell or doing both,
         start with a company workspace built for the way you trade.
       </p>
+    </div><div class="actions justify-center mb-6">
+      <a class="button" href="/buyers">Explore Buyer Features</a><a
+        class="button secondary"
+        href="/vendors">Explore Vendor Features</a
+      >
     </div><div class="feature-grid">
       {
         audiences.map(([title, text]) => (

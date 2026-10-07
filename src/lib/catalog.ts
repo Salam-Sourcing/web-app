@@ -1,4 +1,5 @@
 import { AccessError, positiveId, textField } from "./security";
+import { businessNumber } from "./business-numbers";
 import type { Database, Json } from "./database.types";
 import {
   companyLimits,
@@ -64,20 +65,7 @@ export function numberValue(
   label: string,
   integer = false,
 ): number | null {
-  if (value === undefined || value === null || value === "") return null;
-  if (typeof value !== "string" && typeof value !== "number")
-    throw new AccessError(400, "invalid_number", "Check " + label + ".");
-  if (typeof value === "string" && !/^\d+(?:\.\d+)?$/.test(value))
-    throw new AccessError(400, "invalid_number", "Check " + label + ".");
-  const n = Number(value);
-  if (
-    !Number.isFinite(n) ||
-    n < 0 ||
-    n > 1e12 ||
-    (integer && !Number.isSafeInteger(n))
-  )
-    throw new AccessError(400, "invalid_number", "Check " + label + ".");
-  return n;
+  return businessNumber(value, label, { integer });
 }
 export function website(value: unknown): string | null {
   if (value === undefined || value === null || value === "") return null;
@@ -153,7 +141,10 @@ export function companyPayload(
       : website(data.website),
   };
 }
-export function listingPayload(data: Record<string, unknown>) {
+export function listingPayload(
+  data: Record<string, unknown>,
+  existing?: Record<string, any>,
+) {
   const type = textField(data, "listing_type", 10);
   if (!["product", "service"].includes(type))
     throw new AccessError(400, "invalid_type", "Choose product or service.");
@@ -201,10 +192,10 @@ export function listingPayload(data: Record<string, unknown>) {
     price_per_unit: numberValue(data.price_per_unit, "price"),
     unit_of_measure: textField(data, "unit_of_measure", 60),
     minimum_order_quantity: numberValue(data.minimum_order_quantity, "MOQ"),
-    estimated_lead_time_days: numberValue(
+    estimated_lead_time_days: businessNumber(
       data.estimated_lead_time_days,
       "lead time",
-      true,
+      { integer: true, existing: existing?.estimated_lead_time_days },
     ),
     origin_country: optional(data, "origin_country", 100),
   };
@@ -310,14 +301,25 @@ export const imageTypes = ["image/jpeg", "image/png", "image/webp"] as const;
 export function validateFile(
   bytes: Uint8Array,
   mime: string,
-  kind: "listing" | "document" | "enquiry" | "message" | "deal",
+  kind:
+    | "listing"
+    | "document"
+    | "enquiry"
+    | "message"
+    | "deal"
+    | "company"
+    | "profile",
 ) {
-  const max = kind === "listing" ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+  const max = ["listing", "company", "profile"].includes(kind)
+    ? 5 * 1024 * 1024
+    : 10 * 1024 * 1024;
   if (bytes.length === 0 || bytes.length > max)
     throw new AccessError(
       400,
       "file_size",
-      "Choose a file up to " + (kind === "listing" ? "5" : "10") + " MB.",
+      "Choose a file up to " +
+        (["listing", "company", "profile"].includes(kind) ? "5" : "10") +
+        " MB.",
     );
   const prefix = Array.from(bytes.subarray(0, 12));
   const matches =
@@ -328,7 +330,8 @@ export function validateFile(
         : mime === "image/webp" && kind !== "deal"
           ? String.fromCharCode(...prefix.slice(0, 4)) === "RIFF" &&
             String.fromCharCode(...prefix.slice(8, 12)) === "WEBP"
-          : mime === "application/pdf" && kind !== "listing"
+          : mime === "application/pdf" &&
+              !["listing", "company", "profile"].includes(kind)
             ? String.fromCharCode(...prefix.slice(0, 5)) === "%PDF-"
             : false;
   if (!matches)
@@ -336,7 +339,7 @@ export function validateFile(
       400,
       "file_type",
       "Choose a valid JPEG, PNG, WebP" +
-        (kind !== "listing" ? " or PDF" : "") +
+        (!["listing", "company", "profile"].includes(kind) ? " or PDF" : "") +
         " file.",
     );
 }

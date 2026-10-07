@@ -1,9 +1,22 @@
 ---
+import ProfileAvatar from "../../components/ProfileAvatar.astro";
+import { profilePhoto } from "../../lib/server/profile-photo";
 import AppLayout from "../../layouts/AppLayout.astro";
 import AccountForm from "../../components/AccountForm.astro";
+import { managerRoles } from "../../lib/catalog";
+import CompanyAvatar from "../../components/CompanyAvatar.astro";
+import { companyPhoto } from "../../lib/server/company-photo";
 import Icon from "../../components/Icon.astro";
 import { requireWorkspace } from "../../lib/server/access";
 const state = await requireWorkspace(Astro);
+const personalPhoto = await profilePhoto(state).catch(() => null);
+const name =
+  [state.profile.first_name, state.profile.last_name]
+    .filter(Boolean)
+    .join(" ") || "Your account";
+const photo = state.company
+  ? await companyPhoto(state, state.company.id).catch(() => null)
+  : null;
 const companyItems = [
   ["team", "Company & team", "team"],
   ["billing", "Plans & billing", "billing"],
@@ -35,12 +48,11 @@ const items = [
     "Replies, appeals, ownership requests and personal export.",
   ],
   [
-    "security",
+    "password",
     "shield",
-    "Two-factor authentication",
-    "Protect your account with an authenticator app.",
+    "Security & password",
+    "Password and two-factor authentication.",
   ],
-  ["password", "shield", "Password", "Update your password or recover access."],
   [
     "safety",
     "company",
@@ -54,19 +66,30 @@ const items = [
   ><div class="account-grid">
     <div class="stack">
       <section class="card">
-        <p class="eyebrow">Your account</p><h2>
-          {
-            [state.profile.first_name, state.profile.last_name]
-              .filter(Boolean)
-              .join(" ")
-          }
-        </h2><p class="mt-2">{state.profile.email}</p><ul class="settings-list">
+        <div class="personal-identity">
+          <ProfileAvatar name={name} photo={Boolean(personalPhoto)} large /><div
+          >
+            <p class="eyebrow">Your account</p><h2>{name}</h2><p
+              class="help-text"
+            >
+              {state.profile.email}
+            </p>
+          </div>
+        </div><ul class="settings-list">
           {
             items.map(([path, icon, title, description]) => (
               <li>
-                <a class="settings-link" href={"/account/" + path}>
+                <a
+                  class:list={[
+                    "settings-link",
+                    path === "password" && "settings-security",
+                  ]}
+                  href={"/account/" + path}
+                >
                   <>
-                    <Icon name={icon} />
+                    <span class="settings-icon">
+                      <Icon name={icon} />
+                    </span>
                     <div>
                       <>
                         <strong>{title}</strong>
@@ -97,114 +120,173 @@ const items = [
           </p><button class="button secondary" type="submit">Sign out</button>
         </form>
       </section>
-    </div><section class="card">
-      <p class="eyebrow">Company workspace</p>{
+    </div><section class="card company-workspace">
+      <p class="eyebrow">Company workspace</p>
+      {
         state.company ? (
           <>
-            <>
-              <h2>{state.company.display_name}</h2>
-              <dl>
+            <div class="company-identity-heading">
+              <>
+                <CompanyAvatar
+                  id={state.company.id}
+                  name={state.company.display_name}
+                  photo={Boolean(photo)}
+                />
+                <div>
+                  <>
+                    <h2>{state.company.display_name}</h2>
+                    <p class="help-text">
+                      {state.company.role.charAt(0).toUpperCase() +
+                        state.company.role.slice(1)}{" "}
+                      ·{" "}
+                      {[
+                        state.company.city,
+                        state.company.province_state,
+                        state.company.country,
+                      ]
+                        .filter(Boolean)
+                        .join(", ") || "Location not provided"}
+                    </p>
+                  </>
+                </div>
+              </>
+            </div>
+            <div class="workspace-tiles">
+              {managerRoles.includes(state.company.role) && (
+                <a class="workspace-tile" href="/company">
+                  <Icon name="company" />
+                  <div>
+                    <strong>Company profile</strong>
+                    <span>Business details, photo &amp; verification</span>
+                  </div>
+                  <Icon name="arrow" size={17} />
+                </a>
+              )}
+              <a class="workspace-tile" href="/account/team">
                 <>
-                  <div class="info-row">
+                  <Icon name="team" />
+                  <div>
                     <>
-                      <dt>Your role</dt>
-                      <dd>{state.company.role}</dd>
+                      <strong>Company &amp; team</strong>
+                      <span>Memberships and company access</span>
                     </>
                   </div>
-                  <div class="info-row">
+                  <Icon name="arrow" size={17} />
+                </>
+              </a>
+              {(state.permissions.includes("sales") ||
+                state.permissions.includes("procurement")) && (
+                <a class="workspace-tile" href="/deals">
+                  <Icon name="enquiries" />
+                  <div>
+                    <strong>Company deals</strong>
+                    <span>Orders and transaction progress</span>
+                  </div>
+                  <Icon name="arrow" size={17} />
+                </a>
+              )}
+              <a
+                class="workspace-tile"
+                href={"/suppliers/" + state.company.id + "/reviews"}
+              >
+                <>
+                  <Icon name="star" />
+                  <div>
                     <>
-                      <dt>Location</dt>
-                      <dd>
-                        {[
-                          state.company.city,
-                          state.company.province_state,
-                          state.company.country,
-                        ]
-                          .filter(Boolean)
-                          .join(", ") || "Not provided"}
-                      </dd>
+                      <strong>Reviews &amp; responses</strong>
+                      <span>Feedback from business partners</span>
                     </>
                   </div>
+                  <Icon name="arrow" size={17} />
                 </>
-              </dl>
-              <div class="actions mt-5">
+              </a>
+              {companyItems
+                .filter(
+                  ([path, , scope]) =>
+                    path !== "team" && state.permissions.includes(scope),
+                )
+                .map(([path, title]) => (
+                  <a class="workspace-tile" href={"/account/" + path}>
+                    <Icon name={path === "billing" ? "billing" : "insights"} />
+                    <div>
+                      <strong>{title}</strong>
+                      <span>
+                        {path === "billing"
+                          ? "Subscriptions and invoices"
+                          : "Understand listing performance"}
+                      </span>
+                    </div>
+                    <Icon name="arrow" size={17} />
+                  </a>
+                ))}
+              <a class="workspace-tile" href="/saved">
                 <>
-                  <a class="button secondary" href="/deals">
-                    Company deals
-                  </a>
-                  <a
-                    class="text-link"
-                    href={"/suppliers/" + state.company.id + "/reviews"}
-                  >
-                    Company reviews & responses
-                  </a>
+                  <Icon name="heart" />
+                  <div>
+                    <>
+                      <strong>Saved listings &amp; suppliers</strong>
+                      <span>Your sourcing shortlist</span>
+                    </>
+                  </div>
+                  <Icon name="arrow" size={17} />
                 </>
-              </div>
-              <h3 class="mt-5">Your permissions</h3>
-              <div class="permission-list">
-                {state.permissions.length ? (
-                  state.permissions.map((permission) => (
-                    <span class="badge">{permission}</span>
-                  ))
-                ) : (
-                  <p class="help-text">
-                    You have no management permissions for this company.
-                  </p>
-                )}
-              </div>
-            </>
+              </a>
+            </div>
+            <details class="workspace-permissions">
+              <>
+                <summary>Your permissions</summary>
+                <div class="permission-list">
+                  {state.permissions.length ? (
+                    state.permissions.map((permission) => (
+                      <span class="badge">
+                        {permission.charAt(0).toUpperCase() +
+                          permission.slice(1)}
+                      </span>
+                    ))
+                  ) : (
+                    <p class="help-text">
+                      No management permissions for this company.
+                    </p>
+                  )}
+                </div>
+              </>
+            </details>
           </>
         ) : (
           <>
             <>
-              <h2>Your company comes next.</h2>
-              <p>
-                Create your company to begin sourcing. Existing app companies
-                appear here when you use the same account.
+              <h2>Start your company workspace</h2>
+              <p class="help-text">
+                Create your company or join an existing team to start sourcing.
               </p>
+              <div class="actions">
+                <>
+                  <a class="button" href="/company/new">
+                    Create company
+                  </a>
+                  <a class="button secondary" href="/saved">
+                    Saved items
+                  </a>
+                </>
+              </div>
             </>
           </>
         )
-      }<ul class="settings-list">
-        {
-          companyItems
-            .filter(
-              ([, , scope]) =>
-                state.permissions.includes(scope) &&
-                (scope !== "team" ||
-                  ["owner", "admin"].includes(state.company?.role ?? "")),
-            )
-            .map(([path, title]) => (
-              <li>
-                <a class="settings-link" href={"/account/" + path}>
-                  <strong>{title}</strong>
-                </a>
-              </li>
-            ))
-        }
-      </ul>
-      <div class="actions">
-        <a
-          class="button secondary"
-          href={state.company ? "/company" : "/company/new"}
-          >{
-            state.company ? "Company profile & verification" : "Create company"
-          }</a
-        ><a class="text-link" href="/saved">Saved listings & suppliers</a>
-      </div><hr class="divider" /><AccountForm
-        action="invitation-preview"
-        submit="Preview invitation"
-        ><label class="field"
-          >Company invitation code<input
-            name="invitation_id"
-            required
-            maxlength="36"
-          /></label
-        ></AccountForm
-      ><p class="help-text">
-        Company membership, verification and account access are shared with your
-        Salam Sourcing app.
-      </p>
+      }
+      <details class="workspace-invitation">
+        <summary>Have a company invitation?</summary><AccountForm
+          action="invitation-preview"
+          submit="Preview invitation"
+          ><label class="field"
+            >Company invitation code<input
+              name="invitation_id"
+              required
+              maxlength="36"
+              placeholder="Paste your invitation code"
+            /></label
+          ></AccountForm
+        >
+      </details>
     </section>
   </div></AppLayout
 >

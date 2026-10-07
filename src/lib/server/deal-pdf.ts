@@ -1,3 +1,4 @@
+import { statusLabel } from "../status-label";
 import { pdfWriter } from "./business-pdf";
 import type { DealBundle } from "../deals";
 import type { Enquiry, Quote } from "../procurement";
@@ -25,10 +26,10 @@ export async function dealPdf(
     ["Enquiry", "#" + e.id + " - " + e.title],
     ["Requirements", e.message ?? ""],
     ["Quantity", quantityLabel(e)],
-    ["Deal status", d.status],
+    ["Deal status", statusLabel(d.status)],
     ["Agreed value", money(d.deal_value_estimate, d.currency)],
     ["Agreed", dateLabel(d.agreed_at)],
-    ["Delivery progress", p.stage],
+    ["Delivery progress", statusLabel(p.stage)],
     ["Expected delivery", p.expected_delivery ?? ""],
     ["Tracking / reference", p.tracking_reference ?? ""],
     ["Buyer completion", dateLabel(d.buyer_completed_at)],
@@ -62,7 +63,7 @@ export async function dealPdf(
   for (const event of bundle.events) {
     field(
       "Milestone",
-      event.stage +
+      statusLabel(event.stage) +
         " - " +
         (event.company_id === d.buyer_company_id
           ? bundle.buyer

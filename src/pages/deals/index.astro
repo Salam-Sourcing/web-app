@@ -1,4 +1,5 @@
 ---
+import { statusLabel } from "../../lib/status-label";
 import AppLayout from "../../layouts/AppLayout.astro";
 import { requireWorkspace } from "../../lib/server/access";
 import { activeCompany, checked } from "../../lib/server/catalog";
@@ -86,7 +87,7 @@ const link = (n: number) =>
               <p class="help-text mt-2">{dateLabel(d.agreed_at)}</p>
             </div>
             <div>
-              <span class="badge">{d.status.replaceAll("_", " ")}</span>
+              <span class="badge">{statusLabel(d.status)}</span>
               <p class="mt-3">{money(d.deal_value_estimate, d.currency)}</p>
               <span class="text-link">Open deal →</span>
             </div>

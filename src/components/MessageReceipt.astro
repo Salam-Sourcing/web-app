@@ -1,0 +1,26 @@
+---
+import { messageReceipt } from "../lib/message-receipt";
+interface Props {
+  seen: boolean;
+}
+const view = messageReceipt(Astro.props.seen ? "seen" : "sent");
+---
+
+<span
+  class={view.className}
+  role="img"
+  aria-label={view.label}
+  title={view.label}
+>
+  <svg
+    width="17"
+    height="17"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"><path d={view.path}></path></svg
+  >
+</span>

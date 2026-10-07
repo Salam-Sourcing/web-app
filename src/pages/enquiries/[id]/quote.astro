@@ -1,4 +1,5 @@
 ---
+import { createRequestId } from "../../../lib/request-id";
 import AppLayout from "../../../layouts/AppLayout.astro";
 import { requireWorkspace } from "../../../lib/server/access";
 import { enquiry, quoteTarget } from "../../../lib/server/procurement";
@@ -36,11 +37,12 @@ const q = result?.data;
   <form
     class="card form-stack reading"
     data-api-form
-    data-non-idempotent="true"
+    data-business-retry="true"
     data-check-href={"/enquiries/" + id}
     action="/api/procurement/quote"
     method="post"
   >
+    <input type="hidden" name="client_request_id" value={createRequestId()} />
     <input type="hidden" name="company_id" value={c.id} /><input
       type="hidden"
       name="enquiry_id"
@@ -60,8 +62,8 @@ const q = result?.data;
           type="number"
           name="price_per_unit"
           min="0"
-          max="1000000000000"
-          step="any"
+          max="999999999999.99"
+          step="0.01"
           value={q?.price_per_unit}
         /></label
       ><label class="field"
@@ -69,8 +71,8 @@ const q = result?.data;
           type="number"
           name="total_price"
           min="0.01"
-          max="1000000000000"
-          step="any"
+          max="999999999999.99"
+          step="0.01"
           required
           value={q?.total_price}
         /></label

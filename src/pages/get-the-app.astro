@@ -1,0 +1,54 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import Icon from "../components/Icon.astro";
+---
+
+<MainLayout
+  title="The Salam Sourcing app"
+  description="Meet the Salam Sourcing app for iOS and Android. One account for your suppliers, enquiries, conversations and company workspace."
+>
+  <section class="container section app-download-hero">
+    <div>
+      <p class="eyebrow">Your business, within reach</p><h1>
+        Take Salam Sourcing with you.
+      </h1><p class="lead">
+        Browse opportunities, follow your enquiries and keep business
+        conversations close. Use the same account and company workspace on the
+        website and in our mobile app.
+      </p><div class="app-store-grid">
+        <div class="card">
+          <Icon name="phone" size={26} /><h2>For iPhone</h2><span class="badge"
+            >Coming Soon</span
+          ><p>
+            App Store downloads will be linked here when the public release is
+            available.
+          </p>
+        </div><div class="card">
+          <Icon name="phone" size={26} /><h2>For Android</h2><span class="badge"
+            >Coming Soon</span
+          ><p>
+            Google Play downloads will be linked here when the public release is
+            available.
+          </p>
+        </div>
+      </div><div class="actions">
+        <a class="button" href="/">Continue on the web<Icon name="arrow" /></a
+        ><a class="text-link" href="/signup">Create an account</a>
+      </div>
+    </div>
+    <aside class="card app-features-preview">
+      <span class="audience-feature-icon"><Icon name="phone" size={30} /></span
+      ><h2>Your workspace travels with you.</h2><ul>
+        <li><Icon name="discover" />Find products and suppliers</li><li>
+          <Icon name="enquiries" />Follow enquiries and quotes
+        </li><li>
+          <Icon name="messages" />Message, share photos and open files
+        </li><li><Icon name="box" />Manage your company catalogue</li><li>
+          <Icon name="truck" />Keep up with deal progress
+        </li><li><Icon name="bell" />Choose your notification preferences</li>
+      </ul><p class="help-text">
+        Already have an account? Your existing account works in the app.
+      </p>
+    </aside>
+  </section>
+</MainLayout>

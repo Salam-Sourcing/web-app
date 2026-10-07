@@ -116,7 +116,7 @@ export async function handleAuthAction(
   if (action === "login") {
     const result = await client.auth.signInWithPassword({
       email: email(),
-      password: textField(input, "password", 128),
+      password: textField(input, "password", 4096),
       options: { captchaToken: captcha() },
     });
     checked(result.error);

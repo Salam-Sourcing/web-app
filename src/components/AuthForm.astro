@@ -90,7 +90,7 @@ const label =
           type="password"
           autocomplete={mode === "signup" ? "new-password" : "current-password"}
           minlength={mode === "signup" ? 8 : undefined}
-          maxlength="128"
+          maxlength={mode === "login" ? 4096 : 128}
           required
         />
       </label>

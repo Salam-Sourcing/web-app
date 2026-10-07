@@ -1,0 +1,577 @@
+{
+  "version": 1,
+  "policy": {
+    "parity": "Same business capabilities, persisted data and security outcomes. Platform-specific layout, navigation, haptics and public guest browse are intentional.",
+    "deferred": [
+      {
+        "id": "browser-push",
+        "reason": "User deferred Firebase web config/VAPID setup."
+      }
+    ],
+    "releaseRule": "Automated source coverage is inventory only. Every non-deferred acceptance scenario needs current paired-revision execution evidence; skipped/unverified tests block release."
+  },
+  "screens": [
+    {
+      "screen": "accept_company_invitation_screen.dart",
+      "web": "`/invitations/[id]`",
+      "note": "Preview, confirmation, acceptance and role/seat enforcement."
+    },
+    {
+      "screen": "account_settings_screen.dart",
+      "web": "`/account` and billing/preferences/security",
+      "note": "Settings and plan request counterparts; push deferred."
+    },
+    {
+      "screen": "auth_screen.dart",
+      "web": "`/login`, `/signup`, `/forgot-password`",
+      "note": "CAPTCHA, confirmation, login and field contracts."
+    },
+    {
+      "screen": "buyer_dashboard_screen.dart",
+      "web": "`/enquiries/dashboard`",
+      "note": "Counts, enquiry and deal continuation."
+    },
+    {
+      "screen": "company_onboarding_screen.dart",
+      "web": "`/company/new`",
+      "note": "F06 unknown creation outcome."
+    },
+    {
+      "screen": "company_profile_screen.dart",
+      "web": "`/company`, `/company/edit`",
+      "note": "Fields, shared private company photo, verification states/documents; F03 deletion."
+    },
+    {
+      "screen": "company_team_screen.dart",
+      "web": "`/account/team`, `/account/team/[id]`",
+      "note": "Unified company workspace, roles, restrictions, invite/revoke, company selection."
+    },
+    {
+      "screen": "create_enquiry_screen.dart",
+      "web": "`/enquiries/new`, `/enquiries/[id]/edit`",
+      "note": "Earlier category/numeric/draft retry corrections present."
+    },
+    {
+      "screen": "create_listing_screen.dart",
+      "web": "`/sell/new`, `/sell/[id]`",
+      "note": "Specifications, media, retired category/legacy lead; F02 retry."
+    },
+    {
+      "screen": "deal_progress_screen.dart",
+      "web": "`/deals/[id]`",
+      "note": "Milestones, tracking/delivery, documents, completion/review."
+    },
+    {
+      "screen": "direct_enquiry_screen.dart",
+      "web": "`/enquiries/new` with supplier/listing context",
+      "note": "Buyer permission, currency/context and request identity."
+    },
+    {
+      "screen": "discovery_home_screen.dart",
+      "web": "`/discover`",
+      "note": "Search/sort/filter/category/paging; both clients support public guest browse with sign-in before product access or submitted search/filter."
+    },
+    {
+      "screen": "enquiries_screen.dart",
+      "web": "`/enquiries`",
+      "note": "All/mine/saved, search and related-company visibility."
+    },
+    {
+      "screen": "enquiry_detail_screen.dart",
+      "web": "`/enquiries/[id]`, `/quotes/[id]`",
+      "note": "Attachments, invitations, history/decisions and error state."
+    },
+    {
+      "screen": "legal_document_screen.dart",
+      "web": "Legal/help/verification pages",
+      "note": "Production content acceptance still needed."
+    },
+    {
+      "screen": "listing_detail_screen.dart",
+      "web": "`/listings/[id]`",
+      "note": "Specifications/images, supplier photo and actual five-star rating, related products, save/report/direct enquiry."
+    },
+    {
+      "screen": "manage_listing_screen.dart",
+      "web": "`/sell/[id]`",
+      "note": "Edit/review/status and moderation feedback."
+    },
+    {
+      "screen": "marketplace_home_shell_screen.dart",
+      "web": "`AppLayout` and workspace boundary",
+      "note": "Navigation/company/notification routing; web F01."
+    },
+    {
+      "screen": "marketplace_pdf_screen.dart",
+      "web": "Enquiry/quote/deal export and preview routes",
+      "note": "Earlier shared comparison bounds; device PDF acceptance open."
+    },
+    {
+      "screen": "message_photo_screen.dart",
+      "web": "In-page chat image viewer",
+      "note": "Embed, zoom/pan/reset/retry and private media handling."
+    },
+    {
+      "screen": "message_thread_screen.dart",
+      "web": "`/messages/[id]`",
+      "note": "Text/outbox, history, captions/files/report/archive/profile link."
+    },
+    {
+      "screen": "messages_screen.dart",
+      "web": "`/messages`",
+      "note": "Active/archived, search/paging, preview/unread/freshness."
+    },
+    {
+      "screen": "notification_settings_screen.dart",
+      "web": "`/account/preferences`",
+      "note": "Category preferences present; browser push deferred."
+    },
+    {
+      "screen": "notifications_screen.dart",
+      "web": "`/account/notifications`, notification resolver",
+      "note": "Compact activity cards with original RLS-authorized previews and sender, latest 100/full unread count, safe read/delete actions and deep links."
+    },
+    {
+      "screen": "privacy_safety_screen.dart",
+      "web": "`/account/safety`",
+      "note": "Blocking, deletion/cancellation; F05 native false-empty state."
+    },
+    {
+      "screen": "profile_information_screen.dart",
+      "web": "`/account/profile`",
+      "note": "Names/contact/country/email confirmation/account metadata; shared owner-only personal photo upload, account avatar and loading states."
+    },
+    {
+      "screen": "public_company_profile_screen.dart",
+      "web": "`/suppliers/[id]` and reviews",
+      "note": "Profile verification explanation and reviews; native F04 catalogue."
+    },
+    {
+      "screen": "quote_comparison_screen.dart",
+      "web": "`/enquiries/[id]/compare`",
+      "note": "Revision/status, terms, buyer decisions and bounded export."
+    },
+    {
+      "screen": "reset_password_screen.dart",
+      "web": "`/auth/callback`, `/account/password`",
+      "note": "Password bounds, secure reset/reauthentication flow."
+    },
+    {
+      "screen": "saved_marketplace_screen.dart",
+      "web": "`/saved`",
+      "note": "Listings/suppliers/unavailable removal; native F04 IDs."
+    },
+    {
+      "screen": "saved_searches_screen.dart",
+      "web": "`/account/searches`, `/account/searches/[id]`",
+      "note": "Save/matches/delete/alerts; web also edits filter fields."
+    },
+    {
+      "screen": "sell_screen.dart",
+      "web": "`/sell`",
+      "note": "Company summary, counted status filters, management and insights; one permission-aware floating Post an item button above navigation and safe areas."
+    },
+    {
+      "screen": "submit_quote_screen.dart",
+      "web": "`/enquiries/[id]/quote`",
+      "note": "Currency/terms/optional lead/validity and request identity."
+    },
+    {
+      "screen": "supabase_bootstrap_screen.dart",
+      "web": "Middleware/access/session/callback handlers",
+      "note": "Session/MFA/account boundary; device acceptance remains."
+    },
+    {
+      "screen": "supplier_insights_screen.dart",
+      "web": "`/account/insights`",
+      "note": "Period metrics and listing activity."
+    },
+    {
+      "screen": "support_requests_screen.dart",
+      "web": "`/account/support`, personal export",
+      "note": "Replies/versioning, appeals, ownership requests, bounded export."
+    },
+    {
+      "screen": "two_factor_screen.dart",
+      "web": "`/auth/mfa`, `/account/password#two-factor` (legacy `/account/security` redirects)",
+      "note": "Combined Security & password destination; enrollment, QR/manual key concealment/copy, verify/remove."
+    }
+  ],
+  "boundaries": {
+    "messageLimit": 8000,
+    "reportLimit": 1000,
+    "businessMaximum": 999999999999.99,
+    "leadDaysMaximum": 36500,
+    "companyLimits": {
+      "legal_name": 200,
+      "display_name": 200,
+      "description": 4000,
+      "business_registration_number": 200,
+      "tax_number": 200,
+      "country": 100,
+      "province_state": 100,
+      "city": 100,
+      "address": 500,
+      "postal_code": 30,
+      "contact_number": 50,
+      "email": 254,
+      "website": 500
+    }
+  },
+  "numbers": [
+    {
+      "raw": "0.01",
+      "integer": false,
+      "valid": true
+    },
+    {
+      "raw": "1.2300",
+      "integer": false,
+      "valid": true
+    },
+    {
+      "raw": "999999999999.99",
+      "integer": false,
+      "valid": true
+    },
+    {
+      "raw": "0.001",
+      "integer": false,
+      "valid": false
+    },
+    {
+      "raw": "1000000000000",
+      "integer": false,
+      "valid": false
+    },
+    {
+      "raw": "1e3",
+      "integer": false,
+      "valid": false
+    },
+    {
+      "raw": "-1",
+      "integer": false,
+      "valid": false
+    },
+    {
+      "raw": "36500",
+      "integer": true,
+      "valid": true
+    },
+    {
+      "raw": "36501",
+      "integer": true,
+      "valid": false
+    },
+    {
+      "raw": "1.0",
+      "integer": true,
+      "valid": false
+    },
+    {
+      "raw": "1.5",
+      "integer": true,
+      "valid": false
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "auth",
+      "title": "Account access",
+      "required": true,
+      "outcomes": "Sign up, email confirmation, login, recovery, email change, MFA, revoked/inactive sessions, logout clears private state. Web Account highlights Security & password, which includes password visibility controls, email reauthentication when required, and built-in authenticator settings; legacy security links redirect safely.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "company",
+      "title": "Company and team",
+      "required": true,
+      "outcomes": "Create, edit, select companies; unified workspace; manager uploads/replaces private company photo visible in both clients; 5 MB image-only bounds, stale replacement rejection and secure cleanup; invite/accept/revoke roles, seat limits, restricted scopes; lost create acknowledgement stops repeat writes.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "verification",
+      "title": "Company verification",
+      "required": true,
+      "outcomes": "Prepare, upload, preview, remove, submit, rejection/resubmit and read-only submitted status; referenced bytes survive failed detach.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "discovery",
+      "title": "Discovery and supplier catalogue",
+      "required": true,
+      "outcomes": "Guest browse in both clients permits draft query/category and prompts sign-in before product access or submitted search/filter, preserving intent after protected authentication; private prices/details stay protected. Supplier photo and actual five-star rating on product detail; related visible products exclude current product. Search, available categories, filters, sort, pagination, saved listing/supplier; complete results at low API caps; unavailable records. Web save feedback disappears without shifting page layout. Search activity and photo decoding show loaders without temporary broken-image placeholders.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "listing",
+      "title": "Seller listings",
+      "required": true,
+      "outcomes": "Draft, specifications, images, edit, moderation, publication and status changes; partial upload/review retry retains draft and completed files. Both seller workspaces use counted status filters and one floating permission-aware post button that stays above navigation and safe areas. Pending Review is an amber timer state explaining private visibility and paused editing; historical rejection notes disappear after resubmission. Visible statuses use Title Case without changing submitted enum values.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "rfq",
+      "title": "Public RFQs",
+      "required": true,
+      "outcomes": "Draft/edit/save/review, retired categories, deadlines, supplier invitations, attachment preview/removal; request identity and publication permissions. Opening a successfully created enquiry uses the actual saved_enquiries composite key; page errors offer Retry to that enquiry rather than Account.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "direct",
+      "title": "Direct enquiry",
+      "required": true,
+      "outcomes": "Web-created private enquiry is visible in Flutter with the same supplier, listing, quantity, currency and conversation.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "quotes",
+      "title": "Quotes and notifications",
+      "required": true,
+      "outcomes": "Flutter-created quote appears on web; optional values/currency survive; actual quote ID opens correct parent; version history, compare, withdrawal/rejection and one accepted deal.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "chat",
+      "title": "Messages and attachments",
+      "required": true,
+      "outcomes": "Text appears promptly in both clients; captioned private photos embed and open viewer; file attachments, report per message, history, unread/archive; retry deduplicates and account switch cancels outbox. Web Enter sends, Shift Enter adds a line, IME composition never submits; routine connected/sending/sent notices are hidden while failures/retry remain visible. Web outgoing bubbles show a clock while pending, one tick only after confirmation, and double seen ticks from the backend read state; accessible labels distinguish them in initial rendering and refreshed history.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "deal",
+      "title": "Deal progress and reviews",
+      "required": true,
+      "outcomes": "One accepted deal, milestones, delivery/tracking, documents, completion, company reviews and transaction-party scope.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "saved-search",
+      "title": "Saved searches",
+      "required": true,
+      "outcomes": "Save/edit/delete, matches, alerts, frequency and ownership.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "notifications",
+      "title": "Notifications and preferences",
+      "required": true,
+      "outcomes": "Preferences, unread count, mark-read, deep links and cross-company access. Native push/device checks; browser push explicitly deferred. Compact activity cards show the original message or resource preview, sender company when authorized, context and timestamp. Deleted or no-longer-authorized resources reveal no preview. Notification storage and OS pushes remain minimized; in-app enrichment uses current resource RLS, never a newer unrelated message. Failed read/delete actions preserve items and offer retry.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "profile",
+      "title": "Profile and billing",
+      "required": true,
+      "outcomes": "Names/contact/location/email confirmation, plans, request/cancel changes, billing history and seat limits. Personal profile photo uploads/replaces in both clients without requiring company membership, appears on Account and web header; private owner-only access, 5 MB image bounds, concurrent replacement protection and safe cleanup.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "safety",
+      "title": "Privacy and safety",
+      "required": true,
+      "outcomes": "Report, block/unblock, schedule/cancel deletion, processing/failed states; independent loading/error sections, never false-empty unknown deletion state.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "support",
+      "title": "Support and exports",
+      "required": true,
+      "outcomes": "Submit support case, rate limits/lengths, case ownership, quote/enquiry/deal PDF values, paging/export bounds, security headers and private cache.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "cross-security",
+      "title": "Cross-client security",
+      "required": true,
+      "outcomes": "Every write rechecks active user, membership, scope, verification and business state; no private data/media accessible to unrelated user; revoked permission and close/accept race.",
+      "clients": ["web", "flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "browser-layout",
+      "title": "Web browser and layout",
+      "required": true,
+      "outcomes": "Desktop Chromium/Firefox/WebKit and phone emulation; narrow screens/text zoom, overflow, keyboard focus, dialogs, disabled empty Send, image viewer and attachment popups. Avatar beside Notifications opens an accessible account menu; signed-out Log in links directly to login without a dropdown; activity and image loaders preserve layout. Public and signed-in pages share a branded responsive footer. Category and primary navigation links have hover/keyboard focus feedback; saved navigation includes a heart, file selection uses a visible button, and Sell has a red circular icon in desktop/mobile navigation. Public Buyers and Vendors pages describe implemented capabilities. About Salam Sourcing and the audience pages are discoverable from navigation/footer and indexed public sitemap. Every layout has a sticky Get the app entry; iOS/Android are Coming Soon until public store URLs exist.",
+      "clients": ["web"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    },
+    {
+      "id": "native-device",
+      "title": "Flutter devices",
+      "required": true,
+      "outcomes": "Android and iOS: keyboard/safe areas, haptics, file pickers/photos, CAPTCHA, MFA, PDF viewing and lifecycle/reconnect. Native home, guest and auth headers use the same two-line Salam wordmark; iOS launcher/store artwork and Android legacy/adaptive launcher icons use the existing emblem and wordmark. Verify installed icon masking and legibility on devices.",
+      "clients": ["flutter"],
+      "evidence": {
+        "web": "unverified",
+        "flutter": "unverified"
+      }
+    }
+  ],
+  "webPages": [
+    "[section].astro",
+    "about.astro",
+    "account/billing.astro",
+    "account/block.astro",
+    "account/index.astro",
+    "account/insights.astro",
+    "account/notifications.astro",
+    "account/password.astro",
+    "account/preferences.astro",
+    "account/profile.astro",
+    "account/report.astro",
+    "account/safety.astro",
+    "account/searches/[id].astro",
+    "account/searches/index.astro",
+    "account/security.astro",
+    "account/support.astro",
+    "account/team.astro",
+    "account/team/[id].astro",
+    "auth/access.astro",
+    "auth/callback.astro",
+    "auth/mfa.astro",
+    "buyers.astro",
+    "company/edit.astro",
+    "company/index.astro",
+    "company/new.astro",
+    "deals/[id]/export.astro",
+    "deals/[id]/index.astro",
+    "deals/index.astro",
+    "discover.astro",
+    "enquiries/[id]/compare.astro",
+    "enquiries/[id]/edit.astro",
+    "enquiries/[id]/export.astro",
+    "enquiries/[id]/index.astro",
+    "enquiries/[id]/quote.astro",
+    "enquiries/dashboard.astro",
+    "enquiries/index.astro",
+    "enquiries/new.astro",
+    "forgot-password.astro",
+    "get-the-app.astro",
+    "help.astro",
+    "index.astro",
+    "invitations/[id].astro",
+    "listings/[id].astro",
+    "login.astro",
+    "marketplace.astro",
+    "messages/[id].astro",
+    "messages/index.astro",
+    "plans.astro",
+    "platform.astro",
+    "privacy.astro",
+    "quotes/[id].astro",
+    "saved.astro",
+    "sell/[id].astro",
+    "sell/index.astro",
+    "sell/new.astro",
+    "signup.astro",
+    "suppliers/[id].astro",
+    "suppliers/[id]/reviews.astro",
+    "terms.astro",
+    "vendors.astro",
+    "verification.astro",
+    "verify-email.astro"
+  ],
+  "fixtureImageBase64": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAFklEQVR4nGPoU9cjCTGMahjVMHw1AAAPdOMB/TivMwAAAABJRU5ErkJggg==",
+  "statusLabels": [
+    {
+      "raw": "pending_review",
+      "label": "Pending Review"
+    },
+    {
+      "raw": "active",
+      "label": "Active"
+    },
+    {
+      "raw": "in_progress",
+      "label": "In Progress"
+    },
+    {
+      "raw": "waiting_for_reply",
+      "label": "Waiting For Reply"
+    },
+    {
+      "raw": "  PENDING_review  ",
+      "label": "Pending Review"
+    },
+    {
+      "raw": "past-due",
+      "label": "Past Due"
+    },
+    {
+      "raw": "",
+      "label": "Not Available"
+    },
+    {
+      "raw": null,
+      "label": "Not Available"
+    }
+  ]
+}

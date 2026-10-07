@@ -11,6 +11,9 @@ for (const path of [
   "/",
   "/about",
   "/platform",
+  "/buyers",
+  "/vendors",
+  "/get-the-app",
   "/plans",
   "/verification",
   "/help",
@@ -45,6 +48,11 @@ for (const path of [
   }
   const body = await response.text();
   check(body.includes("/fonts/Inter.ttf"), path + " loads Inter");
+  check(
+    body.includes('aria-label="Salam Sourcing mobile app"') &&
+      body.includes('href="/get-the-app"'),
+    path + " keeps app availability visible",
+  );
   if (
     ["/login", "/signup", "/forgot-password", "/verify-email"].includes(path)
   ) {
@@ -173,6 +181,49 @@ check(
   (plansHtml.match(/class="card public-plan"/g) ?? []).length === 3,
   "plans page renders exactly three placeholders",
 );
+for (const [path, features] of [
+  [
+    "/buyers",
+    [
+      "Compare the actual terms",
+      "Create a request for quotes",
+      "Keep promising options close",
+      "Follow the deal through",
+    ],
+  ],
+  [
+    "/vendors",
+    [
+      "Send quotes with useful detail",
+      "See supplier activity",
+      "Build a record of your relationships",
+      "List products and services properly",
+    ],
+  ],
+]) {
+  const body = await (await request(path)).text();
+  check(
+    features.every((feature) => body.includes(feature)),
+    path + " explains audience-specific features",
+  );
+  check(
+    body.includes('href="/buyers"') &&
+      body.includes('href="/vendors"') &&
+      body.includes("About Salam Sourcing"),
+    path + " links both audiences and platform information",
+  );
+}
+const appHtml = await (await request("/get-the-app")).text();
+check(
+  appHtml.includes("For iPhone") &&
+    appHtml.includes("For Android") &&
+    appHtml.includes("Coming Soon"),
+  "app page clearly describes unreleased store availability",
+);
+check(
+  !/href=["'][^"']*(apps\.apple\.com|play\.google\.com)/.test(appHtml),
+  "unreleased app has no fabricated store links",
+);
 const sitemap = await request("/sitemap.xml");
 check(
   sitemap.status === 200 &&
@@ -183,7 +234,10 @@ const sitemapXml = await sitemap.text();
 check(
   sitemapXml.includes("/platform</loc>") &&
     sitemapXml.includes("/plans</loc>") &&
-    sitemapXml.includes("/verification</loc>"),
+    sitemapXml.includes("/verification</loc>") &&
+    ["/buyers", "/vendors", "/get-the-app"].every((path) =>
+      sitemapXml.includes(path + "</loc>"),
+    ),
   "sitemap includes public information pages",
 );
 check(
@@ -372,6 +426,26 @@ check(
         /Expires=Thu, 01 Jan 1970 00:00:00 GMT/i.test(cookie)),
   ),
   "logout clears HttpOnly auth cookies",
+);
+const retryPage = await request(
+  "/auth/access?reason=catalog_failed&next=%2Fenquiries%2F42",
+);
+check(retryPage.status === 200, "page failure recovery renders");
+const retryBody = await retryPage.text();
+check(
+  /href="\/enquiries\/42"[^>]*>Retry<\/a>/.test(retryBody),
+  "Retry returns to the failed enquiry rather than Account",
+);
+check(
+  retryBody.includes("We couldn’t load this page."),
+  "catalogue errors do not misreport account access failure",
+);
+const externalRetry = await request(
+  "/auth/access?reason=page_unavailable&next=https%3A%2F%2Fexample.com",
+);
+check(
+  /href="\/discover"[^>]*>Retry<\/a>/.test(await externalRetry.text()),
+  "Retry rejects an external destination",
 );
 console.log(
   count +

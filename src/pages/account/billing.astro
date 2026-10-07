@@ -1,4 +1,5 @@
 ---
+import { statusLabel } from "../../lib/status-label";
 import AppLayout from "../../layouts/AppLayout.astro";
 import BillingPlan from "../../components/BillingPlan.astro";
 import AccountForm from "../../components/AccountForm.astro";
@@ -24,7 +25,7 @@ const money = (amount: number, currency: string) =>
   <a slot="actions" class="text-link" href="/account">Back to Account</a>
   <section class="card">
     <h2>{sub?.subscription_plans?.name ?? "Starter access"}</h2><p>
-      {sub?.status ?? "No paid plan"}
+      {sub ? statusLabel(sub.status) : "No Paid Plan"}
     </p><p>
       {
         sub?.cancel_at_period_end
@@ -116,7 +117,7 @@ const money = (amount: number, currency: string) =>
                   <>
                     <th scope="row">{i.invoice_number}</th>
                     <td>{money(i.total_amount, i.currency)}</td>
-                    <td>{i.status}</td>
+                    <td>{statusLabel(i.status)}</td>
                     <td>{i.issued_at ?? "—"}</td>
                     <td>{i.due_at ?? "—"}</td>
                     <td>{i.paid_at ?? "—"}</td>

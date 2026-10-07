@@ -1,0 +1,239 @@
+---
+import type { Workspace } from "../lib/server/access";
+interface Props {
+  state: Workspace;
+}
+const { state } = Astro.props;
+---
+
+<section id="two-factor" class="card security-section">
+  <h2>Two-factor authentication</h2><p>
+    Add another layer of protection with an authenticator app. A code will be
+    required before you can access your private workspace.
+  </p>
+  {
+    state.factors.length > 0 ? (
+      <>
+        <span class="badge success mt-5">Enabled</span>
+        {state.factors.map((factor) => (
+          <form
+            class="form"
+            data-api-form
+            method="post"
+            action="/api/auth/mfa-remove"
+          >
+            <input type="hidden" name="factor_id" value={factor.id} />
+            <p class="help-text">
+              Removing your authenticator reduces account protection. Type
+              REMOVE to confirm.
+            </p>
+            <label class="field">
+              Confirmation
+              <input
+                name="confirm"
+                pattern="REMOVE"
+                autocomplete="off"
+                required
+              />
+            </label>
+            <p class="form-message" data-form-message role="status" hidden />
+            <button class="button danger" type="submit">
+              Remove authenticator
+            </button>
+          </form>
+        ))}
+      </>
+    ) : (
+      <>
+        <>
+          <button class="button mt-6" id="enroll-authenticator" type="button">
+            Set up authenticator
+          </button>
+          <p class="form-message" id="enroll-message" role="status" hidden />
+        </>
+        <section id="authenticator-setup" class="mt-6" hidden>
+          <>
+            <h3>Scan the QR code</h3>
+            <img
+              class="qr-image"
+              id="authenticator-qr"
+              alt="QR code for your authenticator app"
+            />
+            <p class="help-text">
+              Or enter this setup key manually. Keep it private.
+            </p>
+            <p id="qr-warning" class="help-text" role="status" hidden />
+            <label class="field mt-3">
+              Setup key
+              <input
+                id="authenticator-secret"
+                data-secret-control
+                type="password"
+                readonly
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </label>
+            <div class="row-actions">
+              <button
+                class="button secondary"
+                type="button"
+                data-reveal-key
+                aria-pressed="false"
+                disabled
+              >
+                Show key
+              </button>
+              <button
+                class="button secondary"
+                type="button"
+                data-copy-key
+                disabled
+              >
+                Copy setup key
+              </button>
+            </div>
+            <p class="help-text" data-key-message role="status" />
+          </>
+          <form
+            class="form"
+            id="enrollment-verification"
+            data-api-form
+            method="post"
+            action="/api/auth/mfa-verify"
+          >
+            <>
+              <input type="hidden" name="factor_id" />
+              <input type="hidden" name="purpose" value="enrollment" />
+              <input type="hidden" name="next" value="/account/password" />
+              <label class="field">
+                Six-digit code
+                <input
+                  name="code"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxlength="6"
+                  minlength="6"
+                  required
+                />
+              </label>
+              <p class="form-message" data-form-message role="status" hidden />
+              <button class="button" type="submit">
+                Verify and enable
+              </button>
+            </>
+          </form>
+          <form
+            class="form"
+            id="enrollment-cancel"
+            data-api-form
+            method="post"
+            action="/api/auth/mfa-cancel"
+          >
+            <>
+              <input type="hidden" name="factor_id" />
+              <p class="form-message" data-form-message role="status" hidden />
+              <button class="button secondary" type="submit">
+                Cancel setup
+              </button>
+            </>
+          </form>
+        </section>
+      </>
+    )
+  }
+</section><script>
+  import { post } from "../scripts/forms";
+  import { authenticatorQrUrl } from "../lib/authenticator-qr";
+  import { bindAuthenticatorSecret } from "../scripts/authenticator-secret";
+  const button = document.querySelector<HTMLButtonElement>(
+    "#enroll-authenticator",
+  );
+  const message = document.querySelector<HTMLElement>("#enroll-message");
+  let pendingFactor: string | undefined;
+  const setup = document.querySelector<HTMLElement>("#authenticator-setup");
+  const discardSetup = () => {
+    if (pendingFactor) {
+      const factor = pendingFactor;
+      pendingFactor = undefined;
+      void post("/api/auth/mfa-cancel", { factor_id: factor }).catch(() => {});
+    }
+    if (setup) {
+      setup.hidden = true;
+      setup
+        .querySelectorAll<HTMLInputElement>("input[name=factor_id]")
+        .forEach((input) => (input.value = ""));
+    }
+    if (button) button.hidden = false;
+  };
+  const secret = setup
+    ? bindAuthenticatorSecret(setup, discardSetup)
+    : undefined;
+  button?.addEventListener("click", async () => {
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    if (message) {
+      message.hidden = false;
+      message.dataset.loading = "true";
+      message.textContent = "Preparing authenticator…";
+    }
+    try {
+      const result = await post("/api/auth/mfa-enroll", {});
+      const factor = result as unknown as {
+        id: string;
+        totp: { qr_code: string; secret: string };
+      };
+      pendingFactor = factor.id;
+      if (!secret?.set(factor.totp.secret)) {
+        discardSetup();
+        return;
+      }
+      const qr = document.querySelector<HTMLImageElement>("#authenticator-qr")!;
+      const warning = document.querySelector<HTMLElement>("#qr-warning")!;
+      warning.hidden = true;
+      const unavailable = () => {
+        qr.hidden = true;
+        warning.hidden = false;
+        warning.textContent =
+          "QR code unavailable. Enter the setup key manually.";
+      };
+      qr.onerror = unavailable;
+      try {
+        qr.src = authenticatorQrUrl(factor.totp.qr_code);
+        qr.hidden = false;
+      } catch {
+        unavailable();
+      }
+      document
+        .querySelectorAll<HTMLInputElement>(
+          "#authenticator-setup input[name=factor_id]",
+        )
+        .forEach((input) => (input.value = factor.id));
+      setup!.hidden = false;
+      if (message) message.hidden = true;
+      button.hidden = true;
+    } catch (error) {
+      if (message) {
+        message.hidden = false;
+        message.textContent =
+          error instanceof Error
+            ? error.message
+            : "Unable to set up your authenticator.";
+      }
+    } finally {
+      button.disabled = false;
+      button.removeAttribute("aria-busy");
+      if (message) message.dataset.loading = "false";
+    }
+  });
+  window.addEventListener("pagehide", () => {
+    if (pendingFactor)
+      navigator.sendBeacon(
+        "/api/auth/mfa-cancel",
+        new Blob([JSON.stringify({ factor_id: pendingFactor })], {
+          type: "application/json",
+        }),
+      );
+  });
+</script>

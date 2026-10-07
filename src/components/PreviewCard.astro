@@ -1,48 +1,44 @@
 ---
+import MediaImage from "./MediaImage.astro";
 import Icon from "./Icon.astro";
 import type { PreviewCard } from "../lib/server/public-catalog";
 const { listing: l } = Astro.props as { listing: PreviewCard };
 ---
 
-<article class="listing-card preview-card">
-  <a
-    class="preview-picture"
-    href={"/listings/" + l.id}
-    data-login-gate
-    aria-label={"View " + l.name}
-  >
-    <Icon name={l.listing_type === "service" ? "briefcase" : "box"} size={40} />
-    {
-      l.has_image && (
-        <img
-          src={"/api/preview/" + l.id}
-          alt={l.name}
-          loading="lazy"
-          decoding="async"
-          data-preview-image
-        />
-      )
-    }
-    <span class="preview-type"
-      >{l.listing_type === "service" ? "Service" : "Product"}</span
-    >
-  </a>
+<article class="listing-card guest-listing-card">
+  <div class="listing-picture">
+    <a href={"/listings/" + l.id} data-login-gate aria-label={"View " + l.name}>
+      <Icon name="image" size={36} />
+      {
+        l.has_image && (
+          <MediaImage
+            src={"/api/preview/" + l.id}
+            alt={l.name}
+            loading="lazy"
+            decoding="async"
+            data-preview-image
+          />
+        )
+      }
+    </a>
+  </div>
   <div class="listing-card-body">
-    <p class="eyebrow">{l.category || "Business supplies"}</p>
-    <h2><a href={"/listings/" + l.id} data-login-gate>{l.name}</a></h2>
-    <a class="supplier-link" href={"/suppliers/" + l.company_id} data-login-gate
-      >{l.vendor_name}</a
+    <a
+      class="eyebrow supplier-link"
+      href={"/suppliers/" + l.company_id}
+      data-login-gate>{l.vendor_name}</a
     >
-    {
-      l.location && (
-        <p class="help-text preview-location">
-          <Icon name="company" size={15} />
-          {l.location}
-        </p>
-      )
-    }
-    <a class="preview-details" href={"/listings/" + l.id} data-login-gate
-      >View details <Icon name="arrow" size={17} /></a
+    <h2><a href={"/listings/" + l.id} data-login-gate>{l.name}</a></h2>
+    {l.category && <p class="help-text">{l.category}</p>}
+    <div class="listing-facts">
+      <p class="guest-price-note">Sign in for pricing &amp; order details</p>{
+        l.location && <p>{l.location}</p>
+      }
+    </div>
+    <a
+      class="button secondary guest-details"
+      href={"/listings/" + l.id}
+      data-login-gate>View details <Icon name="arrow" size={17} /></a
     >
   </div>
 </article>

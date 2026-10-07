@@ -5,6 +5,9 @@ const plans = new WeakMap<File, Prepared>();
 function display(form: HTMLFormElement, value: string, error = false) {
   const message = form.querySelector<HTMLElement>("[data-form-message]");
   if (message) {
+    message.dataset.loading = String(
+      !error && /Saving|Uploading|Preparing|Submitting|Checking/.test(value),
+    );
     message.hidden = false;
     message.textContent = value;
     message.setAttribute("role", error ? "alert" : "status");
@@ -121,7 +124,10 @@ export function bindListingForms() {
             const url = URL.createObjectURL(prepared);
             previewURLs.push(url);
             image.src = url;
-            form.querySelector("[data-upload-previews]")!.append(image);
+            const frame = document.createElement("span");
+            frame.className = "upload-preview-frame";
+            frame.append(image);
+            form.querySelector("[data-upload-previews]")!.append(frame);
           }
         } catch (error) {
           if (generation !== previewGeneration) return;
@@ -325,6 +331,7 @@ export function bindDocumentUploads() {
         const files = validFiles(input, 0, true);
         if (!form.reportValidity()) return;
         form.dataset.busy = "true";
+        form.setAttribute("aria-busy", "true");
         const button = form.querySelector<HTMLButtonElement>("button")!;
         button.disabled = true;
         try {
@@ -357,6 +364,7 @@ export function bindDocumentUploads() {
           );
         } finally {
           form.dataset.busy = "false";
+          form.removeAttribute("aria-busy");
           button.disabled = false;
         }
       });

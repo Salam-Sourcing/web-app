@@ -175,6 +175,7 @@ export function bindChatImageViewer(root: HTMLElement) {
     retry.hidden = true;
     feedback.hidden = false;
     status.hidden = false;
+    status.dataset.loading = "true";
     status.textContent = "Loading photo…";
     download.href = url.download;
     const links = photos(),
@@ -198,6 +199,7 @@ export function bindChatImageViewer(root: HTMLElement) {
     image.hidden = true;
     feedback.hidden = false;
     status.hidden = false;
+    status.dataset.loading = "false";
     status.textContent = "Photo unavailable. Retry or use Download.";
     retry.hidden = false;
   });

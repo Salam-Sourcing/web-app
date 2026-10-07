@@ -1,3 +1,5 @@
+import { messageReceipt } from "../lib/message-receipt";
+import { submitChatOnEnter } from "../lib/chat-keyboard";
 import { messageImage } from "../lib/deals";
 import { post, ApiError } from "./forms";
 import { bindChatImageViewer } from "./chat-image-viewer";
@@ -9,6 +11,31 @@ import {
   pendingText,
   type ThreadMessage,
 } from "../lib/procurement";
+function receipt(status: "sending" | "sent" | "seen") {
+  const view = messageReceipt(status),
+    element = document.createElement("span");
+  element.className = view.className;
+  element.setAttribute("role", "img");
+  element.ariaLabel = element.title = view.label;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"),
+    path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  for (const [name, value] of Object.entries({
+    width: "17",
+    height: "17",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-width": "1.8",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    "aria-hidden": "true",
+  }))
+    svg.setAttribute(name, value);
+  path.setAttribute("d", view.path);
+  svg.append(path);
+  element.append(svg);
+  return element;
+}
 type Page = {
   rows: ThreadMessage[];
   hasMore: boolean;
@@ -62,8 +89,15 @@ export function bindThread() {
       bubble.dataset.localMessage = message.client_message_id;
       text.className = "preserve-lines";
       text.textContent = message.content;
-      state.textContent = message.status;
-      bubble.append(text, state);
+      state.textContent =
+        message.status === "Sending…" || message.status === "Sent"
+          ? ""
+          : message.status;
+      state.hidden = !state.textContent;
+      bubble.append(text);
+      if (message.status !== "Not confirmed · Retry")
+        bubble.append(receipt(message.status === "Sent" ? "sent" : "sending"));
+      bubble.append(state);
       history.append(bubble);
     }
   };
@@ -188,11 +222,9 @@ export function bindThread() {
       const small = document.createElement("small"),
         time = document.createElement("time");
       time.dateTime = m.sent_at;
-      time.textContent =
-        dateLabel(m.sent_at) +
-        " " +
-        (m.outgoing ? (m.seen ? "· Seen" : "· Sent") : "");
+      time.textContent = dateLabel(m.sent_at);
       small.append(time);
+      if (m.outgoing) small.append(receipt(m.seen ? "seen" : "sent"));
       if (!m.outgoing) {
         const report = document.createElement("a");
         report.className = "chat-icon-button message-report";
@@ -291,10 +323,7 @@ export function bindThread() {
         initialized = true;
       }
       await markRead();
-      status.textContent =
-        source?.readyState === EventSource.OPEN
-          ? "Messages up to date."
-          : "Messages refreshed. Reconnecting to live updates…";
+      status.textContent = "";
     } catch (e) {
       status.textContent =
         (e as Error).message + " Loaded history and your draft are kept.";
@@ -330,7 +359,7 @@ export function bindThread() {
       return;
     source = new EventSource("/api/messages/stream?conversation=" + id);
     source.addEventListener("ready", () => {
-      status.textContent = "Live updates connected.";
+      status.textContent = "";
       void refresh();
     });
     source.addEventListener("change", (event) => {
@@ -389,6 +418,25 @@ export function bindThread() {
           inline: "nearest",
         });
     };
+    let composing = false;
+    input.addEventListener("compositionstart", () => {
+      composing = true;
+    });
+    input.addEventListener("compositionend", () => {
+      composing = false;
+    });
+    input.addEventListener("keydown", (event) => {
+      if (
+        event.key !== "Enter" ||
+        event.shiftKey ||
+        event.isComposing ||
+        composing
+      )
+        return;
+      event.preventDefault();
+      if (submitChatOnEnter(event, composing, send.disabled))
+        form.requestSubmit(send);
+    });
     input.addEventListener("input", fitComposer);
     fitComposer();
     onConfirmed = (key) => {
@@ -396,9 +444,8 @@ export function bindThread() {
       if (input.value.trim() === pending.content) input.value = "";
       pending = undefined;
       retry.hidden = true;
-      note.hidden = false;
-      note.setAttribute("role", "status");
-      note.textContent = "Message sent.";
+      note.hidden = true;
+      note.textContent = "";
       fitComposer();
     };
     const sendPending = async () => {
@@ -410,9 +457,8 @@ export function bindThread() {
       sending = true;
       send.disabled = true;
       retry.disabled = true;
-      note.hidden = false;
-      note.setAttribute("role", "status");
-      note.textContent = "Sending…";
+      note.hidden = true;
+      note.textContent = "";
       try {
         await post("/api/procurement/send", {
           conversation_id: id,
@@ -427,13 +473,15 @@ export function bindThread() {
         outbox.status(attempted.client_message_id, "Sent");
         renderOutbox();
         retry.hidden = true;
-        note.textContent = "Message sent.";
+        note.hidden = true;
+        note.textContent = "";
         void refresh();
       } catch (e) {
         if (outbox.messages.has(attempted.client_message_id)) {
           outbox.status(attempted.client_message_id, "Not confirmed · Retry");
           renderOutbox();
           retry.hidden = false;
+          note.hidden = false;
           note.textContent =
             (e as Error).message +
             " Retry sends the same text once. Your current draft is kept.";
@@ -446,7 +494,8 @@ export function bindThread() {
           }
           pending = undefined;
           retry.hidden = true;
-          note.textContent = "Message sent.";
+          note.hidden = true;
+          note.textContent = "";
         }
         void refresh();
       } finally {
@@ -607,10 +656,7 @@ export function bindConversationActivity() {
       }
       const next = document.querySelector<HTMLElement>("[data-next-page]");
       if (next) next.hidden = !feed.hasMore;
-      status.textContent =
-        source?.readyState === EventSource.OPEN
-          ? "Conversations up to date."
-          : "Conversations refreshed. Reconnecting to live updates…";
+      status.textContent = "";
     } catch (e) {
       status.textContent = (e as Error).message + " Your current list is kept.";
     } finally {
@@ -629,7 +675,7 @@ export function bindConversationActivity() {
     if (timer) clearTimeout(timer);
     source = new EventSource("/api/messages/stream");
     source.addEventListener("ready", () => {
-      status.textContent = "Live updates connected.";
+      status.textContent = "";
       void update();
     });
     source.addEventListener("change", changed);

@@ -1,0 +1,73 @@
+---
+import AccountForm from "./AccountForm.astro";
+import Icon from "./Icon.astro";
+import { notificationPresentation } from "../lib/notification-display";
+const { notice: n } = Astro.props;
+const view = notificationPresentation(n);
+---
+
+<article
+  data-notification-id={n.id}
+  data-notification-signature={JSON.stringify(n)}
+  class:list={["notification-card", !n.is_read && "notification-unread"]}
+>
+  <span class="notification-symbol"><Icon name={view.icon} size={22} /></span>
+  <div class="notification-content">
+    <div class="notification-heading">
+      <h2>{view.title}</h2>{
+        !n.is_read && <span class="notification-dot" aria-label="Unread" />
+      }
+    </div>
+    <p class="notification-source">{view.source}</p>
+    <p class="notification-preview">{view.preview}</p>
+    {
+      view.context && view.context !== view.preview && (
+        <p class="notification-context">{view.context}</p>
+      )
+    }
+    <div class="notification-footer">
+      <time datetime={n.created_at}
+        >{
+          new Date(n.created_at).toLocaleString("en-CA", {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            timeZone: "America/Edmonton",
+          })
+        }</time
+      >
+      {
+        n.can_open && (
+          <AccountForm
+            class="notification-action"
+            action="notification-open"
+            id={n.id}
+            submit={view.openLabel}
+          />
+        )
+      }
+    </div>
+  </div>
+  <details class="notification-more">
+    <summary aria-label={"More actions for " + view.title}>⋯</summary>
+    <div class="notification-options">
+      {
+        !n.is_read && (
+          <AccountForm
+            class="notification-action"
+            action="notification-read"
+            id={n.id}
+            submit="Mark read"
+          />
+        )
+      }
+      <AccountForm
+        class="notification-action"
+        action="notification-delete"
+        id={n.id}
+        submit="Delete"
+      />
+    </div>
+  </details>
+</article>

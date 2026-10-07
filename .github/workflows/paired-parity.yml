@@ -1,0 +1,120 @@
+name: Paired client acceptance
+on:
+  workflow_dispatch:
+    inputs:
+      flutter_ref:
+        description: Flutter commit or branch to test with this web revision
+        type: string
+        required: true
+        default: "1.0"
+permissions:
+  contents: read
+concurrency:
+  group: paired-parity-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  paired:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    services:
+      concurrency-db:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: disposable-fixture-only
+          POSTGRES_DB: salam_parity
+        ports: ["55482:5432"]
+        options: --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      CONCURRENCY_DATABASE_URL: postgres://postgres:disposable-fixture-only@127.0.0.1:55482/salam_parity
+      CI: "true"
+      FLUTTER_SUPPRESS_ANALYTICS: "true"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: web
+          persist-credentials: false
+      - name: Check companion repository access
+        env:
+          COMPANION_TOKEN: ${{ secrets.PARITY_REPO_READ_TOKEN }}
+        run: test -n "$COMPANION_TOKEN" || { echo 'Configure PARITY_REPO_READ_TOKEN with read-only access to the companion Flutter repository.'; exit 1; }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: Salam-Sourcing/Salam-Sourcing-Marketplace-App
+          ref: ${{ inputs.flutter_ref }}
+          token: ${{ secrets.PARITY_REPO_READ_TOKEN }}
+          path: flutter-app
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: "3.47.4"
+          channel: stable
+          cache: false
+          pub-cache: false
+      - name: Install locked dependencies
+        run: |
+          npm ci --prefix web
+          npm ci --prefix flutter-app/supabase/tests --ignore-scripts --no-audit --no-fund
+          cd flutter-app
+          flutter pub get --enforce-lockfile
+      - name: Limit Gradle memory for Android UI
+        run: |
+          mkdir -p "$HOME/.gradle"
+          printf '%s\n' 'org.gradle.jvmargs=-Xmx2G -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=256m' 'org.gradle.workers.max=2' 'org.gradle.daemon=false' > "$HOME/.gradle/gradle.properties"
+      - name: Verify both clients and database
+        working-directory: web
+        run: npm run verify:parity -- --native ../flutter-app
+      - name: Install browser test engines and isolated backend CLI
+        working-directory: web
+        run: |
+          npx playwright install --with-deps chromium firefox webkit
+          npm install --prefix "$RUNNER_TEMP/salam-ui-cli" --save-exact supabase@2.119.0
+          echo "$RUNNER_TEMP/salam-ui-cli/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Prepare disposable backend
+        id: prepare
+        working-directory: flutter-app
+        run: node scripts/temporary-ui-backend.mjs prepare
+      - name: Start and seed disposable backend
+        working-directory: flutter-app
+        run: |
+          node scripts/temporary-ui-backend.mjs start
+          node supabase/tests/ui-backend-seed.mjs
+      - name: Enable Android hardware acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run paired browser and Android journey
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          cores: 2
+          ram-size: 2048M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none
+          script: npm --prefix web run test:paired-ui -- --native ../flutter-app
+      - name: Preserve execution reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: paired-parity-evidence
+          path: |
+            web/.parity-artifacts/
+            web/test-results/
+            flutter-app/.dart_tool/ui-test-artifacts/
+          include-hidden-files: true
+          retention-days: 3
+      - name: Remove isolated backend
+        if: always() && steps.prepare.outcome == 'success'
+        working-directory: flutter-app
+        run: node scripts/temporary-ui-backend.mjs stop

@@ -1,6 +1,7 @@
 ---
 import MessageAttachment from "../../components/MessageAttachment.astro";
 import Icon from "../../components/Icon.astro";
+import MessageReceipt from "../../components/MessageReceipt.astro";
 import AppLayout from "../../layouts/AppLayout.astro";
 import { requireWorkspace } from "../../lib/server/access";
 import {
@@ -64,9 +65,7 @@ const companies = otherId ? await companySummaries(state, [otherId]) : [],
         )
       }
     </div>
-    <p class="help-text" data-live-status role="status">
-      Connecting to updates…
-    </p>
+    <p class="help-text" data-live-status role="status"></p>
     <button
       class="button secondary older-button"
       type="button"
@@ -90,7 +89,7 @@ const companies = otherId ? await companySummaries(state, [otherId]) : [],
             )}
             <small>
               <time datetime={m.sent_at}>{dateLabel(m.sent_at)}</time>
-              {m.outgoing ? " · " + (m.seen ? "Seen" : "Sent") : ""}
+              {m.outgoing && <MessageReceipt seen={m.seen} />}
               {!m.outgoing && (
                 <a
                   class="chat-icon-button message-report"

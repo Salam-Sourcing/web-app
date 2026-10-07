@@ -1,5 +1,7 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
+import Icon from "../../components/Icon.astro";
+import { statusLabel } from "../../lib/status-label";
 import ListingForm from "../../components/ListingForm.astro";
 import { requireWorkspace } from "../../lib/server/access";
 import { sellerListing, taxonomy, checked } from "../../lib/server/catalog";
@@ -24,6 +26,9 @@ const images = [...listing.listing_images].sort(
     Number(b.is_primary) - Number(a.is_primary) ||
     a.display_order - b.display_order,
 );
+const transitions = ["submit", "pause", "resume", "archive"].filter((action) =>
+  allowedTransition(listing.status, action),
+);
 const labels: Record<string, string> = {
   submit: "Submit for review",
   pause: "Pause listing",
@@ -32,24 +37,74 @@ const labels: Record<string, string> = {
 };
 ---
 
-<AppLayout title="Manage listing" active="sell" state={state}
-  ><div class="stack reading">
-    <section class="card">
-      <a class="text-link" href="/sell">← Your listings</a><h2 class="mt-5">
-        {listing.name}
-      </h2><span class="badge mt-3">{listing.status.replaceAll("_", " ")}</span>
+<AppLayout
+  title="Manage listing"
+  active="sell"
+  state={state}
+  description="Review your listing and manage its next steps."
+>
+  <a slot="actions" class="button secondary" href="/sell">← Your listings</a>
+  <div class="stack listing-management">
+    <section class="card listing-management-overview">
+      <div class="listing-management-heading">
+        <h2>
+          {listing.name}
+        </h2><span
+          class:list={[
+            "badge",
+            listing.status === "pending_review" && "review-status-badge",
+          ]}
+        >
+          {
+            listing.status === "pending_review" && (
+              <Icon name="clock" size={16} />
+            )
+          }{statusLabel(listing.status)}</span
+        >
+      </div>
       {
-        ["draft", "pending_review"].includes(listing.status) &&
-          Astro.url.searchParams.get("saved") && (
-            <p class="form-message success mt-4">
-              {listing.status === "pending_review"
-                ? "Submitted for moderation. Your listing is not public until approved."
-                : "Your draft was saved."}
-            </p>
-          )
+        listing.status === "pending_review" && (
+          <section
+            class="listing-review-notice"
+            aria-labelledby="listing-review-title"
+          >
+            <span class="review-clock">
+              <Icon name="clock" size={28} />
+            </span>
+            <div>
+              <>
+                <p class="review-eyebrow">Submitted for Moderation</p>
+                <h3 id="listing-review-title">Under Review</h3>
+              </>
+              <p>
+                Your listing is with the Salam Sourcing review team. It stays
+                private until approved, and editing is paused during review.
+              </p>
+              <ol
+                class="review-progress"
+                aria-label="Listing publication progress"
+              >
+                <li class="complete">
+                  <Icon name="check" size={16} />
+                  Draft Saved
+                </li>
+                <li class="current" aria-current="step">
+                  <Icon name="clock" size={16} />
+                  Under Review
+                </li>
+                <li>Published</li>
+              </ol>
+            </div>
+          </section>
+        )
       }
       {
-        review.data?.rejection_reason && (
+        listing.status === "draft" && Astro.url.searchParams.get("saved") && (
+          <p class="form-message success mt-4">Your draft was saved.</p>
+        )
+      }
+      {
+        listing.status === "rejected" && review.data?.rejection_reason && (
           <p class="form-message mt-4">
             Review: {review.data.rejection_reason}
           </p>
@@ -68,11 +123,14 @@ const labels: Record<string, string> = {
           </div>
         )
       }
-      <p class="help-text mt-5">
-        Images are retained in their existing cover/display order. Editing a
-        published or paused listing returns it to draft and requires a new
-        review.
-      </p>
+      {
+        editable && (
+          <p class="help-text mt-5">
+            Photos stay in the order you set. Editing a published or paused
+            listing saves it as a draft for another review.
+          </p>
+        )
+      }
       {
         listing.status === "published" && (
           <a class="text-link mt-4" href={"/listings/" + id}>
@@ -80,58 +138,61 @@ const labels: Record<string, string> = {
           </a>
         )
       }
-      <div class="listing-transitions">
-        {
-          ["submit", "pause", "resume", "archive"]
-            .filter((action) => allowedTransition(listing.status, action))
-            .map((action) => (
-              <form
-                class="form"
-                data-api-form
-                method="post"
-                action="/api/catalog/listing-status"
-              >
-                <>
-                  <input
-                    type="hidden"
-                    name="company_id"
-                    value={listing.company_id}
-                  />
-                  <input type="hidden" name="listing_id" value={id} />
-                  <input type="hidden" name="transition" value={action} />
-                  <label class="checkbox-field">
+      {
+        transitions.length > 0 && (
+          <details class="listing-management-actions">
+            <summary>Listing Actions</summary>
+            <div class="listing-transitions">
+              {transitions.map((action) => (
+                <form
+                  class="form"
+                  data-api-form
+                  method="post"
+                  action="/api/catalog/listing-status"
+                >
+                  <>
                     <input
-                      type="checkbox"
-                      name="confirm"
-                      value="CONFIRM"
-                      required
-                    />{" "}
-                    Confirm {action === "submit" ? "submission" : action}
-                  </label>
-                  <p
-                    class="form-message"
-                    data-form-message
-                    role="status"
-                    hidden
-                  />
-                  <button
-                    class:list={[
-                      "button",
-                      action === "archive" ? "danger" : "secondary",
-                    ]}
-                    type="submit"
-                    disabled={
-                      action === "submit" &&
-                      state.company?.verification_status !== "verified"
-                    }
-                  >
-                    {labels[action]}
-                  </button>
-                </>
-              </form>
-            ))
-        }
-      </div>
+                      type="hidden"
+                      name="company_id"
+                      value={listing.company_id}
+                    />
+                    <input type="hidden" name="listing_id" value={id} />
+                    <input type="hidden" name="transition" value={action} />
+                    <label class="checkbox-field">
+                      <input
+                        type="checkbox"
+                        name="confirm"
+                        value="CONFIRM"
+                        required
+                      />{" "}
+                      Confirm {action === "submit" ? "submission" : action}
+                    </label>
+                    <p
+                      class="form-message"
+                      data-form-message
+                      role="status"
+                      hidden
+                    />
+                    <button
+                      class:list={[
+                        "button",
+                        action === "archive" ? "danger" : "secondary",
+                      ]}
+                      type="submit"
+                      disabled={
+                        action === "submit" &&
+                        state.company?.verification_status !== "verified"
+                      }
+                    >
+                      {labels[action]}
+                    </button>
+                  </>
+                </form>
+              ))}
+            </div>
+          </details>
+        )
+      }
     </section>
     {
       editable ? (
@@ -146,20 +207,14 @@ const labels: Record<string, string> = {
           </>
         </section>
       ) : (
-        <section class="card">
-          <>
-            <h2>
-              {listing.status === "pending_review"
-                ? "Under review"
-                : "Archived"}
-            </h2>
-            <p>
-              {listing.status === "pending_review"
-                ? "Editing is unavailable while this listing is being reviewed."
-                : "Archived listings cannot be edited or resumed."}
-            </p>
-          </>
-        </section>
+        listing.status === "archived" && (
+          <section class="card">
+            <>
+              <h2>Archived</h2>
+              <p>Archived listings cannot be edited or resumed.</p>
+            </>
+          </section>
+        )
       )
     }
   </div></AppLayout

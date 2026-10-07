@@ -1,5 +1,6 @@
 ---
 import AppLayout from "../layouts/AppLayout.astro";
+import Icon from "../components/Icon.astro";
 import CatalogFeed from "../components/CatalogFeed.astro";
 import { requireWorkspace } from "../lib/server/access";
 const state = await requireWorkspace(Astro);
@@ -13,7 +14,7 @@ const saveSearch = "/account/searches?" + Astro.url.searchParams;
   description="Find products, services and suppliers for your business."
 >
   <a slot="actions" class="button secondary" href="/saved"
-    >Saved listings &amp; suppliers</a
+    ><Icon name="heart" />Saved listings &amp; suppliers</a
   >
   <div class="actions mb-5">
     <a class="text-link" href={saveSearch}>Save these search filters</a>

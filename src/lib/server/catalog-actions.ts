@@ -104,9 +104,18 @@ export async function handleCatalogAction(
   }
   if (action === "listing-create" || action === "listing-update") {
     const company = activeCompany(state, input.company_id, "listings");
-    const payload = listingPayload(input),
+    const existing =
+      action === "listing-update"
+        ? await sellerListing(
+            state,
+            positiveId(input.listing_id),
+            input.company_id,
+          )
+        : undefined;
+    const payload = listingPayload(input, existing),
       categories = await taxonomy(state);
     if (
+      payload.sub_category_id !== existing?.sub_category_id &&
       !categories.some((c) =>
         c.sub_categories.some((s) => s.id === payload.sub_category_id),
       )
@@ -139,7 +148,6 @@ export async function handleCatalogAction(
       id = result.data.id;
     } else {
       id = positiveId(input.listing_id);
-      await sellerListing(state, id, input.company_id);
       checked(
         (
           await state.client.rpc("update_listing", {

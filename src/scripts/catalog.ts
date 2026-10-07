@@ -1,3 +1,5 @@
+import { bindImageLoading } from "./loading";
+import { toast } from "./toast";
 import { post } from "./forms";
 import type { ListingCardData } from "../lib/catalog";
 import { uniquePage } from "../lib/catalog";
@@ -84,6 +86,7 @@ function listingCard(row: ListingCardData) {
   if (row.location) facts.append(el("p", "", row.location));
   body.append(facts, saveButton(row.id, "listing", row.saved, row.name));
   card.append(picture, body);
+  bindImageLoading(card);
   return card;
 }
 function supplierCard(row: {
@@ -182,6 +185,7 @@ export function bindCatalog() {
         controller?.abort();
         controller = new AbortController();
         busy = true;
+        message.dataset.loading = "true";
         message.hidden = false;
         message.textContent = append ? "Loading more…" : "Searching…";
         message.setAttribute("role", "status");
@@ -254,6 +258,7 @@ export function bindCatalog() {
                 ? a.setAttribute("aria-current", "page")
                 : a.removeAttribute("aria-current"),
             );
+          message.dataset.loading = "false";
           message.hidden = true;
           feed
             .querySelector<HTMLElement>("[data-feed-retry]")
@@ -261,6 +266,7 @@ export function bindCatalog() {
         } catch (error) {
           if (ownGeneration === generation) {
             message.hidden = false;
+            message.dataset.loading = "false";
             message.setAttribute("role", "alert");
             message.textContent =
               (error instanceof Error
@@ -353,15 +359,6 @@ export function bindSavedActions() {
     if (!button || button.disabled) return;
     button.disabled = true;
     const old = button.getAttribute("aria-pressed") === "true";
-    let message = document.querySelector<HTMLElement>(
-      "#catalog-action-message",
-    );
-    if (!message) {
-      message = el("p", "form-message");
-      message.id = "catalog-action-message";
-      message.setAttribute("aria-live", "polite");
-      document.querySelector("#main")?.prepend(message);
-    }
     try {
       const result = await post("/api/catalog/save", {
         id: button.dataset.saveId,
@@ -391,8 +388,7 @@ export function bindSavedActions() {
             ? "♥"
             : "♡";
         });
-      message.setAttribute("role", "status");
-      message.textContent = String(result.message);
+      toast(saved ? "Added to saved items" : "Removed from saved items");
       if (!saved && location.pathname === "/saved") {
         button.closest("[data-record-id]")?.remove();
         const feed =
@@ -403,11 +399,12 @@ export function bindSavedActions() {
           empty.hidden = false;
       }
     } catch (error) {
-      message.setAttribute("role", "alert");
-      message.textContent =
+      toast(
         error instanceof Error
           ? error.message
-          : "Could not update this saved item. Retry.";
+          : "Could not update this saved item. Retry.",
+        true,
+      );
     } finally {
       button.disabled = false;
     }

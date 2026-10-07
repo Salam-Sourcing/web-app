@@ -31,7 +31,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
         "/auth/access?reason=" +
           (error instanceof AccessError
             ? encodeURIComponent(error.code)
-            : "access_unavailable"),
+            : "page_unavailable") +
+          "&next=" +
+          encodeURIComponent(safeNext(path + context.url.search)),
         303,
       );
   }

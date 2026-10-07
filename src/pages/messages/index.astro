@@ -30,7 +30,7 @@ const link = (page: number) => {
       >Archived</a
     >
   </nav>
-  <form class="card row-actions" method="get">
+  <form class="card message-search row-actions" method="get">
     <input
       type="hidden"
       name="tab"
@@ -51,7 +51,6 @@ const link = (page: number) => {
     data-enabled={!!state.company}
     role="status"
   >
-    Checking for new activity…
   </p>
   <div class="card conversation-list mt-5" data-conversations>
     {
@@ -69,7 +68,6 @@ const link = (page: number) => {
                 <>
                   <div class="row-actions">
                     <strong>{c.name}</strong>
-
                   </div>
                   <p>{c.preview}</p>
                   <small>{c.enquiry}</small>

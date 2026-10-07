@@ -10,7 +10,7 @@ import {
   companyManager,
 } from "./catalog";
 import { supportNotice } from "../notification-display";
-import { conversation, enquiry, quoteBundle } from "./procurement";
+import { conversation, enquiry } from "./procurement";
 import { dealBundle } from "./deals";
 
 // Notification data/link_url is never navigation authority. Resolve the actual
@@ -62,7 +62,34 @@ export async function notificationTarget(
       );
       path = "/enquiries/" + entity;
     } else if (n.entity_type === "quote") {
-      await quoteBundle(selected, entity);
+      const result = await selected.client
+        .from("quotes")
+        .select("enquiry_id,supplier_company_id")
+        .eq("id", entity)
+        .maybeSingle();
+      checked(result.error);
+      if (!result.data)
+        throw new AccessError(
+          404,
+          "quote_unavailable",
+          "This quote is unavailable.",
+        );
+      const e = await enquiry(selected, result.data.enquiry_id);
+      const c = activeCompany(selected);
+      if (
+        c.id !== e.buyer_company_id &&
+        c.id !== result.data.supplier_company_id
+      )
+        throw new AccessError(
+          403,
+          "wrong_company",
+          "Select a company participating in this quote.",
+        );
+      activeCompany(
+        selected,
+        undefined,
+        c.id === e.buyer_company_id ? "procurement" : "sales",
+      );
       path = "/quotes/" + entity;
     } else if (n.entity_type === "deal") {
       await dealBundle(selected, entity);

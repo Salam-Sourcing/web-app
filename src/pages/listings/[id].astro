@@ -1,5 +1,10 @@
 ---
+import MediaImage from "../../components/MediaImage.astro";
 import AppLayout from "../../layouts/AppLayout.astro";
+import SupplierSummary from "../../components/SupplierSummary.astro";
+import ListingCard from "../../components/ListingCard.astro";
+import { relatedListings } from "../../lib/server/related-listings";
+import { companyPhoto } from "../../lib/server/company-photo";
 import SaveButton from "../../components/SaveButton.astro";
 import { requireWorkspace } from "../../lib/server/access";
 import {
@@ -35,6 +40,15 @@ const images = listing
         a.display_order - b.display_order,
     )
   : [];
+const related = listing
+  ? await relatedListings(state, {
+      id,
+      category: listing.sub_categories?.name ?? "",
+    }).catch(() => null)
+  : null;
+const photo = company
+  ? await companyPhoto(state, company.id).catch(() => null)
+  : null;
 const specs =
   listing?.specifications &&
   typeof listing.specifications === "object" &&
@@ -57,7 +71,7 @@ const specs =
               ▧
             </span>
             {images.length > 0 && (
-              <img
+              <MediaImage
                 data-private-media
                 src={"/api/media/listing/" + id + "?image=" + images[0].id}
                 alt={listing.name}
@@ -74,7 +88,7 @@ const specs =
                   }
                   aria-label={"Show image " + (index + 1)}
                 >
-                  <img
+                  <MediaImage
                     data-private-media
                     src={"/api/media/listing/" + id + "?image=" + image.id}
                     alt={"Listing image " + (index + 1)}
@@ -101,6 +115,7 @@ const specs =
           </section>
         </section>
         <aside class="stack">
+          <SupplierSummary company={company} photo={Boolean(photo)} />
           <section class="card">
             <>
               <a
@@ -177,10 +192,7 @@ const specs =
                   <a
                     class="button"
                     href={
-                      "/enquiries/new?listing=" +
-                      id +
-                      "&supplier=" +
-                      company.id
+                      "/enquiries/new?listing=" + id + "&supplier=" + company.id
                     }
                   >
                     Contact supplier
@@ -238,6 +250,40 @@ const specs =
               </a>
             </>
           </div>
+        </>
+      </section>
+    )
+  }
+  {
+    listing && related && related.length > 0 && (
+      <section class="related-section">
+        <>
+          <div class="browse-section-heading">
+            <div>
+              <>
+                <p class="eyebrow">Keep exploring</p>
+                <h2>Related products &amp; services</h2>
+              </>
+            </div>
+          </div>
+          <div class="catalog-grid">
+            {related.map((row) => (
+              <ListingCard listing={row} />
+            ))}
+          </div>
+        </>
+      </section>
+    )
+  }
+  {
+    listing && related === null && (
+      <section class="card related-section">
+        <>
+          <h2>Related products &amp; services</h2>
+          <p class="help-text">Related listings couldn’t be loaded.</p>
+          <a class="text-link" href={Astro.url.pathname}>
+            Retry
+          </a>
         </>
       </section>
     )

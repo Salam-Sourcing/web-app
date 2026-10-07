@@ -1,7 +1,11 @@
 import type { APIRoute } from "astro";
 import inter from "../../../../../public/fonts/Inter.ttf?inline";
 import { requireWorkspace } from "../../../../lib/server/access";
-import { enquiry, companySummaries } from "../../../../lib/server/procurement";
+import {
+  enquiry,
+  companySummaries,
+  quoteBundle,
+} from "../../../../lib/server/procurement";
 import { checked } from "../../../../lib/server/catalog";
 import { quotePdf } from "../../../../lib/server/quote-pdf";
 import {
@@ -15,26 +19,27 @@ export const GET: APIRoute = async (context) => {
       id = positiveId(context.params.id),
       e = await enquiry(state, id),
       single = context.url.searchParams.get("quote");
-    let q = state.client
-      .from("quotes")
-      .select("*")
-      .eq("enquiry_id", id)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false });
-    if (single) q = q.eq("id", positiveId(single));
-    const result = await q.limit(501);
+    const bundle = single ? null : await quoteBundle(state, id, false);
+    if (bundle?.tooLarge)
+      throw new AccessError(
+        413,
+        "export_too_large",
+        "Export quotes individually for this enquiry with more than 500 quotes.",
+      );
+    const result = single
+      ? await state.client
+          .from("quotes")
+          .select("*")
+          .eq("enquiry_id", id)
+          .eq("id", positiveId(single))
+          .limit(1)
+      : { data: bundle!.quotes, error: null };
     checked(result.error);
     if (!result.data?.length)
       throw new AccessError(
         404,
         "quotes_unavailable",
         "No authorized quotes are available to export.",
-      );
-    if (result.data.length > 500)
-      throw new AccessError(
-        413,
-        "export_too_large",
-        "Export quotes individually for this enquiry with more than 500 quotes.",
       );
     const summaries = await companySummaries(state, [
       e.buyer_company_id,

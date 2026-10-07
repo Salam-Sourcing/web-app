@@ -2,6 +2,12 @@ import { post, ApiError } from "./forms";
 const say = (form: HTMLFormElement, text: string, error = false) => {
   const node = form.querySelector<HTMLElement>("[data-form-message]");
   if (node) {
+    node.dataset.loading = String(
+      !error &&
+        /^(Saving|Uploading|Attaching|Submitting|Sending|Preparing|Checking)/.test(
+          text,
+        ),
+    );
     node.hidden = false;
     node.textContent = text;
     node.setAttribute("role", error ? "alert" : "status");
@@ -9,7 +15,7 @@ const say = (form: HTMLFormElement, text: string, error = false) => {
 };
 export async function attachFile(
   file: File,
-  kind: "enquiry" | "message" | "deal",
+  kind: "enquiry" | "message" | "deal" | "company" | "profile",
   target: number,
   company: string,
   key?: string,
@@ -56,12 +62,17 @@ export function validatePicked(file: File, kind?: string) {
     ) ||
     !file.size ||
     (kind === "deal" && file.type === "image/webp") ||
-    file.size > 10 * 1024 * 1024
+    (["company", "profile"].includes(kind ?? "") &&
+      file.type === "application/pdf") ||
+    file.size >
+      (["company", "profile"].includes(kind ?? "") ? 5 : 10) * 1024 * 1024
   )
     throw new Error(
-      kind === "deal"
-        ? "Choose PDF, JPEG or PNG files up to 10 MB."
-        : "Choose JPEG, PNG, WebP or PDF files up to 10 MB.",
+      ["company", "profile"].includes(kind ?? "")
+        ? "Choose JPEG, PNG or WebP photos up to 5 MB."
+        : kind === "deal"
+          ? "Choose PDF, JPEG or PNG files up to 10 MB."
+          : "Choose JPEG, PNG, WebP or PDF files up to 10 MB.",
     );
 }
 export function bindProcurementForms() {
@@ -79,24 +90,28 @@ export function bindProcurementForms() {
     .forEach((form) => {
       if (form.dataset.bound) return;
       form.dataset.bound = "true";
+      let reviewUncertain = false;
       let createdId: number | undefined,
         completed = new Set<File>(),
         uploadKeys = new Map<File, string>(),
-        filesSnapshot: File[] | undefined;
+        filesSnapshot: File[] | undefined,
+        originalRequest: Record<string, FormDataEntryValue> | undefined;
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
         if (form.dataset.busy || !form.reportValidity()) return;
-        const data = Object.fromEntries(new FormData(form));
+        let data = Object.fromEntries(new FormData(form));
         delete data.files;
         form
           .querySelectorAll<HTMLInputElement>("[data-date-field]")
           .forEach((i) => {
             if (i.value) data[i.name] = new Date(i.value).toISOString();
           });
-        const files = Array.from(
-          form.querySelector<HTMLInputElement>("[data-file-input]")?.files ??
-            [],
-        );
+        const files =
+          filesSnapshot ??
+          Array.from(
+            form.querySelector<HTMLInputElement>("[data-file-input]")?.files ??
+              [],
+          );
         try {
           files.forEach((file) => validatePicked(file));
         } catch (e) {
@@ -111,7 +126,11 @@ export function bindProcurementForms() {
           );
           return;
         }
-        filesSnapshot = files;
+        filesSnapshot = filesSnapshot ?? files;
+        if (originalRequest || (form.dataset.create === "true" && !createdId)) {
+          originalRequest ??= { ...data };
+          data = { ...originalRequest };
+        }
         const intent = (event as SubmitEvent)
           .submitter as HTMLButtonElement | null;
         form.dataset.busy = "true";
@@ -124,9 +143,15 @@ export function bindProcurementForms() {
         let creating = form.dataset.create === "true" && !createdId;
         try {
           if (createdId) data.enquiry_id = String(createdId);
+          if (reviewUncertain) data.reconcile_review = "true";
           const result = await post(form.action, data);
           createdId = Number(result.id);
           creating = false;
+          originalRequest = undefined;
+          if (result.submitted) {
+            location.assign(String(result.redirect));
+            return;
+          }
           for (const file of files) {
             if (completed.has(file)) continue;
             say(form, "Attaching " + file.name + "…");
@@ -153,26 +178,55 @@ export function bindProcurementForms() {
             );
             completed.add(file);
           }
-          if (intent?.value === "review")
+          if (intent?.value === "review" || reviewUncertain) {
+            reviewUncertain = true;
+            originalRequest = { ...data, enquiry_id: String(createdId) };
             await post("/api/procurement/review", {
               enquiry_id: String(createdId),
               company_id: data.company_id,
             });
+            reviewUncertain = false;
+          }
           location.assign(String(result.redirect));
         } catch (e) {
-          if (creating && (!(e instanceof ApiError) || e.status >= 500)) {
-            form.dataset.uncertain = "true";
+          if (
+            (creating || reviewUncertain) &&
+            (!(e instanceof ApiError) || e.status >= 500)
+          ) {
             say(
               form,
-              "Creation could not be confirmed. Check My Enquiries before creating another record.",
+              "Submission could not be confirmed. Retry here to confirm the original enquiry.",
               true,
             );
-            const link = document.createElement("a");
-            link.href = "/enquiries?tab=mine";
-            link.className = "text-link";
-            link.textContent = "Check My Enquiries";
-            form.append(link);
-          } else
+            form
+              .querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+                "input:not([type=hidden]),textarea",
+              )
+              .forEach((input) => (input.readOnly = true));
+            form
+              .querySelectorAll<HTMLSelectElement>("select")
+              .forEach((input) => (input.disabled = true));
+            const fileInput =
+              form.querySelector<HTMLInputElement>("[data-file-input]");
+            if (fileInput) fileInput.disabled = true;
+          } else {
+            reviewUncertain = false;
+            originalRequest = undefined;
+            if (creating) {
+              originalRequest = undefined;
+              filesSnapshot = undefined;
+              const fileInput =
+                form.querySelector<HTMLInputElement>("[data-file-input]");
+              if (fileInput) fileInput.disabled = false;
+            }
+            form
+              .querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+                "input:not([type=hidden]),textarea",
+              )
+              .forEach((input) => (input.readOnly = false));
+            form
+              .querySelectorAll<HTMLSelectElement>("select")
+              .forEach((input) => (input.disabled = false));
             say(
               form,
               (e as Error).message +
@@ -181,6 +235,7 @@ export function bindProcurementForms() {
                   : ""),
               true,
             );
+          }
         } finally {
           delete form.dataset.busy;
           form.removeAttribute("aria-busy");
@@ -224,6 +279,7 @@ export function bindProcurementForms() {
         chosen = file;
         chosenCaption = caption;
         form.dataset.busy = "true";
+        form.setAttribute("aria-busy", "true");
         const data = Object.fromEntries(new FormData(form));
         const button = form.querySelector<HTMLButtonElement>("button")!;
         button.disabled = true;
@@ -247,7 +303,8 @@ export function bindProcurementForms() {
             );
           await attachFile(
             file,
-            form.dataset.kind as "enquiry" | "message" | "deal",
+            form.dataset.kind as
+              "enquiry" | "message" | "deal" | "company" | "profile",
             Number(data.target_id),
             String(data.company_id),
             key,
@@ -273,6 +330,7 @@ export function bindProcurementForms() {
           );
         } finally {
           delete form.dataset.busy;
+          form.removeAttribute("aria-busy");
           button.disabled = false;
           if (captionInput) captionInput.readOnly = false;
           if (fileInput) fileInput.disabled = false;

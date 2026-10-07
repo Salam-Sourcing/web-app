@@ -202,6 +202,7 @@ function message(
 ) {
   const element = form.querySelector<HTMLElement>("[data-form-message]");
   if (!element) return;
+  element.dataset.loading = String(state === "pending");
   element.hidden = false;
   element.textContent = text;
   element.className = "form-message " + (state === "error" ? "" : state);
@@ -214,18 +215,28 @@ export function bindForms() {
     .forEach((form) => {
       if (form.dataset.bound) return;
       form.dataset.bound = "true";
+      let originalRequest: Record<string, FormDataEntryValue> | undefined;
       form.addEventListener("submit", async (event) => {
         if (event.defaultPrevented) return;
         event.preventDefault();
         if (form.dataset.busy === "true" || !form.reportValidity()) return;
         form.dataset.busy = "true";
-        const data = Object.fromEntries(new FormData(form).entries());
+        let data = Object.fromEntries(new FormData(form).entries());
         form
           .querySelectorAll<HTMLInputElement>("[data-date-field]")
           .forEach((input) => {
             if (input.name && input.value)
               data[input.name] = new Date(input.value).toISOString();
           });
+        if (form.dataset.businessRetry === "true") {
+          originalRequest ??= { ...data };
+          data = { ...originalRequest };
+          form
+            .querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+              "input:not([type=hidden]),textarea",
+            )
+            .forEach((input) => (input.readOnly = true));
+        }
         const buttons = Array.from(
           form.querySelectorAll<HTMLButtonElement>("button"),
         );
@@ -268,6 +279,25 @@ export function bindForms() {
             if (form.action.endsWith("/report")) form.reset();
           }
         } catch (error) {
+          form.dispatchEvent(
+            new CustomEvent("salam-form-error", {
+              detail: {
+                code: error instanceof ApiError ? error.code : undefined,
+              },
+            }),
+          );
+          if (
+            form.dataset.businessRetry === "true" &&
+            error instanceof ApiError &&
+            error.status < 500
+          ) {
+            originalRequest = undefined;
+            form
+              .querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+                "input:not([type=hidden]),textarea",
+              )
+              .forEach((input) => (input.readOnly = false));
+          }
           if (
             (form.action.endsWith("/company-create") ||
               form.dataset.nonIdempotent === "true") &&
@@ -294,7 +324,10 @@ export function bindForms() {
           message(
             form,
             error instanceof Error
-              ? error.message
+              ? error.message +
+                  (originalRequest
+                    ? " Retry here to confirm the original submission."
+                    : "")
               : "Unable to complete this request. Please retry.",
             "error",
           );

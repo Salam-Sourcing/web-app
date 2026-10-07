@@ -30,8 +30,32 @@ export async function procurementAction(
   const state = await requireWorkspace(context);
   if (action === "save-enquiry") {
     const c = verifiedCompany(state, input.company_id, "procurement");
-    const payload = enquiryPayload(input, c.id);
-    if (payload.sub_category_id) {
+    const existing = input.enquiry_id
+      ? await enquiry(state, positiveId(input.enquiry_id))
+      : undefined;
+    if (existing) {
+      buyer(state, existing, input.company_id);
+      if (
+        input.reconcile_review === "true" &&
+        existing.enquiry_type === "public_rfq" &&
+        ["pending_review", "published"].includes(existing.publication_status)
+      )
+        return json({
+          id: existing.id,
+          submitted: true,
+          redirect: "/enquiries/" + existing.id,
+        });
+    }
+    const payload = {
+      ...enquiryPayload(input, c.id),
+      ...(input.client_request_id
+        ? { client_request_id: requestId(input.client_request_id) }
+        : {}),
+    };
+    if (
+      payload.sub_category_id &&
+      payload.sub_category_id !== existing?.sub_category_id
+    ) {
       const cat = await state.client
         .from("sub_categories")
         .select("id")
@@ -188,7 +212,12 @@ export async function procurementAction(
   if (action === "quote") {
     const e = await enquiry(state, positiveId(input.enquiry_id)),
       c = await quoteTarget(state, e, input.company_id);
-    const payload = quotePayload(input, c.id, e);
+    const payload = {
+      ...quotePayload(input, c.id, e),
+      ...(input.client_request_id
+        ? { client_request_id: requestId(input.client_request_id) }
+        : {}),
+    };
     const r = await state.client.rpc("submit_quote", { p_quote: payload });
     checked(r.error);
     return json({ id: r.data, redirect: "/enquiries/" + e.id });

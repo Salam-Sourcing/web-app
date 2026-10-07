@@ -514,3 +514,29 @@ test("reports map exactly one allowed target to guarded RPCs", async () => {
     false,
   );
 });
+
+test("login forwards existing long passwords unchanged while signup rejects new over-limit passwords", async () => {
+  const f = fixture();
+  const password = " x".repeat(65);
+  await f.action("login", {
+    email: "fixture@example.com",
+    password,
+    captcha_token: "fixture-token",
+  });
+  assert.equal(
+    f.calls.find((c) => c.name === "login")?.args.password,
+    password,
+  );
+  await assert.rejects(
+    () =>
+      f.action("signup", {
+        email: "fixture@example.com",
+        password,
+        first_name: "First",
+        last_name: "Last",
+        captcha_token: "fixture-token",
+      }),
+    AccessError,
+  );
+  assert.equal(f.calls.filter((c) => c.name === "signup").length, 0);
+});

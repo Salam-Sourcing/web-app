@@ -1,4 +1,5 @@
 ---
+import MediaImage from "./MediaImage.astro";
 import { messageImage } from "../lib/deals";
 interface Props {
   attachment: {
@@ -23,7 +24,7 @@ const { attachment: a } = Astro.props,
         aria-label={"Open image: " + (a.file_name ?? "attachment")}
       >
         <>
-          <img
+          <MediaImage
             class="message-image"
             src={url + "?inline=1"}
             alt={a.file_name ?? "Message image"}

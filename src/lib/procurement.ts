@@ -1,4 +1,5 @@
 import { AccessError, positiveId, textField } from "./security";
+import { businessNumber } from "./business-numbers";
 import { createRequestId } from "./request-id";
 import type { Row } from "./catalog";
 export type Enquiry = Row<"enquiries">;
@@ -13,33 +14,10 @@ export function numberField(
   required = false,
   integer = false,
 ): number | null {
-  const raw = input[key];
-  if (raw === "" || raw === null || raw === undefined) {
-    if (required)
-      throw new AccessError(
-        400,
-        "invalid_input",
-        "Enter " + key.replaceAll("_", " ") + ".",
-      );
-    return null;
-  }
-  if (typeof raw !== "string" && typeof raw !== "number")
-    throw new AccessError(400, "invalid_input", "Enter a valid number.");
-  if (typeof raw === "string" && !/^\d+(?:\.\d+)?$/.test(raw))
-    throw new AccessError(400, "invalid_input", "Enter a positive number.");
-  const value = Number(raw);
-  if (
-    !Number.isFinite(value) ||
-    value < 0 ||
-    value > 1e12 ||
-    (integer && (!Number.isSafeInteger(value) || value > 36500))
-  )
-    throw new AccessError(
-      400,
-      "invalid_input",
-      "Check " + key.replaceAll("_", " ") + ".",
-    );
-  return value;
+  return businessNumber(input[key], key.replaceAll("_", " "), {
+    required,
+    integer,
+  });
 }
 export function futureDate(
   value: unknown,

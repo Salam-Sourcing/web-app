@@ -1,6 +1,11 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
+import { safeNext } from "../../lib/security";
 const reason = Astro.url.searchParams.get("reason");
+const retry = safeNext(Astro.url.searchParams.get("next"));
+const pageFailure = ["catalog_failed", "page_unavailable"].includes(
+  reason ?? "",
+);
 const unavailable =
   reason === "account_unavailable" || reason === "unsupported_factor";
 ---
@@ -10,20 +15,25 @@ const unavailable =
     <div class="card">
       <p class="eyebrow">Account access</p><h1>
         {
-          unavailable
-            ? "We couldn't open this account."
-            : "Let's check your access again."
+          pageFailure
+            ? "We couldn’t load this page."
+            : unavailable
+              ? "We couldn't open this account."
+              : "Let's check your access again."
         }
       </h1><p>
         {
-          unavailable
-            ? "Your account or security method needs attention. Contact support for help."
-            : "Connect to the internet and try again. We need to verify your account before showing private information."
+          pageFailure
+            ? "This page couldn’t finish loading. Retry to return to where you were. If you just submitted an enquiry, check it before posting again."
+            : unavailable
+              ? "Your account or security method needs attention. Contact support for help."
+              : "Connect to the internet and try again. We need to verify your account before showing private information."
         }
       </p><div class="actions">
-        <a class="button" href="/account">Retry</a><a
+        <a class="button" href={retry}>Retry</a><a
           class="text-link"
-          href="mailto:support@salamsourcing.com">Contact support</a>
+          href="mailto:support@salamsourcing.com">Contact support</a
+        >
       </div><form
         class="form"
         data-api-form

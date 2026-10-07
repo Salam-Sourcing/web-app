@@ -1,0 +1,101 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import Icon from "./Icon.astro";
+import { audienceContent } from "../lib/public-audiences";
+interface Props {
+  audience: keyof typeof audienceContent;
+}
+const content = audienceContent[Astro.props.audience];
+---
+
+<MainLayout
+  title={content.name + " | About Salam Sourcing"}
+  description={content.intro}
+>
+  <section class="audience-hero">
+    <div class="container audience-hero-grid">
+      <div>
+        <a class="text-link" href="/platform">About Salam Sourcing</a>
+        <p class="eyebrow mt-6">{content.eyebrow}</p><h1>{content.title}</h1>
+        <p class="lead">{content.intro}</p>
+        <div class="actions">
+          <a class="button" href="/signup">{content.cta}<Icon name="arrow" /></a
+          ><a class="button secondary" href="/">Browse the marketplace</a>
+        </div>
+      </div>
+      <aside class="card audience-journey">
+        <p class="eyebrow">For {content.name}</p><h2>
+          Your next steps, connected.
+        </h2>
+        <ol>
+          {
+            content.steps.map((step, i) => (
+              <li>
+                <span>{i + 1}</span>
+                {step}
+              </li>
+            ))
+          }
+        </ol>
+        <p>One account for web and the Salam Sourcing app.</p><a
+          class="text-link"
+          href="/get-the-app">Meet the app<Icon name="phone" size={16} /></a
+        >
+      </aside>
+    </div>
+  </section>
+  {
+    content.groups.map((group) => (
+      <section class="container audience-feature-section">
+        <div class="audience-section-heading">
+          <>
+            <h2>{group.title}</h2>
+            <p>{group.description}</p>
+          </>
+        </div>
+        <div class="audience-feature-grid">
+          {group.features.map((feature) => (
+            <article class="card audience-feature">
+              <span class="audience-feature-icon">
+                <Icon name={feature.icon} size={24} />
+              </span>
+              <h3>{feature.title}</h3>
+              <p>{feature.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+  <section class="container audience-shared">
+    <div class="card">
+      <span class="audience-feature-icon"><Icon name="shield" size={24} /></span
+      ><div>
+        <h2>Shared tools for both sides</h2><p>
+          Your account includes personal profiles and photos, optional
+          authenticator two-factor security, notification preferences, reporting
+          and blocking, support requests and export tools. Companies can buy and
+          sell from the same workspace.
+        </p><div class="actions">
+          <a class="text-link" href="/verification">What verification means</a
+          ><a class="text-link" href="/plans">Explore company plans</a><a
+            class="text-link"
+            href="/help">Get help</a
+          >
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="container audience-bottom">
+    <h2>Bring your next business conversation here.</h2><div class="actions">
+      <a class="button" href="/signup">Create an account</a><a
+        class="text-link"
+        href={"/" + content.other}
+        >{content.otherLabel}<Icon name="arrow" size={16} /></a
+      >
+    </div><p class="help-text">
+      Participating businesses agree their own payment, contract and delivery
+      arrangements.
+    </p>
+  </section>
+</MainLayout>

@@ -18,12 +18,51 @@ import { serverConfig } from "../../../../lib/server/config";
 export const GET: APIRoute = async (context) => {
   try {
     const state = await requireWorkspace(context),
-      id = positiveId(context.params.id),
+      id =
+        context.params.kind === "profile" ? 1 : positiveId(context.params.id),
       kind = context.params.kind;
     let path: string | null = null,
       bucket: string,
       name = "Document";
-    if (kind === "listing") {
+    if (kind === "profile") {
+      if (context.params.id !== "me")
+        throw new AccessError(
+          404,
+          "file_unavailable",
+          "This photo is unavailable.",
+        );
+      const result = await state.client
+        .from("profile_photos")
+        .select("storage_path")
+        .eq("user_id", state.user.id)
+        .maybeSingle();
+      checked(result.error);
+      if (!result.data)
+        throw new AccessError(
+          404,
+          "file_unavailable",
+          "Your profile photo is unavailable.",
+        );
+      path = result.data.storage_path;
+      bucket = "profile-photos";
+      name = "Profile photo";
+    } else if (kind === "company") {
+      const result = await state.client
+        .from("company_photos")
+        .select("storage_path")
+        .eq("company_id", id)
+        .maybeSingle();
+      checked(result.error);
+      if (!result.data)
+        throw new AccessError(
+          404,
+          "file_unavailable",
+          "This company photo is unavailable.",
+        );
+      path = result.data.storage_path;
+      bucket = "company-photos";
+      name = "Company photo";
+    } else if (kind === "listing") {
       const own = await state.client
         .from("listings")
         .select("company_id")
@@ -128,7 +167,7 @@ export const GET: APIRoute = async (context) => {
     checked(result.error);
     if (
       !result.data ||
-      !(kind === "listing"
+      !(["listing", "company", "profile"].includes(kind ?? "")
         ? imageTypes.includes(result.data.type as (typeof imageTypes)[number])
         : [...imageTypes, "application/pdf"].includes(result.data.type))
     )
@@ -148,7 +187,7 @@ export const GET: APIRoute = async (context) => {
       kind === "message" &&
       context.url.searchParams.get("inline") === "1" &&
       imageTypes.includes(result.data.type as (typeof imageTypes)[number]);
-    if (kind !== "listing" && !inlineImage)
+    if (!["listing", "company", "profile"].includes(kind ?? "") && !inlineImage)
       headers.set(
         "Content-Disposition",
         "attachment; filename=" +

@@ -1,10 +1,13 @@
 ---
+import { statusLabel } from "../../../lib/status-label";
 import AppLayout from "../../../layouts/AppLayout.astro";
+import { savedEnquiry } from "../../../lib/server/saved-enquiry";
 import QuoteCard from "../../../components/QuoteCard.astro";
 import ProcurementAction from "../../../components/ProcurementAction.astro";
 import { requireWorkspace } from "../../../lib/server/access";
 import {
-  quoteBundle,
+  quotePage,
+  enquiryFileParty,
   companySummaries,
   quoteTarget,
 } from "../../../lib/server/procurement";
@@ -14,11 +17,23 @@ import { location, dateLabel, openEnquiry } from "../../../lib/procurement";
 import { quantityLabel } from "../../../lib/procurement";
 const state = await requireWorkspace(Astro),
   id = positiveId(Astro.params.id),
-  bundle = await quoteBundle(state, id),
+  bundle = await quotePage(
+    state,
+    id,
+    Astro.url.searchParams.get("quotes_offset"),
+  ),
   e = bundle.enquiry;
 const owner =
   state.company?.id === e.buyer_company_id &&
   state.permissions.includes("procurement");
+let fileParty: "buyer" | "supplier" | null = null;
+if (state.company) {
+  try {
+    fileParty = await enquiryFileParty(state, e);
+  } catch (error) {
+    if (!(error instanceof AccessError) || error.status >= 500) throw error;
+  }
+}
 const [companies, attachments, invites, conversations, saved, deal] =
   await Promise.all([
     companySummaries(state, [e.buyer_company_id]),
@@ -35,12 +50,7 @@ const [companies, attachments, invites, conversations, saved, deal] =
       .from("conversations")
       .select("id,buyer_company_id,supplier_company_id")
       .eq("enquiry_id", id),
-    state.client
-      .from("saved_enquiries")
-      .select("id")
-      .eq("enquiry_id", id)
-      .eq("user_id", state.user.id)
-      .maybeSingle(),
+    savedEnquiry(state, id),
     state.client
       .from("deals")
       .select(
@@ -105,8 +115,8 @@ const inviteCompanies = await companySummaries(
     <div class="stack">
       <section class="card">
         <div class="card-meta">
-          <span class="badge">{e.status}</span><span class="badge"
-            >{e.publication_status.replaceAll("_", " ")}</span
+          <span class="badge">{statusLabel(e.status)}</span><span class="badge"
+            >{statusLabel(e.publication_status)}</span
           >{e.urgency === "urgent" && <span class="badge urgent">Urgent</span>}
         </div>
         <h2 class="mt-5">Requirements</h2><p class="preserve-lines mt-3">
@@ -191,8 +201,8 @@ const inviteCompanies = await companySummaries(
               <>
                 <h2>Quote accepted</h2>
                 <p>
-                  Deal #{deal.data.id} · {deal.data.status}. Track delivery and
-                  complete your transaction.
+                  Deal #{deal.data.id} · {statusLabel(deal.data.status)}. Track
+                  delivery and complete your transaction.
                 </p>
                 <a class="button mt-4" href={"/deals/" + deal.data.id}>
                   Open deal
@@ -223,7 +233,9 @@ const inviteCompanies = await companySummaries(
                       ? Math.ceil(a.file_size_bytes / 1024) + " KB"
                       : ""}
                   </span>
-                  {owner && (
+                  {(fileParty === "buyer" ||
+                    (fileParty === "supplier" &&
+                      a.uploaded_by_user_id === state.user.id)) && (
                     <form
                       data-api-form
                       action="/api/uploads/remove-enquiry"
@@ -256,7 +268,7 @@ const inviteCompanies = await companySummaries(
           )
         }
         {
-          owner &&
+          fileParty &&
             openEnquiry(e) &&
             e.publication_status !== "pending_review" && (
               <form class="form" data-file-form data-kind="enquiry">
@@ -284,7 +296,7 @@ const inviteCompanies = await companySummaries(
         }
       </section>
       <div class="section-heading">
-        <h2>Quotes ({bundle.quotes.length})</h2>{
+        <h2>Quotes ({bundle.count ?? bundle.quotes.length})</h2>{
           bundle.quotes.length > 0 && (
             <div class="actions">
               <>
@@ -321,6 +333,33 @@ const inviteCompanies = await companySummaries(
           </div>
         )
       }
+      <nav class="actions" aria-label="Quote pages">
+        {
+          bundle.offset > 0 && (
+            <a
+              class="button secondary"
+              href={
+                "/enquiries/" +
+                id +
+                "?quotes_offset=" +
+                Math.max(0, bundle.offset - 24)
+              }
+            >
+              Previous quotes
+            </a>
+          )
+        }
+        {
+          bundle.hasMore && (
+            <a
+              class="button secondary"
+              href={"/enquiries/" + id + "?quotes_offset=" + bundle.nextOffset}
+            >
+              Older quotes
+            </a>
+          )
+        }
+      </nav>
     </div>
     <aside class="stack">
       <section class="card">
@@ -352,7 +391,7 @@ const inviteCompanies = await companySummaries(
                 <li>
                   {inviteCompanies.find((c) => c.id === i.supplier_company_id)
                     ?.display_name ?? "Supplier unavailable"}{" "}
-                  <span class="badge">{i.status}</span>
+                  <span class="badge">{statusLabel(i.status)}</span>
                 </li>
               ))}
             </ul>

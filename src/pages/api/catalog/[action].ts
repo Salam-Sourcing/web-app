@@ -1,13 +1,14 @@
 import type { APIRoute } from "astro";
 import { readMutation, errorResponse } from "../../../lib/security";
 import { handleCatalogAction } from "../../../lib/server/catalog-actions";
+import { catalogRequestLimit } from "../../../lib/request-limits";
 export const POST: APIRoute = async (context) => {
   try {
     return await handleCatalogAction(
       context,
       await readMutation(
         context.request,
-        context.params.action === "company-update" ? 1024 * 1024 : 16384,
+        catalogRequestLimit(context.params.action),
       ),
       context.params.action,
     );

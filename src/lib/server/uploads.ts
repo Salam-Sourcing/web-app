@@ -1,6 +1,11 @@
 import { editableDeal, dealBundle } from "./deals";
 import { dealFileTypes } from "../deals";
-import { enquiry, buyer, conversation, sendText } from "./procurement";
+import {
+  enquiry,
+  enquiryFileParty,
+  conversation,
+  sendText,
+} from "./procurement";
 import { requestId, openEnquiry } from "../procurement";
 import {
   messageCaption,
@@ -20,7 +25,15 @@ import {
 } from "./catalog";
 type Intent = {
   user: string;
-  kind: "listing" | "document" | "enquiry" | "message" | "deal";
+  kind:
+    | "listing"
+    | "document"
+    | "enquiry"
+    | "message"
+    | "deal"
+    | "company"
+    | "profile";
+  previous_path?: string | null;
   target: number;
   path: string;
   mime: string;
@@ -40,9 +53,18 @@ export function ownedIntent(value: unknown, user: string): value is Intent {
   const i = value as Intent;
   if (
     i.user !== user ||
-    !["listing", "document", "enquiry", "message", "deal"].includes(i.kind) ||
+    ![
+      "listing",
+      "document",
+      "enquiry",
+      "message",
+      "deal",
+      "company",
+      "profile",
+    ].includes(i.kind) ||
     !Number.isSafeInteger(i.target) ||
     i.target <= 0 ||
+    (i.kind === "profile" && i.target !== 1) ||
     !Number.isFinite(i.created) ||
     i.created > Date.now() ||
     !/^[a-f0-9-]{36}$/.test(i.key)
@@ -54,7 +76,7 @@ export function ownedIntent(value: unknown, user: string): value is Intent {
   )
     return false;
   if (
-    !(i.kind === "listing"
+    !(["listing", "company", "profile"].includes(i.kind)
       ? imageTypes.includes(i.mime as (typeof imageTypes)[number])
       : i.kind === "deal"
         ? dealFileTypes.includes(i.mime as (typeof dealFileTypes)[number])
@@ -71,7 +93,11 @@ export function ownedIntent(value: unknown, user: string): value is Intent {
           : "jpg";
   return (
     i.path ===
-    (i.kind === "listing" ? user + "/" + i.target : i.target + "/" + user) +
+    (i.kind === "profile"
+      ? "profile/" + user
+      : i.kind === "listing"
+        ? user + "/" + i.target
+        : i.target + "/" + user) +
       "/" +
       i.key +
       "." +
@@ -97,6 +123,25 @@ async function target(
   intent: Pick<Intent, "kind" | "target">,
   expected?: unknown,
 ) {
+  if (intent.kind === "profile") {
+    if (intent.target !== 1)
+      throw new AccessError(
+        400,
+        "invalid_upload",
+        "Choose a valid profile photo upload.",
+      );
+    return state.profile;
+  }
+  if (intent.kind === "company") {
+    const company = companyManager(state, expected);
+    if (company.id !== intent.target)
+      throw new AccessError(
+        403,
+        "company_changed",
+        "Select this company before changing its photo.",
+      );
+    return company;
+  }
   if (intent.kind === "listing") {
     const row = await sellerListing(state, intent.target, expected);
     if (!["draft", "rejected"].includes(row.status))
@@ -109,7 +154,7 @@ async function target(
   }
   if (intent.kind === "enquiry") {
     const row = await enquiry(state, intent.target);
-    buyer(state, row, expected);
+    await enquiryFileParty(state, row, expected);
     if (!openEnquiry(row) || row.publication_status === "pending_review")
       throw new AccessError(
         409,
@@ -138,7 +183,17 @@ export async function prepareUpload(
 ) {
   const state = await requireWorkspace(context),
     kind = textField(input, "kind", 10);
-  if (!["listing", "document", "enquiry", "message", "deal"].includes(kind))
+  if (
+    ![
+      "listing",
+      "document",
+      "enquiry",
+      "message",
+      "deal",
+      "company",
+      "profile",
+    ].includes(kind)
+  )
     throw new AccessError(400, "invalid_upload", "Choose a valid upload.");
   const id = positiveId(input.target_id);
   await target(
@@ -155,7 +210,7 @@ export async function prepareUpload(
     );
   const mime = textField(input, "mime", 50);
   if (
-    !(kind === "listing"
+    !(["listing", "company", "profile"].includes(kind)
       ? imageTypes.includes(mime as (typeof imageTypes)[number])
       : kind === "deal"
         ? dealFileTypes.includes(mime as (typeof dealFileTypes)[number])
@@ -181,6 +236,25 @@ export async function prepareUpload(
         "A listing can have at most five images.",
       );
   }
+  let previous: string | null = null;
+  if (kind === "profile") {
+    const result = await state.client
+      .from("profile_photos")
+      .select("storage_path")
+      .eq("user_id", state.user.id)
+      .maybeSingle();
+    checked(result.error);
+    previous = result.data?.storage_path ?? null;
+  }
+  if (kind === "company") {
+    const result = await state.client
+      .from("company_photos")
+      .select("storage_path")
+      .eq("company_id", id)
+      .maybeSingle();
+    checked(result.error);
+    previous = result.data?.storage_path ?? null;
+  }
   const key = crypto.randomUUID(),
     extension =
       mime === "application/pdf"
@@ -196,15 +270,20 @@ export async function prepareUpload(
     kind: kind as Intent["kind"],
     target: id,
     path:
-      (kind === "listing"
-        ? state.user.id + "/" + id
-        : id + "/" + state.user.id) +
+      (kind === "profile"
+        ? "profile/" + state.user.id
+        : kind === "listing"
+          ? state.user.id + "/" + id
+          : id + "/" + state.user.id) +
       "/" +
       key +
       "." +
       extension,
     mime,
     created: Date.now(),
+    ...(["company", "profile"].includes(kind)
+      ? { previous_path: previous }
+      : {}),
     ...(kind === "message"
       ? { caption_hash: await captionHash(messageCaption(input.caption)) }
       : {}),
@@ -334,41 +413,55 @@ export async function attachUpload(context: APIContext, form: FormData) {
     throw new AccessError(400, "document_type", "Choose a document type.");
   const bucket = uploadBucket(intent.kind);
   const existing =
-    intent.kind === "listing"
+    intent.kind === "profile"
       ? await state.client
-          .from("listing_images")
-          .select("id")
-          .eq("listing_id", intent.target)
-          .eq("image_url", intent.path)
+          .from("profile_photos")
+          .select("storage_path")
+          .eq("user_id", state.user.id)
+          .eq("storage_path", intent.path)
           .maybeSingle()
-      : intent.kind === "enquiry"
+      : intent.kind === "company"
         ? await state.client
-            .from("enquiry_attachments")
-            .select("id")
-            .eq("enquiry_id", intent.target)
+            .from("company_photos")
+            .select("id:company_id")
+            .eq("company_id", intent.target)
             .eq("storage_path", intent.path)
             .maybeSingle()
-        : intent.kind === "deal"
+        : intent.kind === "listing"
           ? await state.client
-              .from("deal_documents")
-              .select("id,deal_id,file_name,file_mime_type,file_size_bytes")
-              .eq("deal_id", intent.target)
-              .eq("storage_path", intent.path)
+              .from("listing_images")
+              .select("id")
+              .eq("listing_id", intent.target)
+              .eq("image_url", intent.path)
               .maybeSingle()
-          : intent.kind === "message"
+          : intent.kind === "enquiry"
             ? await state.client
-                .from("message_attachments")
-                .select(
-                  "id,message_id,file_name,file_mime_type,file_size_bytes",
-                )
-                .eq("file_url", intent.path)
-                .maybeSingle()
-            : await state.client
-                .from("verification_documents")
+                .from("enquiry_attachments")
                 .select("id")
-                .eq("company_verification_id", intent.target)
-                .eq("file_url", intent.path)
-                .maybeSingle();
+                .eq("enquiry_id", intent.target)
+                .eq("storage_path", intent.path)
+                .maybeSingle()
+            : intent.kind === "deal"
+              ? await state.client
+                  .from("deal_documents")
+                  .select("id,deal_id,file_name,file_mime_type,file_size_bytes")
+                  .eq("deal_id", intent.target)
+                  .eq("storage_path", intent.path)
+                  .maybeSingle()
+              : intent.kind === "message"
+                ? await state.client
+                    .from("message_attachments")
+                    .select(
+                      "id,message_id,file_name,file_mime_type,file_size_bytes",
+                    )
+                    .eq("file_url", intent.path)
+                    .maybeSingle()
+                : await state.client
+                    .from("verification_documents")
+                    .select("id")
+                    .eq("company_verification_id", intent.target)
+                    .eq("file_url", intent.path)
+                    .maybeSingle();
   checked(existing.error);
   if (existing.data) {
     if (intent.kind === "message") {
@@ -423,8 +516,12 @@ export async function attachUpload(context: APIContext, form: FormData) {
           "Refresh this deal before retrying the document.",
         );
     }
-    context.cookies.delete(cookieName(intent.key), options(context));
-    return json({ id: existing.data.id, attached: true });
+    const cleaned =
+      !["company", "profile"].includes(intent.kind) ||
+      (await cleanupPreviousPhoto(state, intent));
+    if (cleaned)
+      context.cookies.delete(cookieName(intent.key), options(context));
+    return json({ attached: true });
   }
   if (intent.kind === "deal")
     await editableDeal(state, intent.target, form.get("company_id"));
@@ -487,7 +584,27 @@ export async function attachUpload(context: APIContext, form: FormData) {
         "The existing upload differs. Choose a fresh file.",
       );
   }
-  if (intent.kind === "listing")
+  if (intent.kind === "profile") {
+    checked(
+      (
+        await state.client.rpc("set_profile_photo", {
+          p_path: intent.path,
+          p_previous_path: intent.previous_path ?? null,
+        })
+      ).error,
+    );
+  } else if (intent.kind === "company") {
+    checked(
+      (
+        await state.client.rpc("set_company_photo", {
+          p_company_id: intent.target,
+          p_path: intent.path,
+          p_previous_path: intent.previous_path ?? null,
+        })
+      ).error,
+    );
+    // Old owned bytes are cleaned after metadata succeeds; failures keep the intent for recovery.
+  } else if (intent.kind === "listing")
     checked(
       (
         await state.client.from("listing_images").insert({
@@ -577,7 +694,11 @@ export async function attachUpload(context: APIContext, form: FormData) {
         })
       ).error,
     );
-  context.cookies.delete(cookieName(intent.key), options(context));
+  if (
+    !["company", "profile"].includes(intent.kind) ||
+    (await cleanupPreviousPhoto(state, intent))
+  )
+    context.cookies.delete(cookieName(intent.key), options(context));
   return json({ attached: true, message: "File attached." });
 }
 
@@ -643,6 +764,13 @@ export async function recoverUploads(context: APIContext) {
           p_path: intent.path,
         });
         checked(result.error);
+      }
+      if (
+        ["company", "profile"].includes(intent.kind) &&
+        !(await cleanupPreviousPhoto(state, intent))
+      ) {
+        remaining++;
+        continue;
       }
       if (result.data === "gone" || result.data === "retained")
         context.cookies.delete(cookieName(intent.key), options(context));
@@ -727,15 +855,19 @@ export async function removeDocument(
 }
 
 export function uploadBucket(kind: Intent["kind"]) {
-  return kind === "listing"
-    ? "listing-images"
-    : kind === "document"
-      ? "company-verification-documents"
-      : kind === "enquiry"
-        ? "enquiry-attachments"
-        : kind === "deal"
-          ? "deal-documents"
-          : "message-attachments";
+  return kind === "profile"
+    ? "profile-photos"
+    : kind === "company"
+      ? "company-photos"
+      : kind === "listing"
+        ? "listing-images"
+        : kind === "document"
+          ? "company-verification-documents"
+          : kind === "enquiry"
+            ? "enquiry-attachments"
+            : kind === "deal"
+              ? "deal-documents"
+              : "message-attachments";
 }
 export async function removeEnquiryFile(
   context: APIContext,
@@ -752,7 +884,13 @@ export async function removeEnquiryFile(
   if (!row.data)
     throw new AccessError(404, "file_unavailable", "This file is unavailable.");
   const e = await enquiry(state, row.data.enquiry_id);
-  buyer(state, e, input.company_id);
+  const party = await enquiryFileParty(state, e, input.company_id);
+  if (party === "supplier" && row.data.uploaded_by_user_id !== state.user.id)
+    throw new AccessError(
+      403,
+      "file_access",
+      "You can only remove your own enquiry attachments.",
+    );
   if (input.confirm !== "REMOVE")
     throw new AccessError(
       400,
@@ -793,4 +931,39 @@ export async function removeEnquiryFile(
   return json({
     redirect: "/enquiries/" + e.id + (cleaned ? "" : "?notice=storage-cleanup"),
   });
+}
+
+async function cleanupPreviousPhoto(state: Workspace, intent: Intent) {
+  if (
+    !intent.previous_path ||
+    intent.previous_path.split("/")[1] !== state.user.id
+  )
+    return true;
+  try {
+    const claim = await state.client.rpc("claim_upload_cleanup", {
+      p_bucket: uploadBucket(intent.kind),
+      p_path: intent.previous_path,
+    });
+    checked(claim.error);
+    if (claim.data === "claimed") {
+      checked(
+        (
+          await state.client.storage
+            .from(uploadBucket(intent.kind))
+            .remove([intent.previous_path])
+        ).error,
+      );
+      checked(
+        (
+          await state.client.rpc("claim_upload_cleanup", {
+            p_bucket: uploadBucket(intent.kind),
+            p_path: intent.previous_path,
+          })
+        ).error,
+      );
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }

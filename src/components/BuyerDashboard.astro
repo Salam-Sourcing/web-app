@@ -1,4 +1,5 @@
 ---
+import { statusLabel } from "../lib/status-label";
 import { money, dateLabel } from "../lib/procurement";
 type Dashboard = {
   open_enquiries: number;
@@ -73,8 +74,9 @@ const { data } = Astro.props;
                 <div>
                   <strong>{d.product_name}</strong>
                   <span>
-                    {d.stage} · {money(d.deal_value_estimate, d.currency)} ·
-                    Expected {d.expected_delivery ?? "not set"}
+                    {statusLabel(d.stage)} ·{" "}
+                    {money(d.deal_value_estimate, d.currency)} · Expected{" "}
+                    {d.expected_delivery ?? "not set"}
                   </span>
                 </div>
               </a>

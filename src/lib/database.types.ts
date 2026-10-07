@@ -174,6 +174,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      profile_photos: {
+        Row: { user_id: string; storage_path: string; updated_at: string };
+        Insert: { user_id: string; storage_path: string; updated_at?: string };
+        Update: {
+          user_id?: string;
+          storage_path?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      company_photos: {
+        Row: {
+          company_id: number;
+          storage_path: string;
+          uploaded_by_user_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          company_id: number;
+          storage_path: string;
+          uploaded_by_user_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          storage_path?: string;
+          uploaded_by_user_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       companies: {
         Row: {
           address: string | null;
@@ -2573,6 +2603,24 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      get_notification_feed: {
+        Args: { p_limit?: number };
+        Returns: {
+          id: number;
+          notification_type: string;
+          title: string;
+          body: string | null;
+          is_read: boolean;
+          entity_type: string | null;
+          entity_id: number | null;
+          created_at: string;
+          data: Json;
+          source_name: string | null;
+          preview: string | null;
+          context_name: string | null;
+        }[];
+      };
+
       search_enquiries: {
         Args: { p_filters?: Json; p_offset?: number; p_limit?: number };
         Returns: Database["public"]["Tables"]["enquiries"]["Row"][];
@@ -2795,6 +2843,18 @@ export type Database = {
           role: string;
           verification_status: string;
         }[];
+      };
+      set_profile_photo: {
+        Args: { p_path: string; p_previous_path?: string | null };
+        Returns: string;
+      };
+      set_company_photo: {
+        Args: {
+          p_company_id: number;
+          p_path: string;
+          p_previous_path?: string | null;
+        };
+        Returns: string;
       };
       get_public_company_profile: {
         Args: { p_company_id: number };

@@ -1,0 +1,55 @@
+---
+import CompanyAvatar from "./CompanyAvatar.astro";
+import Icon from "./Icon.astro";
+interface Props {
+  company: {
+    id: number;
+    display_name: string;
+    city?: string;
+    province_state?: string;
+    country?: string;
+    average_rating: number;
+    total_reviews: number;
+  };
+  photo?: boolean;
+}
+const { company, photo = false } = Astro.props;
+const rating = Math.max(0, Math.min(5, Number(company.average_rating) || 0));
+---
+
+<section class="card supplier-summary">
+  <a class="supplier-identity" href={"/suppliers/" + company.id}>
+    <CompanyAvatar id={company.id} name={company.display_name} photo={photo} />
+    <div>
+      <p class="eyebrow">Supplier</p><h2>{company.display_name}</h2><p
+        class="help-text"
+      >
+        {
+          [company.city, company.province_state, company.country]
+            .filter(Boolean)
+            .join(", ")
+        }
+      </p>
+    </div>
+    <Icon name="arrow" size={18} />
+  </a>
+  <a class="supplier-rating" href={"/suppliers/" + company.id + "/reviews"}>
+    <span class="rating-stars" aria-hidden="true"
+      ><span class="rating-stars-base">★★★★★</span><span
+        class="rating-stars-fill"
+        style={"width:" + (company.total_reviews ? rating * 20 : 0) + "%"}
+        >★★★★★</span
+      ></span
+    >
+    <span
+      >{
+        company.total_reviews
+          ? rating.toFixed(1) +
+            " / 5 · " +
+            company.total_reviews +
+            (company.total_reviews === 1 ? " review" : " reviews")
+          : "No reviews yet"
+      }</span
+    >
+  </a>
+</section>

@@ -1,4 +1,5 @@
 ---
+import { createRequestId } from "../lib/request-id";
 import type { Taxonomy } from "../lib/catalog";
 import type { Enquiry } from "../lib/procurement";
 interface Props {
@@ -25,6 +26,11 @@ const {
   province,
   country,
 } = Astro.props;
+const retiredCategory =
+  e?.sub_category_id &&
+  !categories.some((c) =>
+    c.sub_categories.some((s) => s.id === e.sub_category_id),
+  );
 const direct = !!supplier || e?.enquiry_type === "direct";
 ---
 
@@ -36,6 +42,7 @@ const direct = !!supplier || e?.enquiry_type === "direct";
   method="post"
 >
   <input type="hidden" name="company_id" value={companyId} />
+  <input type="hidden" name="client_request_id" value={createRequestId()} />
   <input
     type="hidden"
     name="enquiry_type"
@@ -65,7 +72,15 @@ const direct = !!supplier || e?.enquiry_type === "direct";
   <div class="form-row">
     <label class="field"
       >Category<select name="sub_category_id"
-        ><option value="">Select a category</option>{
+        ><option value="">Select a category</option>
+        {
+          retiredCategory && (
+            <option value={e!.sub_category_id!} selected>
+              Current category (no longer available for new RFQs)
+            </option>
+          )
+        }
+        {
           categories.map((c) => (
             <optgroup label={c.name}>
               {c.sub_categories.map((s) => (
@@ -93,9 +108,9 @@ const direct = !!supplier || e?.enquiry_type === "direct";
       >Quantity<input
         type="number"
         name="quantity"
-        min="0.000001"
-        max="1000000000000"
-        step="any"
+        min="0.01"
+        max="999999999999.99"
+        step="0.01"
         value={e?.quantity}
       /></label
     >

@@ -8,7 +8,14 @@ import { AccessError } from "../src/lib/security.ts";
 function fixture(
   notification: any,
   rpcError = false,
-  options: { verification?: any; companies?: any[]; role?: string } = {},
+  options: {
+    verification?: any;
+    companies?: any[];
+    role?: string;
+    quote?: any;
+    enquiry?: any;
+    permissions?: string[];
+  } = {},
 ) {
   const companies = options.companies ?? [
     { id: 4, role: options.role ?? "owner" },
@@ -47,9 +54,13 @@ function fixture(
           data:
             table === "notifications"
               ? notification
-              : table === "company_verifications"
-                ? (options.verification ?? null)
-                : { id: "current-user", status: "active" },
+              : table === "quotes"
+                ? (options.quote ?? null)
+                : table === "enquiries"
+                  ? (options.enquiry ?? null)
+                  : table === "company_verifications"
+                    ? (options.verification ?? null)
+                    : { id: "current-user", status: "active" },
           error: null,
         }),
       };
@@ -58,7 +69,12 @@ function fixture(
     rpc: async (name: string, args: unknown) => {
       calls.push(["rpc", name, args]);
       return {
-        data: name === "get_my_companies" ? companies : [],
+        data:
+          name === "get_my_companies"
+            ? companies
+            : name === "get_company_permissions"
+              ? (options.permissions ?? [])
+              : [],
         error: rpcError
           ? { code: "P0001", message: "Search unavailable" }
           : null,
@@ -70,7 +86,7 @@ function fixture(
     user: { id: "current-user" },
     company: companies[0],
     companies,
-    permissions: [],
+    permissions: options.permissions ?? [],
   } as unknown as Workspace;
   const context = {
     url: new URL("https://test.salamsourcing.com"),
@@ -246,4 +262,82 @@ test("verification notification cannot bypass company-manager access", async () 
     (e: any) => e instanceof AccessError && e.status === 403,
   );
   assert.equal(f.cookies.length, 0);
+});
+
+for (const party of ["buyer", "supplier"] as const) {
+  test(`quote notification resolves quote 901 to enquiry 42 for ${party}`, async () => {
+    const f = fixture({ entity_type: "quote", entity_id: 901 }, false, {
+      quote: { enquiry_id: 42, supplier_company_id: 8 },
+      enquiry: { id: 42, buyer_company_id: party === "buyer" ? 4 : 9 },
+      companies: [{ id: party === "buyer" ? 4 : 8, role: "owner" }],
+      permissions: [party === "buyer" ? "procurement" : "sales"],
+    });
+    assert.equal(
+      (await notificationTarget(f.context, f.state, 73)).redirect,
+      "/quotes/901",
+    );
+    assert.ok(f.calls.some((c) => c[0] === "from" && c[1] === "quotes"));
+    assert.ok(
+      f.calls.some((c) => c[0] === "eq" && c[1] === "id" && c[2] === 42),
+    );
+    assert.ok(!f.calls.some((c) => c[0] === "from" && c[1] === "quote_items"));
+  });
+}
+test("quote notice never opens deleted, unrelated or forbidden targets", async () => {
+  for (const options of [
+    {
+      quote: null,
+      enquiry: { id: 42, buyer_company_id: 4 },
+      permissions: ["procurement"],
+    },
+    {
+      quote: { enquiry_id: 42, supplier_company_id: 8 },
+      enquiry: null,
+      permissions: ["procurement"],
+    },
+    {
+      quote: { enquiry_id: 42, supplier_company_id: 8 },
+      enquiry: { id: 42, buyer_company_id: 9 },
+      permissions: ["procurement"],
+    },
+    {
+      quote: { enquiry_id: 42, supplier_company_id: 8 },
+      enquiry: { id: 42, buyer_company_id: 4 },
+      permissions: [],
+    },
+  ]) {
+    const f = fixture({ entity_type: "quote", entity_id: 901 }, false, options);
+    await assert.rejects(() => notificationTarget(f.context, f.state, 73));
+    assert.equal(f.cookies.length, 0);
+  }
+});
+test("quote notice selects its participating recipient company only after resolving access", async () => {
+  const options = {
+    companies: [
+      { id: 4, role: "owner" },
+      { id: 8, role: "sales" },
+    ],
+    quote: { enquiry_id: 42, supplier_company_id: 8 },
+    enquiry: { id: 42, buyer_company_id: 4 },
+    permissions: ["sales"],
+  };
+  const f = fixture(
+    { entity_type: "quote", entity_id: 901, recipient_company_id: 8 },
+    false,
+    options,
+  );
+  assert.deepEqual(await notificationTarget(f.context, f.state, 73), {
+    redirect: "/quotes/901",
+    companyChanged: true,
+  });
+  assert.equal(f.cookies[0][1], "8");
+  const denied = fixture(
+    { entity_type: "quote", entity_id: 901, recipient_company_id: 8 },
+    false,
+    { ...options, permissions: [] },
+  );
+  await assert.rejects(() =>
+    notificationTarget(denied.context, denied.state, 73),
+  );
+  assert.equal(denied.cookies.length, 0);
 });

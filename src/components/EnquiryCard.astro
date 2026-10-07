@@ -1,4 +1,5 @@
 ---
+import { statusLabel } from "../lib/status-label";
 import type { Enquiry } from "../lib/procurement";
 import { location, dateLabel, quantityLabel } from "../lib/procurement";
 interface Props {
@@ -13,13 +14,13 @@ const { enquiry: e, buyerName, saved, companyId } = Astro.props;
 
 <article class="card enquiry-card">
   <div class="card-meta">
-    <span class="badge">{buyerName}</span
-    >{e.urgency === "urgent" && <span class="badge urgent">Urgent</span>}<span
-      class="badge"
+    <span class="badge">{buyerName}</span>{
+      e.urgency === "urgent" && <span class="badge urgent">Urgent</span>
+    }<span class="badge"
       >{
         e.enquiry_type === "direct"
           ? "Direct"
-          : e.publication_status.replaceAll("_", " ")
+          : statusLabel(e.publication_status)
       }</span
     >
   </div>

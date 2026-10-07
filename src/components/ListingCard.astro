@@ -1,4 +1,5 @@
 ---
+import MediaImage from "./MediaImage.astro";
 import type { ListingCardData } from "../lib/catalog";
 import SaveButton from "./SaveButton.astro";
 import Icon from "./Icon.astro";
@@ -13,7 +14,7 @@ const { listing } = Astro.props;
     <a href={"/listings/" + listing.id} aria-label={"View " + listing.name}
       ><Icon name="image" size={36} />{
         listing.has_image && (
-          <img
+          <MediaImage
             data-private-media
             src={"/api/media/listing/" + listing.id}
             alt={listing.name}
@@ -24,9 +25,8 @@ const { listing } = Astro.props;
     >
   </div>
   <div class="listing-card-body">
-    <a
-      class="eyebrow supplier-link"
-      href={"/suppliers/" + listing.company_id}>{listing.vendor_name}</a
+    <a class="eyebrow supplier-link" href={"/suppliers/" + listing.company_id}
+      >{listing.vendor_name}</a
     ><h2><a href={"/listings/" + listing.id}>{listing.name}</a></h2>{
       listing.category && <p class="help-text">{listing.category}</p>
     }

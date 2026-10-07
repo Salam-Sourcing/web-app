@@ -47,6 +47,43 @@ export function buyer(state: Workspace, e: Enquiry, expected?: unknown) {
     );
   return c;
 }
+export async function enquiryFileParty(
+  state: Workspace,
+  e: Enquiry,
+  expected?: unknown,
+) {
+  const c = activeCompany(state, expected);
+  if (c.id === e.buyer_company_id) {
+    buyer(state, e, expected);
+    return "buyer" as const;
+  }
+  activeCompany(state, expected, "sales");
+  if (e.supplier_company_id === c.id) return "supplier" as const;
+  const [invited, quoted] = await Promise.all([
+    state.client
+      .from("enquiry_supplier_invitations")
+      .select("id")
+      .eq("enquiry_id", e.id)
+      .eq("supplier_company_id", c.id)
+      .neq("status", "cancelled")
+      .limit(1),
+    state.client
+      .from("quotes")
+      .select("id")
+      .eq("enquiry_id", e.id)
+      .eq("supplier_company_id", c.id)
+      .limit(1),
+  ]);
+  checked(invited.error);
+  checked(quoted.error);
+  if (!invited.data?.length && !quoted.data?.length)
+    throw new AccessError(
+      403,
+      "file_access",
+      "Only participating companies can manage enquiry files.",
+    );
+  return "supplier" as const;
+}
 export async function quoteTarget(
   state: Workspace,
   e: Enquiry,
@@ -343,28 +380,8 @@ export async function sendText(
   return confirmed.data.id;
 }
 
-export async function quoteBundle(state: Workspace, id: number) {
-  const e = await enquiry(state, id);
-  const quotes: Quote[] = [];
-  for (let offset = 0; ; offset += 500) {
-    const result = await state.client
-      .from("quotes")
-      .select("*")
-      .eq("enquiry_id", id)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range(offset, offset + 499);
-    checked(result.error);
-    quotes.push(...(result.data ?? []));
-    if ((result.data?.length ?? 0) < 500) break;
-    if (quotes.length >= 5000)
-      throw new AccessError(
-        413,
-        "comparison_too_large",
-        "This enquiry has too many quote versions to compare together. Open individual quotes.",
-      );
-  }
-  const profiles = await Promise.all(
+async function quoteProfiles(state: Workspace, quotes: Quote[]) {
+  return Promise.all(
     [...new Set(quotes.map((q) => q.supplier_company_id))].map(async (id) => {
       const result = await state.client.rpc("get_public_company_profile", {
         p_company_id: id,
@@ -373,7 +390,72 @@ export async function quoteBundle(state: Workspace, id: number) {
       return { id, profile: result.data?.[0] ?? null };
     }),
   );
-  return { enquiry: e, quotes, profiles };
+}
+export async function quotePage(
+  state: Workspace,
+  id: number,
+  rawOffset: string | null = null,
+) {
+  if (
+    rawOffset !== null &&
+    (!/^\d+$/.test(rawOffset) || Number(rawOffset) > 10000000)
+  )
+    throw new AccessError(400, "invalid_page", "Choose a valid quote page.");
+  const offset = Number(rawOffset ?? 0),
+    e = await enquiry(state, id);
+  const result = await state.client
+    .from("quotes")
+    .select("*", { count: "exact" })
+    .eq("enquiry_id", id)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(offset, offset + 23);
+  checked(result.error);
+  const quotes = result.data ?? [];
+  return {
+    enquiry: e,
+    quotes,
+    profiles: await quoteProfiles(state, quotes),
+    offset,
+    count: result.count ?? null,
+    nextOffset: offset + quotes.length,
+    hasMore:
+      typeof result.count === "number"
+        ? offset + quotes.length < result.count
+        : quotes.length === 24,
+  };
+}
+export async function quoteBundle(
+  state: Workspace,
+  id: number,
+  includeProfiles = true,
+) {
+  const e = await enquiry(state, id);
+  const quotes: Quote[] = [];
+  for (let offset = 0; ; offset = quotes.length) {
+    const result = await state.client
+      .from("quotes")
+      .select("*", { count: "exact" })
+      .eq("enquiry_id", id)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + 499);
+    checked(result.error);
+    quotes.push(...(result.data ?? []));
+    if (quotes.length > 500 || (result.count ?? 0) > 500)
+      return { enquiry: e, quotes: [], profiles: [], tooLarge: true };
+    if (typeof result.count === "number") {
+      if (quotes.length >= result.count) break;
+      if (!result.data?.length)
+        throw new AccessError(
+          503,
+          "history_incomplete",
+          "Quote history could not be loaded completely. Please retry.",
+        );
+    } else if ((result.data?.length ?? 0) < 500) break;
+  }
+  const profiles = includeProfiles ? await quoteProfiles(state, quotes) : [];
+  return { enquiry: e, quotes, profiles, tooLarge: false };
 }
 
 export async function conversationFeed(

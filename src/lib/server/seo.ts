@@ -2,6 +2,9 @@ import { serverConfig } from "./config";
 export const publicPages = [
   "/",
   "/platform",
+  "/buyers",
+  "/vendors",
+  "/get-the-app",
   "/about",
   "/plans",
   "/verification",

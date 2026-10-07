@@ -14,6 +14,11 @@ const specs =
   !Array.isArray(listing.specifications)
     ? Object.entries(listing.specifications)
     : [];
+const retiredCategory =
+  listing?.sub_category_id &&
+  !categories.some((c) =>
+    c.sub_categories.some((s) => s.id === listing.sub_category_id),
+  );
 const val = (key: keyof Listing) => String(listing?.[key] ?? "");
 ---
 
@@ -49,7 +54,15 @@ const val = (key: keyof Listing) => String(listing?.[key] ?? "");
     >
     <label class="field"
       >Category & subcategory<select name="sub_category_id" required
-        ><option value="">Choose a category</option>{
+        ><option value="">Choose a category</option>
+        {
+          retiredCategory && (
+            <option value={listing!.sub_category_id!} selected>
+              Current category (no longer available for new listings)
+            </option>
+          )
+        }
+        {
           categories.map((category) => (
             <optgroup label={category.name}>
               {category.sub_categories.map((child) => (
@@ -127,7 +140,7 @@ const val = (key: keyof Listing) => String(listing?.[key] ?? "");
           type="number"
           name="price_per_unit"
           min="0"
-          step="any"
+          step="0.01"
           value={val("price_per_unit")}
         /></label
       ><label class="field"
@@ -142,13 +155,14 @@ const val = (key: keyof Listing) => String(listing?.[key] ?? "");
           type="number"
           name="minimum_order_quantity"
           min="0"
-          step="any"
+          step="0.01"
           value={val("minimum_order_quantity")}
         /></label
       ><label class="field"
         >Lead time in days (optional)<input
           type="number"
           name="estimated_lead_time_days"
+          max={Math.max(36500, listing?.estimated_lead_time_days ?? 0)}
           min="0"
           step="1"
           value={val("estimated_lead_time_days")}

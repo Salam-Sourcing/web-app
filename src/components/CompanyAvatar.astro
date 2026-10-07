@@ -1,0 +1,30 @@
+---
+import MediaImage from "./MediaImage.astro";
+interface Props {
+  id: number;
+  name: string;
+  photo?: boolean;
+}
+const { id, name, photo = false } = Astro.props;
+const initials =
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => Array.from(p)[0] ?? "")
+    .join("")
+    .toUpperCase() || "C";
+---
+
+<span class="company-avatar company-profile-avatar" aria-hidden="true"
+  >{initials}{
+    photo && (
+      <MediaImage
+        data-private-media
+        src={"/api/media/company/" + id}
+        alt=""
+        loading="lazy"
+      />
+    )
+  }</span
+>
