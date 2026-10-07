@@ -15,12 +15,16 @@ test("public information and auth pages remain usable on narrow screens", async 
   ]) {
     await page.goto(path);
     await expect(page.locator("main h1")).toBeVisible();
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth + 1,
-      ),
-      path,
-    ).toBe(true);
+    await page.evaluate(() => document.fonts.ready);
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth + 1,
+          ),
+        { message: `${path} must fit after fonts and layout settle` },
+      )
+      .toBe(true);
     await expect(
       page
         .getByRole("link", { name: "Salam Sourcing Marketplace home" })
@@ -41,6 +45,27 @@ test("public information and auth pages remain usable on narrow screens", async 
       await page.keyboard.press("Enter");
       await expect(faq.locator("p")).not.toBeVisible();
     }
+  }
+});
+test("audience pages fit small phones when the brand font cannot load", async ({
+  page,
+}) => {
+  await page.route("**/fonts/Inter.ttf", (route) => route.abort());
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const path of ["/buyers", "/vendors"]) {
+    await page.goto(path);
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.locator("main h1")).toBeVisible();
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth + 1,
+          ),
+        { message: `${path} must fit with the system font` },
+      )
+      .toBe(true);
   }
 });
 for (const submission of ["Search", "Apply filters", "Enter"] as const) {

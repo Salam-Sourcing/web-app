@@ -4043,9 +4043,14 @@ input[type="file"]::file-selector-button:hover {
   gap: 56px;
   align-items: center;
 }
+.audience-hero-grid > *,
+.audience-shared > .card > div {
+  min-width: 0;
+}
 .audience-hero h1 {
   font-size: clamp(2rem, 4vw, 3rem);
   max-width: 740px;
+  overflow-wrap: anywhere;
 }
 .audience-hero .lead {
   font-size: 17px;
@@ -4207,7 +4212,7 @@ input[type="file"]::file-selector-button:hover {
 @media (max-width: 900px) {
   .audience-hero-grid,
   .app-download-hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 28px;
   }
   .audience-feature-grid {
@@ -4366,6 +4371,10 @@ input[type="file"]::file-selector-button:hover {
 .marketing-card p {
   font-size: 14px;
   line-height: 1.85;
+}
+.marketing-card > * {
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .marketing-card > a {
   display: inline-flex;
