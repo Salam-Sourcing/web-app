@@ -1201,3 +1201,20 @@ Web Account icon alignment correction (2026-10-06):
 - [x] Prevent description-span styles from overriding icon tiles; center each SVG in a fixed 44 px tile and inherit the intended tile colour, including white on red for Security & password.
 - [x] Use person, bell and lock icons for Profile information, Notifications and Privacy & safety. Give Help Center the same icon tile as other options.
 - [x] Check the shared account-link markup and production stylesheet in an isolated browser preview at desktop and 390/320 px phone widths. Web type checks and production build pass. Authenticated page/device acceptance remains in the existing release checklist.
+- [x] Fix web 2FA QR rendering: accept Supabase Auth's XML declaration plus SVGo generator comment before the SVG root, retaining image-only rendering and manual key fallback. Regression reproduced before the fix; all 216 web tests, type checks and production build pass. Four SVG response formats rendered successfully in the browser using public synthetic images; real account scan/verification remains part of signed-in acceptance.
+
+Flutter UX cleanup (2026-10-06):
+
+- [x] Reserve navigation dock space so the Sell post action and tab content stay clear of the dock.
+- [x] Modernize the inbox with Active/Archived tabs, complete conversation cards, search clearing, readable previews and loading/empty/retry states; remove verification badges from chat avatars. Keep headers and notices scrollable for short screens with a keyboard and larger text.
+- [x] Rework quote submission into request, pricing, delivery/validity and optional terms sections; keep Submit above the keyboard and validate required values even when fields are off-screen.
+- [x] Improve buyer dashboard totals, status cards, readable deadlines, loading feedback and empty states.
+- [x] Fix related comparison-table text clipping and make complete values readable in a detail sheet; make the three-plan picker scroll at larger text sizes.
+- [x] Protect unsaved enquiry/quote edits on Back; retain unchanged/reverted exits and successful submission results; explain unconfirmed requests before leaving.
+- [x] Redesign enquiry posting with full-width sections, wrapping supplier options and persistent keyboard-safe Save Draft/Submit actions; validate off-screen required values and preserve existing category IDs.
+- [x] Improve deal cards, local dates, action capitalization and visible saving/upload/opening activity; keep mutation progress visible while scrolling.
+- [x] Make company invitations scroll with larger text and show copy/email progress and recovery feedback.
+- [x] Verify haptics, normal/large-text layouts at 320/390/768 widths, existing quote workflows, all 231 Flutter tests, clean analysis and the iOS simulator build.
+- [ ] Install the rebuilt Flutter app and complete physical iOS/Android keyboard, safe-area, gesture and workflow acceptance.
+
+Details: [Flutter UX cleanup](../Salam-Sourcing-Marketplace-App/documentation/flutter_ux_cleanup_2026-10-06.md).

@@ -22,7 +22,13 @@ export function authenticatorQrUrl(value: string): string {
       throw new Error("QR code unavailable. Enter the setup key manually.");
     }
   }
-  if (!/^\s*(?:<\?xml[\s\S]*?\?>\s*)?<svg(?:\s|>)/i.test(svg))
+  // Supabase Auth's SVGo renderer adds a generator comment after its XML
+  // declaration. Validate past that prolog while retaining the complete image.
+  if (
+    !/^\s*(?:<\?xml[\s\S]*?\?>\s*)?(?:<!--[\s\S]*?-->\s*)*<svg(?:\s|>)/i.test(
+      svg,
+    )
+  )
     throw new Error("QR code unavailable. Enter the setup key manually.");
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
