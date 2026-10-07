@@ -1195,3 +1195,9 @@ Review status and public audience pages (2026-10-06):
 - [ ] Complete signed-in web moderation walkthrough and installed iOS/Android acceptance against the updated paired revision before launch.
 
 Details and source inventory: [review states and audience pages](documentation/review_status_and_audience_pages_2026-10-06.md).
+
+Web Account icon alignment correction (2026-10-06):
+
+- [x] Prevent description-span styles from overriding icon tiles; center each SVG in a fixed 44 px tile and inherit the intended tile colour, including white on red for Security & password.
+- [x] Use person, bell and lock icons for Profile information, Notifications and Privacy & safety. Give Help Center the same icon tile as other options.
+- [x] Check the shared account-link markup and production stylesheet in an isolated browser preview at desktop and 390/320 px phone widths. Web type checks and production build pass. Authenticated page/device acceptance remains in the existing release checklist.

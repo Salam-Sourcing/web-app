@@ -620,13 +620,13 @@ button:disabled {
   display: block;
   font-size: 14px;
 }
-.settings-link span {
+.settings-link span:not(.settings-icon) {
   display: block;
   font-size: 13px;
   color: var(--muted);
   margin-top: 3px;
 }
-.settings-link .icon {
+.settings-link > .icon {
   color: #37505c;
   flex-shrink: 0;
 }
@@ -3567,15 +3567,23 @@ img[hidden],
 [data-notification-refresh][aria-busy="true"] .icon {
   animation: ui-spin 1s linear infinite;
 }
-.settings-icon {
+.settings-link .settings-icon {
   display: grid;
   place-items: center;
   width: 44px;
   height: 44px;
   border-radius: 12px;
   background: var(--surface-soft, #f1f3f6);
-  color: var(--secondary);
+  color: var(--secondary, #37505c);
   flex: 0 0 44px;
+  margin: 0;
+}
+.settings-link .settings-icon > .icon {
+  color: inherit;
+}
+.settings-link > div {
+  flex: 1;
+  min-width: 0;
 }
 .settings-security .settings-icon,
 .security-emblem {
