@@ -1,4 +1,6 @@
 ---
+import AuthenticatorSetup from "./AuthenticatorSetup.astro";
+import Icon from "./Icon.astro";
 import type { Workspace } from "../lib/server/access";
 interface Props {
   state: Workspace;
@@ -7,10 +9,25 @@ const { state } = Astro.props;
 ---
 
 <section id="two-factor" class="card security-section">
-  <h2>Two-factor authentication</h2><p>
+  <div class="security-section-heading">
+    <span class="security-emblem"><Icon name="phone" size={25} /></span><div>
+      <p class="eyebrow">An extra step for your account</p><h2>
+        Two-factor authentication
+      </h2>
+    </div>
+  </div><p>
     Add another layer of protection with an authenticator app. A code will be
     required before you can access your private workspace.
   </p>
+  <div class="security-tip">
+    <Icon name="shield" size={18} /><p>
+      Keep access to your authenticator when changing phones. Confirm it works
+      on the new device before erasing the old one. If you lose access, <a
+        class="text-link"
+        href="/help">contact support</a
+      >.
+    </p>
+  </div>
   {
     state.factors.length > 0 ? (
       <>
@@ -51,95 +68,7 @@ const { state } = Astro.props;
           </button>
           <p class="form-message" id="enroll-message" role="status" hidden />
         </>
-        <section id="authenticator-setup" class="mt-6" hidden>
-          <>
-            <h3>Scan the QR code</h3>
-            <img
-              class="qr-image"
-              id="authenticator-qr"
-              alt="QR code for your authenticator app"
-            />
-            <p class="help-text">
-              Or enter this setup key manually. Keep it private.
-            </p>
-            <p id="qr-warning" class="help-text" role="status" hidden />
-            <label class="field mt-3">
-              Setup key
-              <input
-                id="authenticator-secret"
-                data-secret-control
-                type="password"
-                readonly
-                autocomplete="off"
-                spellcheck="false"
-              />
-            </label>
-            <div class="row-actions">
-              <button
-                class="button secondary"
-                type="button"
-                data-reveal-key
-                aria-pressed="false"
-                disabled
-              >
-                Show key
-              </button>
-              <button
-                class="button secondary"
-                type="button"
-                data-copy-key
-                disabled
-              >
-                Copy setup key
-              </button>
-            </div>
-            <p class="help-text" data-key-message role="status" />
-          </>
-          <form
-            class="form"
-            id="enrollment-verification"
-            data-api-form
-            method="post"
-            action="/api/auth/mfa-verify"
-          >
-            <>
-              <input type="hidden" name="factor_id" />
-              <input type="hidden" name="purpose" value="enrollment" />
-              <input type="hidden" name="next" value="/account/password" />
-              <label class="field">
-                Six-digit code
-                <input
-                  name="code"
-                  inputmode="numeric"
-                  autocomplete="one-time-code"
-                  pattern="[0-9]{6}"
-                  maxlength="6"
-                  minlength="6"
-                  required
-                />
-              </label>
-              <p class="form-message" data-form-message role="status" hidden />
-              <button class="button" type="submit">
-                Verify and enable
-              </button>
-            </>
-          </form>
-          <form
-            class="form"
-            id="enrollment-cancel"
-            data-api-form
-            method="post"
-            action="/api/auth/mfa-cancel"
-          >
-            <>
-              <input type="hidden" name="factor_id" />
-              <p class="form-message" data-form-message role="status" hidden />
-              <button class="button secondary" type="submit">
-                Cancel setup
-              </button>
-            </>
-          </form>
-        </section>
+        <AuthenticatorSetup />
       </>
     )
   }

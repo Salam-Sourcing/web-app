@@ -4,7 +4,7 @@ export const audienceContent = {
     eyebrow: "Source with a clearer picture",
     title: "Find the right supply. Keep the whole conversation together.",
     intro:
-      "Salam Sourcing connects businesses looking for products and services with the companies that supply them. Explore the marketplace, explain your requirements and work through the details in one shared workspace.",
+      "Salam Sourcing Marketplace connects businesses looking for products and services with the companies that supply them. Explore the marketplace, explain your requirements and work through the details in one shared workspace.",
     cta: "Start sourcing",
     other: "vendors",
     otherLabel: "See what vendors can do",
@@ -13,6 +13,30 @@ export const audienceContent = {
       "Send your requirements",
       "Compare quotes",
       "Track the agreement",
+    ],
+    mobileIntro:
+      "Take your sourcing work with you. Your shortlist, enquiries and supplier conversations use the same account on the website and in the mobile app.",
+    mobileFeatures: [
+      {
+        icon: "heart",
+        title: "Your shortlist, within reach",
+        body: "Browse on your phone, save a promising listing or supplier and return to the full details when you’re ready to follow up.",
+      },
+      {
+        icon: "image",
+        title: "Make requirements easier to explain",
+        body: "Share a captioned photo or PDF in the conversation. Open a supplier’s photos in the in-app viewer to inspect the details.",
+      },
+      {
+        icon: "layers",
+        title: "Follow supplier responses",
+        body: "Review quotes and their revisions, compare terms and check the active enquiries and deadlines in your buyer dashboard.",
+      },
+      {
+        icon: "truck",
+        title: "Stay connected to delivery",
+        body: "Check deal progress, expected delivery and tracking details. Keep deal documents nearby and confirm your company’s completion.",
+      },
     ],
     groups: [
       {
@@ -27,7 +51,7 @@ export const audienceContent = {
           {
             icon: "company",
             title: "Get to know the supplier",
-            body: "View company profiles, business information, supplier catalogues, company photos and ratings out of five. Verification marks explain what Salam Sourcing has reviewed.",
+            body: "View company profiles, business information, supplier catalogues, company photos and ratings out of five. Verification marks explain what Salam Sourcing Marketplace has reviewed.",
           },
           {
             icon: "heart",
@@ -86,7 +110,7 @@ export const audienceContent = {
     eyebrow: "Give buyers a better way to find you",
     title: "Show what you supply. Build the next business relationship.",
     intro:
-      "Create a clear catalogue, respond to business enquiries and keep your quotes, conversations and deal updates connected. Salam Sourcing gives your company a workspace for the work behind a sale.",
+      "Create a clear catalogue, respond to business enquiries and keep your quotes, conversations and deal updates connected. Salam Sourcing Marketplace gives your company a workspace for the work behind a sale.",
     cta: "Start supplying",
     other: "buyers",
     otherLabel: "See what buyers can do",
@@ -95,6 +119,30 @@ export const audienceContent = {
       "Publish your catalogue",
       "Respond with a quote",
       "Manage the relationship",
+    ],
+    mobileIntro:
+      "Keep your catalogue and buyer conversations close when you’re away from the office. Your company membership and permissions carry across to the app.",
+    mobileFeatures: [
+      {
+        icon: "image",
+        title: "Put your product photos to work",
+        body: "Add listing images from your phone, prepare a draft and submit it for review. Follow moderation status and feedback from your seller workspace.",
+      },
+      {
+        icon: "messages",
+        title: "Show buyers what you mean",
+        body: "Share a captioned photo or PDF in the enquiry’s conversation. Keep specifications, questions and previous messages together.",
+      },
+      {
+        icon: "enquiries",
+        title: "Respond while the details are fresh",
+        body: "Read buying requirements, prepare a quote with pricing and delivery terms and revisit its history when a revision is needed.",
+      },
+      {
+        icon: "insights",
+        title: "Keep the next step visible",
+        body: "Follow recorded supplier activity, update deal progress and review notifications with sender information and activity previews.",
+      },
     ],
     groups: [
       {

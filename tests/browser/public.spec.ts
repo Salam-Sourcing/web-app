@@ -1,4 +1,48 @@
 import { test, expect } from "@playwright/test";
+test("public information and auth pages remain usable on narrow screens", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const path of [
+    "/platform",
+    "/get-the-app",
+    "/buyers",
+    "/vendors",
+    "/login",
+    "/signup",
+    "/forgot-password",
+  ]) {
+    await page.goto(path);
+    await expect(page.locator("main h1")).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1,
+      ),
+      path,
+    ).toBe(true);
+    await expect(
+      page
+        .getByRole("link", { name: "Salam Sourcing Marketplace home" })
+        .first(),
+    ).toBeVisible();
+    const header = page.locator(".site-header");
+    await expect(
+      header.getByRole("link", { name: "Log in", exact: true }),
+    ).toBeVisible();
+    await expect(
+      header.getByRole("link", { name: "Join free", exact: true }),
+    ).toBeVisible();
+    if (path === "/platform" || path === "/get-the-app") {
+      const faq = page.locator(".marketing-faq details").first();
+      await faq.locator("summary").focus();
+      await page.keyboard.press("Enter");
+      await expect(faq.locator("p")).toBeVisible();
+      await page.keyboard.press("Enter");
+      await expect(faq.locator("p")).not.toBeVisible();
+    }
+  }
+});
 for (const submission of ["Search", "Apply filters", "Enter"] as const) {
   test(`public browse preserves choices and requires sign-in via ${submission}`, async ({
     page,

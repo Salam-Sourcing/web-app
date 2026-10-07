@@ -36,7 +36,7 @@ export async function pdfWriter(
     pageNo = 0;
   const header = () => {
     pageNo++;
-    page.drawText("Salam Sourcing", {
+    page.drawText("Salam Sourcing Marketplace", {
       x: left,
       y: height - 45,
       size: 17,
@@ -130,7 +130,7 @@ export async function pdfWriter(
     low: () => y < height / 2,
     save: async () => {
       pdf.setTitle(title);
-      pdf.setAuthor("Salam Sourcing");
+      pdf.setAuthor("Salam Sourcing Marketplace");
       pdf.setCreationDate(now);
       return pdf.save();
     },

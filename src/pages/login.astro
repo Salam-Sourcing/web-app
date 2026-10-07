@@ -1,14 +1,16 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
 import AuthForm from "../components/AuthForm.astro";
+import Icon from "../components/Icon.astro";
 ---
 
 <MainLayout title="Log in" privatePage={true}
   ><section class="auth-section container narrow">
     <div class="card auth-card">
-      <p class="eyebrow">Welcome back</p><h1>
-        Your next opportunity starts here.
-      </h1><p>Log in to your Salam Sourcing account.</p>
+      <span class="auth-emblem"><Icon name="lock" size={26} /></span>
+      <p class="eyebrow">Welcome back</p><h1>Good to see you again.</h1><p>
+        Log in to your Salam Sourcing Marketplace account.
+      </p>
       {
         Astro.url.searchParams.get("notice") === "logout-pending" && (
           <p class="form-message">
@@ -18,7 +20,7 @@ import AuthForm from "../components/AuthForm.astro";
         )
       }
       <AuthForm mode="login" /><p class="auth-foot">
-        New to Salam Sourcing? <a
+        New to Salam Sourcing Marketplace? <a
           class="text-link"
           href={"/signup?next=" +
             encodeURIComponent(

@@ -87,7 +87,7 @@ test("review and generic reports have the complete reason set and matching expla
 test("listing and message uploads accept the exact bucket limit and reject one byte over", () => {
   for (const [kind, max] of [
     ["listing", 5 * 1024 * 1024],
-    ["message", 10 * 1024 * 1024],
+    ["message", 5 * 1024 * 1024],
   ] as const) {
     const bytes = new Uint8Array(max);
     bytes.set([255, 216, 255]);

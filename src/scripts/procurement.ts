@@ -1,3 +1,4 @@
+import { uploadSizeLimit, attachmentLimitHint } from "../lib/upload-limits";
 import { post, ApiError } from "./forms";
 const say = (form: HTMLFormElement, text: string, error = false) => {
   const node = form.querySelector<HTMLElement>("[data-form-message]");
@@ -64,15 +65,14 @@ export function validatePicked(file: File, kind?: string) {
     (kind === "deal" && file.type === "image/webp") ||
     (["company", "profile"].includes(kind ?? "") &&
       file.type === "application/pdf") ||
-    file.size >
-      (["company", "profile"].includes(kind ?? "") ? 5 : 10) * 1024 * 1024
+    file.size > uploadSizeLimit(file.type)
   )
     throw new Error(
       ["company", "profile"].includes(kind ?? "")
         ? "Choose JPEG, PNG or WebP photos up to 5 MB."
         : kind === "deal"
-          ? "Choose PDF, JPEG or PNG files up to 10 MB."
-          : "Choose JPEG, PNG, WebP or PDF files up to 10 MB.",
+          ? "Choose PDF, JPEG or PNG. " + attachmentLimitHint
+          : "Choose JPEG, PNG, WebP or PDF. " + attachmentLimitHint,
     );
 }
 export function bindProcurementForms() {

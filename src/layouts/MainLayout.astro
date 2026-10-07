@@ -11,11 +11,14 @@ interface Props {
 }
 const {
   title,
-  description = "Discover suppliers, request quotes and manage your business sourcing with Salam Sourcing.",
+  description = "Discover suppliers, request quotes and manage your business sourcing with Salam Sourcing Marketplace.",
   privatePage = false,
 } = Astro.props;
 const site = publicSite();
 const canonical = new URL(Astro.url.pathname, site.origin);
+const pageTitle = title.includes("Salam Sourcing Marketplace")
+  ? title
+  : `${title} | Salam Sourcing Marketplace`;
 ---
 
 <!doctype html>
@@ -48,7 +51,7 @@ const canonical = new URL(Astro.url.pathname, site.origin);
     />
     <meta property="og:type" content="website" /><meta
       property="og:title"
-      content={title + " | Salam Sourcing"}
+      content={pageTitle}
     /><meta property="og:description" content={description} /><meta
       property="og:url"
       content={canonical}
@@ -57,7 +60,7 @@ const canonical = new URL(Astro.url.pathname, site.origin);
       content={new URL("/images/salam-sourcing.png", canonical)}
     />
     <meta name="twitter:card" content="summary" /><title>
-      {title} | Salam Sourcing
+      {pageTitle}
     </title>
   </head><body class="flex min-h-screen flex-col"
     ><a href="#main" class="skip-link">Skip to content</a><AppDownloadBanner

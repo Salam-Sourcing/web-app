@@ -33,7 +33,7 @@ export function bindPdfShare() {
       });
       await navigator.share({
         files: [file],
-        title: "Salam Sourcing deal summary",
+        title: "Salam Sourcing Marketplace deal summary",
       });
       note.textContent = "PDF shared.";
     } catch (e) {

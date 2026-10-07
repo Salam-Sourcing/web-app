@@ -9,13 +9,15 @@ const content = audienceContent[Astro.props.audience];
 ---
 
 <MainLayout
-  title={content.name + " | About Salam Sourcing"}
+  title={content.name + " | About Salam Sourcing Marketplace"}
   description={content.intro}
 >
   <section class="audience-hero">
     <div class="container audience-hero-grid">
       <div>
-        <a class="text-link" href="/platform">About Salam Sourcing</a>
+        <a class="text-link" href="/platform"
+          >About Salam Sourcing Marketplace</a
+        >
         <p class="eyebrow mt-6">{content.eyebrow}</p><h1>{content.title}</h1>
         <p class="lead">{content.intro}</p>
         <div class="actions">
@@ -37,7 +39,7 @@ const content = audienceContent[Astro.props.audience];
             ))
           }
         </ol>
-        <p>One account for web and the Salam Sourcing app.</p><a
+        <p>One account for web and the Salam Sourcing Marketplace app.</p><a
           class="text-link"
           href="/get-the-app">Meet the app<Icon name="phone" size={16} /></a
         >
@@ -55,7 +57,7 @@ const content = audienceContent[Astro.props.audience];
         </div>
         <div class="audience-feature-grid">
           {group.features.map((feature) => (
-            <article class="card audience-feature">
+            <article class="card audience-feature marketing-card">
               <span class="audience-feature-icon">
                 <Icon name={feature.icon} size={24} />
               </span>
@@ -67,6 +69,44 @@ const content = audienceContent[Astro.props.audience];
       </section>
     ))
   }
+  <section
+    class="container marketing-section audience-mobile-features"
+    aria-labelledby="audience-mobile-heading"
+  >
+    <div class="marketing-heading">
+      <p class="marketing-kicker">
+        <Icon name="phone" size={17} />On your phone · Coming Soon
+      </p><h2 id="audience-mobile-heading">
+        Your {content.name.toLowerCase() === "buyers" ? "sourcing" : "supplier"} workspace
+        goes with you.
+      </h2><p>{content.mobileIntro}</p>
+    </div>
+    <div class="marketing-mobile-grid">
+      {
+        content.mobileFeatures.map((feature) => (
+          <article class="card marketing-card">
+            <>
+              <span class="audience-feature-icon">
+                <Icon name={feature.icon} size={24} />
+              </span>
+              <h3>{feature.title}</h3>
+              <p>{feature.body}</p>
+            </>
+          </article>
+        ))
+      }
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="/get-the-app"
+        ><Icon name="phone" size={18} />Explore the mobile app<Icon
+          name="arrow"
+          size={16}
+        /></a
+      ><span class="help-text"
+        >Public iOS and Android downloads are coming soon.</span
+      >
+    </div>
+  </section>
   <section class="container audience-shared">
     <div class="card">
       <span class="audience-feature-icon"><Icon name="shield" size={24} /></span

@@ -1,3 +1,4 @@
+import { uploadSizeLimit } from "./upload-limits";
 import { AccessError, positiveId, textField } from "./security";
 import { businessNumber } from "./business-numbers";
 import type { Database, Json } from "./database.types";
@@ -312,14 +313,14 @@ export function validateFile(
 ) {
   const max = ["listing", "company", "profile"].includes(kind)
     ? 5 * 1024 * 1024
-    : 10 * 1024 * 1024;
+    : uploadSizeLimit(mime);
   if (bytes.length === 0 || bytes.length > max)
     throw new AccessError(
       400,
       "file_size",
-      "Choose a file up to " +
-        (["listing", "company", "profile"].includes(kind) ? "5" : "10") +
-        " MB.",
+      mime === "application/pdf" && max > 5 * 1024 * 1024
+        ? "Choose a PDF up to 10 MB."
+        : "Choose a photo up to 5 MB.",
     );
   const prefix = Array.from(bytes.subarray(0, 12));
   const matches =

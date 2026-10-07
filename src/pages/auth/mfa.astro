@@ -1,5 +1,6 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
+import Icon from "../../components/Icon.astro";
 import { identity, requireClient } from "../../lib/server/access";
 import { safeNext } from "../../lib/security";
 const signedIn = await identity(requireClient(Astro));
@@ -9,7 +10,8 @@ if (!signedIn.needsMfa) return Astro.redirect(next, 303);
 
 <MainLayout title="Verify your authenticator" privatePage={true}
   ><section class="container narrow auth-section">
-    <div class="card">
+    <div class="card auth-card auth-mfa-card">
+      <span class="auth-emblem"><Icon name="shield" size={26} /></span>
       <p class="eyebrow">Account security</p><h1>Verify it's you.</h1><p>
         Enter the six-digit code from your authenticator app.
       </p>
@@ -48,6 +50,10 @@ if (!signedIn.needsMfa) return Astro.redirect(next, 303);
         ><p class="form-message" data-form-message role="status" hidden>
         </p><button class="button" type="submit">Verify and continue</button>
       </form>
+      <p class="security-tip">
+        Use the current code from your authenticator app. If it has just
+        changed, try the new one. Don’t share your verification codes.
+      </p>
       <form class="form" data-api-form method="post" action="/api/auth/logout">
         <p class="form-message" data-form-message role="status" hidden>
         </p><button class="button secondary" type="submit">Sign out</button>

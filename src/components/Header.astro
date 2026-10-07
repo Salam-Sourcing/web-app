@@ -3,20 +3,24 @@ const links = [
   { href: "/", label: "Browse" },
   { href: "/buyers", label: "Buyers" },
   { href: "/vendors", label: "Vendors" },
-  { href: "/platform", label: "About Salam Sourcing" },
+  { href: "/platform", label: "About" },
   { href: "/plans", label: "Plans" },
 ];
 ---
 
 <header class="site-header">
   <div class="container header-row">
-    <a class="brand" href="/" aria-label="Salam Sourcing home"
+    <a class="brand" href="/" aria-label="Salam Sourcing Marketplace home"
       ><img
         src="/images/salam-sourcing.png"
         alt=""
         width="52"
         height="52"
-      /><span class="brand-wordmark">Salam<small>Sourcing</small></span></a
+      /><span class="brand-wordmark"
+        >Salam<small>Sourcing</small><span class="brand-marketplace"
+          >Marketplace</span
+        ></span
+      ></a
     >
     <nav class="site-nav" aria-label="Main navigation">
       {
@@ -32,11 +36,13 @@ const links = [
     </nav>
     <div class="header-actions">
       <a class="button secondary" href="/login">Log in</a>
-      <a class="button" href="/signup">Join free</a>
+      <a class="button" href="/signup" aria-label="Join free"
+        >Join<span class="join-extra"> free</span></a
+      >
     </div>
   </div>
   <details class="container mobile-menu">
-    <summary>Explore Salam Sourcing</summary><nav
+    <summary>Explore Salam Sourcing Marketplace</summary><nav
       aria-label="Mobile navigation"
     >
       {links.map((link) => <a href={link.href}>{link.label}</a>)}

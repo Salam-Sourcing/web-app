@@ -17,7 +17,7 @@ const emblem = (
 const font = fontkit.create(
   await readFile(path.join(web, "public/fonts/Inter.ttf")),
 );
-function word(text, x, baseline, size, weight, color) {
+function word(text, x, baseline, size, weight, color, letterSpacing = 0) {
   const face = font.getVariation({ wght: weight }),
     run = face.layout(text),
     scale = size / face.unitsPerEm;
@@ -25,7 +25,7 @@ function word(text, x, baseline, size, weight, color) {
   return run.glyphs
     .map((glyph, i) => {
       const position = run.positions[i],
-        output = `<path fill="${color}" transform="translate(${x + (advance + position.xOffset) * scale} ${baseline - position.yOffset * scale}) scale(${scale} ${-scale})" d="${glyph.path.toSVG()}"/>`;
+        output = `<path fill="${color}" transform="translate(${x + (advance + position.xOffset) * scale + i * letterSpacing} ${baseline - position.yOffset * scale}) scale(${scale} ${-scale})" d="${glyph.path.toSVG()}"/>`;
       advance += position.xAdvance;
       return output;
     })
@@ -34,7 +34,8 @@ function word(text, x, baseline, size, weight, color) {
 const brand =
   `<image x="0" y="0" width="100" height="100" href="data:image/png;base64,${emblem}"/>` +
   word("Salam", 108, 48, 40, 750, "#37505c") +
-  word("Sourcing", 108, 78, 28, 600, "#9c272e");
+  word("Sourcing", 108, 78, 28, 600, "#9c272e") +
+  word("MARKETPLACE", 108, 97, 13, 650, "#37505c", 0.8);
 function artwork(size, width, opaque) {
   const scale = width / 240,
     height = 100 * scale;

@@ -30,8 +30,8 @@ self.addEventListener("push", (event) => {
           current.is_test ? "Push notification test" : "New message",
           {
             body: current.is_test
-              ? "Your Salam message notifications are working."
-              : "Open Salam to view your messages.",
+              ? "Your Salam Sourcing Marketplace message notifications are working."
+              : "Open Salam Sourcing Marketplace to view your messages.",
             icon: "/images/salam-sourcing.png",
             tag: "salam-" + data.notification_id,
             data: {

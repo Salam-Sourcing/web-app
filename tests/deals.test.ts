@@ -320,13 +320,17 @@ test("documents remain immutable and uploads close when the deal completes", asy
     AccessError,
   );
 });
-test("deal documents allow exactly 10 MB but reject oversized files", () => {
+test("deal PDFs allow exactly 10 MB but reject oversized files", () => {
   const bytes = new Uint8Array(10 * 1024 * 1024);
-  bytes.set([137, 80, 78, 71, 13, 10, 26, 10]);
-  validateFile(bytes, "image/png", "deal");
+  bytes.set(new TextEncoder().encode("%PDF-1.7"));
+  validateFile(bytes, "application/pdf", "deal");
   assert.throws(
     () =>
-      validateFile(new Uint8Array(10 * 1024 * 1024 + 1), "image/png", "deal"),
+      validateFile(
+        new Uint8Array(10 * 1024 * 1024 + 1),
+        "application/pdf",
+        "deal",
+      ),
     AccessError,
   );
 });

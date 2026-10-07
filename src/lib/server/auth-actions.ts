@@ -133,7 +133,7 @@ export async function handleAuthAction(
       throw new AccessError(
         400,
         "invalid_intent",
-        "Choose how you plan to use Salam Sourcing.",
+        "Choose how you plan to use Salam Sourcing Marketplace.",
       );
     const result = await client.auth.signUp({
       email: email(),
@@ -249,7 +249,7 @@ export async function handleAuthAction(
     }
     const result = await client.auth.mfa.enroll({
       factorType: "totp",
-      issuer: "Salam Sourcing",
+      issuer: "Salam Sourcing Marketplace",
       friendlyName: "Authenticator app",
     });
     checked(result.error);

@@ -1,6 +1,7 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
 import AuthForm from "../components/AuthForm.astro";
+import Icon from "../components/Icon.astro";
 ---
 
 <MainLayout title="Create an account" privatePage={true}
@@ -15,9 +16,10 @@ import AuthForm from "../components/AuthForm.astro";
         </p>
       </div>
       <div class="card auth-card">
-        <p class="eyebrow">Join Salam Sourcing</p><h2>Create your account</h2><p
-          class="help-text"
-        >
+        <span class="auth-emblem"><Icon name="account" size={26} /></span>
+        <p class="eyebrow">Join Salam Sourcing Marketplace</p><h2>
+          Create your account
+        </h2><p class="help-text">
           Use the same account on the website and app.
         </p><AuthForm mode="signup" /><p class="auth-foot">
           Already have an account? <a

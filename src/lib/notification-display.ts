@@ -60,7 +60,9 @@ export function notificationPresentation(notice: {
     icon,
     source:
       notice.source_name ||
-      (type === "new_message" ? "Conversation update" : "Salam Sourcing"),
+      (type === "new_message"
+        ? "Conversation update"
+        : "Salam Sourcing Marketplace"),
     preview:
       notice.preview ||
       (notice.body === "Open Salam to view the details."

@@ -16,7 +16,7 @@ const label =
 ---
 
 <form
-  class="form"
+  class="form auth-form"
   data-api-form
   data-captcha={mode === "reset" ? "password_reset" : mode}
   data-site-key={config.siteKey}
@@ -98,7 +98,7 @@ const label =
   }
   {
     mode === "login" && (
-      <a class="text-link" href="/forgot-password">
+      <a class="text-link auth-recovery-link" href="/forgot-password">
         Forgot password?
       </a>
     )

@@ -47,3 +47,39 @@ The user confirmed the app is not public yet. Both store cards therefore say Com
 - Local browser inspection checked the Buyers/Vendors pages and narrow navigation at 320/390/800/1024 px, with no horizontal overflow in the measured views, plus the desktop app availability page. Temporary viewport override was reset.
 - Full paired validation is recorded in `.parity-artifacts/automated.json` and its seven check logs after this update. These automated checks do not replace the open browser/device acceptance scenarios or prove final release readiness.
 - A signed-in web review-page walkthrough and installed iOS/Android acceptance remain part of the release checklist. No live product or moderation state was changed during this update.
+
+## Marketplace content, branding and security layout refresh
+
+- `/platform` now explains discovery, RFQs, quote comparison, captioned messages, deal progress and company teamwork. It includes a four-step journey, separate buyer/vendor entries, company identity guidance, FAQs and an app callout.
+- `/get-the-app` explains nine implemented mobile capabilities and how the phone and web share an account and company records. Both audience pages include four role-specific mobile feature cards. The app remains clearly marked Coming Soon, with no fabricated store links, release date, customer data or metrics. Workflow visuals are labeled as illustrations.
+- The pages use existing icons, responsive feature cards, hover effects and finite entrance animations. Reduced-motion users receive no entrance animation or hover movement.
+- Login, signup, password recovery and authenticator verification layouts have clearer hierarchy and spacing. Authenticator enrollment keeps the existing IDs, form actions, QR normalization, masked-secret handling, reveal/copy actions and cancellation cleanup. Scanning and manual entry use separate panels that stack based on available space; the QR retains its square proportions.
+- Visible web and Flutter branding and the three-line wordmarks now say Salam Sourcing Marketplace. New authenticator enrollments use that issuer; existing factors are untouched. Legacy generic push-body comparisons remain compatible with stored notices. No new tappable Flutter control was introduced.
+- Security tips cover unique passphrases, password managers, authenticator transfer when changing phones, private setup keys and automatic phone time. Reference: [Supabase password security](https://supabase.com/docs/guides/auth/password-security) and [Supabase MFA](https://supabase.com/docs/guides/auth/auth-mfa).
+- Existing photo limits were inspected and left unchanged: listing/profile/company photos allow 5 MB; chat, enquiry and document attachments allow 10 MB, including images in those attachment flows. Recommended future policy is 5 MB for photos and 10 MB for PDFs, coordinated across client validation, repositories and storage enforcement.
+
+Validation for this refresh:
+
+- Web check: 0 errors, 0 warnings, 6 existing Firebase deprecation hints; production build passed.
+- 216 web unit tests passed and 421 production HTTP smoke assertions passed.
+- 18 public browser tests passed on Chromium, WebKit and the iPhone profile. The added regression navigates all four information pages and three auth pages at 320 px with reduced motion and checks FAQ keyboard opening/closing. Firefox was not rerun locally because its installed browser fails to launch with a profile-folder error; its CI run is still required for this patch.
+- Manual web review found no horizontal overflow at the inspected 320/390/800/1024/1280 px views. An isolated, disabled authenticator design preview was used without enrolling or changing a real factor; the temporary route and server were removed. Browser viewport override was reset.
+- Flutter analysis found no issues and all 231 Flutter tests passed, including the narrow header with enlarged text. These code checks do not replace an installed iOS/Android review of the updated wordmark.
+- Formatting checks passed for changed files. The repository-wide formatter reports eight pre-existing differences in unchanged files.
+- Changes are local; this refresh has not been committed or pushed.
+
+## Photo upload limit change — 2026-10-07
+
+The user approved a universal 5 MB photo cap. Web browser validation and server validation, plus Flutter picker and repository checks, now enforce 5 MB photos while keeping PDF attachments at 10 MB. Upload instructions reflect the split. Listing/profile/company photos already had 5 MB caps. No new tappable Flutter elements were introduced.
+
+The applied backend migration `20261007062933_photo_upload_limits.sql` enforces this rule when new chat, enquiry, verification and deal attachments are attached. It checks both declared file metadata and the actual uploaded object's recorded size/MIME. Mixed Storage buckets retain their 10 MB overall limit for PDF uploads; the new attachment checks enforce the smaller photo limit. Existing files remain readable, and updates that only change moderation/status do not reject existing larger photos. A rollback removes the added guards without deleting files or records.
+
+Validation: 240 web tests, 236 Flutter tests, clean Flutter analysis, clean web check (six existing hints), successful web production build and 421 HTTP assertions. Database checks include exact boundaries, one byte over, actual photo size despite fake PDF metadata, authenticated execution, old evidence updates and rollback. All 448 existing database security regressions passed, and the generated real schema test passed with the new migration. A temporary-table probe on the hosted backend confirmed the photo/PDF boundary and legacy update behavior without modifying business records. Hosted catalog inspection confirms all four invoker triggers are installed; the advisor findings are unchanged from the pre-migration baseline. The clients are local and not yet pushed.
+
+## Mobile Join entry and Flutter security styling — 2026-10-07
+
+The public web header keeps the red Join button beside Log in on small phones. The mobile label shortens to Join; desktop retains Join free, and both point to signup.
+
+Flutter's Security & password screen now uses separate outlined password and authenticator cards, matching the web's icon accents, security tips and clear action spacing. Password fields have persistent external labels and screen-reader labels. Users can reveal passwords or open the email-verification controls; loading actions disable repeated submissions. Password reauthentication and the existing authenticator flows remain intact. Newly added native tap controls include haptic feedback.
+
+Validation: all 244 Flutter tests passed and analysis found no issues. Eight targeted tests cover 320/390/768 px widths at normal and enlarged text, password mismatch, reauthentication, verification-code loading and haptics; they passed again after the final accessibility label change. Eighteen public browser tests passed on Chromium, WebKit and the phone profile, including visible Log in and Join controls at 320 px. Manual browser review at 320/390 px showed both buttons fitting without horizontal overflow. Flutter test fixtures rendered both cards using the app fonts for visual review. Web check and the production build passed, with the same six existing hints. The changes remain local and have not been pushed.

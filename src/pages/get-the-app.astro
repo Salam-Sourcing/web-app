@@ -1,54 +1,209 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
 import Icon from "../components/Icon.astro";
+import MarketplacePreview from "../components/MarketplacePreview.astro";
+const features = [
+  {
+    icon: "discover",
+    title: "Find supply while you’re out",
+    body: "Browse products and services without signing in. Use your account to search, filter and shortlist suppliers when you find something worth following up.",
+  },
+  {
+    icon: "heart",
+    title: "Pick up your shortlist",
+    body: "Your saved listings, suppliers and searches stay with your account. Move between your phone and the website without building the same shortlist twice.",
+  },
+  {
+    icon: "image",
+    title: "Show the details in a photo",
+    body: "Attach a photo with a caption in a conversation. Open shared images in the in-app viewer when a closer look helps clarify specifications or an order.",
+  },
+  {
+    icon: "layers",
+    title: "Keep quotes close",
+    body: "Create and review quotes, compare supplier terms, follow revisions and open PDF summaries. The enquiry stays connected to its quotes and conversation.",
+  },
+  {
+    icon: "truck",
+    title: "Stay with the deal",
+    body: "Follow preparation, shipping and receipt. Review expected delivery, tracking details and deal documents, and confirm completion for your company.",
+  },
+  {
+    icon: "bell",
+    title: "See what needs your attention",
+    body: "Read the in-app notification feed with sender information and activity previews. Choose notification preferences and matching alerts for your saved searches.",
+  },
+  {
+    icon: "sell",
+    title: "Manage your catalogue on mobile",
+    body: "Add listing photos from your device, save a draft and submit for review. See moderation feedback and manage your company’s product and service listings.",
+  },
+  {
+    icon: "team",
+    title: "Bring your company workspace",
+    body: "Switch companies, manage your profile and work with your team’s assigned permissions. Buying and selling tools share the same company records.",
+  },
+  {
+    icon: "shield",
+    title: "Keep account controls within reach",
+    body: "Update your profile photo and contact details, manage authenticator security, report concerns and find support from your account.",
+  },
+];
+const questions = [
+  [
+    "Can I download the app now?",
+    "The app is not publicly available yet. This page will link to the official App Store and Google Play listings when it is released. You can use the website now.",
+  ],
+  [
+    "Will I need a second account?",
+    "No. Use your existing Salam Sourcing Marketplace account. Company membership, saved items, enquiries, quotes and conversations use the same workspace.",
+  ],
+  [
+    "Can I use the website from my phone?",
+    "Yes. The website adapts to mobile screens, so you can browse and use your account while the public app release is being prepared.",
+  ],
+];
 ---
 
 <MainLayout
-  title="The Salam Sourcing app"
-  description="Meet the Salam Sourcing app for iOS and Android. One account for your suppliers, enquiries, conversations and company workspace."
+  title="The Salam Sourcing Marketplace app"
+  description="Explore the Salam Sourcing Marketplace app for iOS and Android: mobile discovery, captioned photo messages, quotes, deal tracking and company tools. Public release coming soon."
 >
-  <section class="container section app-download-hero">
-    <div>
-      <p class="eyebrow">Your business, within reach</p><h1>
-        Take Salam Sourcing with you.
-      </h1><p class="lead">
-        Browse opportunities, follow your enquiries and keep business
-        conversations close. Use the same account and company workspace on the
-        website and in our mobile app.
-      </p><div class="app-store-grid">
-        <div class="card">
-          <Icon name="phone" size={26} /><h2>For iPhone</h2><span class="badge"
-            >Coming Soon</span
-          ><p>
-            App Store downloads will be linked here when the public release is
-            available.
-          </p>
-        </div><div class="card">
-          <Icon name="phone" size={26} /><h2>For Android</h2><span class="badge"
-            >Coming Soon</span
-          ><p>
-            Google Play downloads will be linked here when the public release is
-            available.
-          </p>
+  <section class="marketing-hero app-marketing-hero">
+    <div class="container marketing-hero-grid">
+      <div class="marketing-enter">
+        <p class="marketing-kicker">
+          <Icon name="phone" size={17} />iOS &amp; Android · Coming Soon
+        </p><h1>
+          Your next connection.<br /><span>Right where you are.</span>
+        </h1><p class="lead">
+          Take Salam Sourcing Marketplace beyond your desk. Browse
+          opportunities, share the details in a photo and stay connected to your
+          enquiries and deals—all with your existing account.
+        </p><div class="actions">
+          <a class="button" href="/"
+            >Continue on the web<Icon name="arrow" size={18} /></a
+          ><a class="button secondary" href="#app-features"
+            >Explore app features<Icon name="phone" size={18} /></a
+          >
+        </div><p class="marketing-release-note">
+          Public downloads are coming soon. Your web workspace is ready now.
+        </p><div class="app-store-grid">
+          <div class="card app-store-card">
+            <Icon name="phone" size={24} /><div>
+              <h2>For iPhone</h2><p>App Store release</p>
+            </div><span class="badge">Coming Soon</span>
+          </div><div class="card app-store-card">
+            <Icon name="phone" size={24} /><div>
+              <h2>For Android</h2><p>Google Play release</p>
+            </div><span class="badge">Coming Soon</span>
+          </div>
         </div>
-      </div><div class="actions">
-        <a class="button" href="/">Continue on the web<Icon name="arrow" /></a
-        ><a class="text-link" href="/signup">Create an account</a>
+      </div><MarketplacePreview mobile />
+    </div>
+  </section>
+  <section id="app-features" class="container marketing-section">
+    <div class="marketing-heading">
+      <p class="eyebrow">Built for the moments between meetings</p><h2>
+        More of your workspace, in your pocket.
+      </h2><p>
+        Use the screen that suits the moment. Your phone and the website connect
+        to the same business records.
+      </p>
+    </div><div class="audience-feature-grid">
+      {
+        features.map((feature) => (
+          <article class="card marketing-card">
+            <>
+              <span class="audience-feature-icon">
+                <Icon name={feature.icon} size={24} />
+              </span>
+              <h3>{feature.title}</h3>
+              <p>{feature.body}</p>
+            </>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+  <section class="marketing-band">
+    <div class="container marketing-section marketing-split">
+      <div>
+        <p class="eyebrow">One account. A shared next step.</p><h2>
+          Start here. Continue there.
+        </h2><p class="lead">
+          Prepare an enquiry on your laptop. Read the response on your phone.
+          Share a photo from the site and return to the quote details on the
+          web.
+        </p><p>
+          You don’t have to send yourself the context. Your conversations, saved
+          items and company records are there when you sign in.
+        </p>
+      </div><div class="card marketing-handoff">
+        <div>
+          <Icon name="company" size={26} /><strong>At your desk</strong><span
+            >Compare, prepare and organize.</span
+          >
+        </div><Icon name="refresh" size={24} /><div>
+          <Icon name="phone" size={26} /><strong>On your phone</strong><span
+            >Follow up, share and keep moving.</span
+          >
+        </div><p>Same account · Same company workspace</p>
       </div>
     </div>
-    <aside class="card app-features-preview">
-      <span class="audience-feature-icon"><Icon name="phone" size={30} /></span
-      ><h2>Your workspace travels with you.</h2><ul>
-        <li><Icon name="discover" />Find products and suppliers</li><li>
-          <Icon name="enquiries" />Follow enquiries and quotes
-        </li><li>
-          <Icon name="messages" />Message, share photos and open files
-        </li><li><Icon name="box" />Manage your company catalogue</li><li>
-          <Icon name="truck" />Keep up with deal progress
-        </li><li><Icon name="bell" />Choose your notification preferences</li>
-      </ul><p class="help-text">
-        Already have an account? Your existing account works in the app.
-      </p>
-    </aside>
+  </section>
+  <section class="container marketing-section">
+    <div class="marketing-heading">
+      <p class="eyebrow">Your role, on the go</p><h2>
+        Built for buyers and vendors.
+      </h2>
+    </div><div class="marketing-role-grid">
+      <a class="card marketing-role" href="/buyers"
+        ><Icon name="discover" size={30} /><h3>For Buyers</h3><p>
+          Keep your shortlist, supplier messages, quote comparisons and active
+          deals within reach.
+        </p><span class="text-link"
+          >See all buyer features<Icon name="arrow" size={16} /></span
+        ></a
+      ><a class="card marketing-role" href="/vendors"
+        ><Icon name="sell" size={30} /><h3>For Vendors</h3><p>
+          Manage your catalogue, respond to enquiries and keep buyers informed
+          as the work progresses.
+        </p><span class="text-link"
+          >See all vendor features<Icon name="arrow" size={16} /></span
+        ></a
+      >
+    </div>
+  </section>
+  <section class="container marketing-section">
+    <div class="marketing-heading">
+      <p class="eyebrow">Before the public release</p><h2>
+        Here’s what to expect.
+      </h2>
+    </div><div class="marketing-faq">
+      {
+        questions.map(([question, answer]) => (
+          <details>
+            <>
+              <summary>
+                {question}
+                <Icon name="plus" size={19} />
+              </summary>
+              <p>{answer}</p>
+            </>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+  <section class="container marketing-bottom">
+    <h2>You can get started today.</h2><p>
+      Create your account on the web. It will be the same account you use in the
+      app.
+    </p><div class="actions">
+      <a class="button" href="/signup"
+        >Create an account<Icon name="arrow" size={18} /></a
+      ><a class="button secondary" href="/login">Already a member? Log in</a>
+    </div>
   </section>
 </MainLayout>

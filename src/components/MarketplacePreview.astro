@@ -1,0 +1,96 @@
+---
+import Icon from "./Icon.astro";
+interface Props {
+  mobile?: boolean;
+}
+const { mobile = false } = Astro.props;
+const items = [
+  {
+    icon: "enquiries",
+    title: "Your requirements",
+    detail: "Quantity, delivery and specifications",
+  },
+  {
+    icon: "layers",
+    title: "Supplier responses",
+    detail: "Pricing, lead time and payment terms",
+  },
+  {
+    icon: "messages",
+    title: "The conversation",
+    detail: "Messages, captioned photos and PDFs",
+  },
+  {
+    icon: "truck",
+    title: "The next step",
+    detail: "Deal progress, documents and completion",
+  },
+];
+---
+
+<aside
+  class:list={["marketplace-preview", { "mobile-preview": mobile }]}
+  aria-label={mobile
+    ? "Illustration of mobile app features"
+    : "Illustration of a sourcing workflow"}
+>
+  <div class="preview-topline">
+    <span class="preview-dot"></span><span
+      >{mobile ? "Your mobile workspace" : "From discovery to delivery"}</span
+    ><Icon name={mobile ? "phone" : "briefcase"} size={18} />
+  </div>
+  <div class="preview-identity">
+    <img src="/images/salam-sourcing.png" width="40" height="40" alt="" /><div>
+      <strong>Salam Sourcing</strong><span>Marketplace</span>
+    </div>
+  </div>
+  <div class="preview-intro">
+    <p class="eyebrow">One connected workspace</p><h2>
+      {
+        mobile
+          ? "Business doesn’t stop at your desk."
+          : "Every detail has a place."
+      }
+    </h2>
+  </div>
+  <div class="preview-workflow">
+    {
+      items.map((item, index) => (
+        <div class="preview-workflow-row">
+          <>
+            <span class="preview-workflow-icon">
+              <Icon name={item.icon} size={21} />
+            </span>
+            <div>
+              <>
+                <strong>{item.title}</strong>
+                <p>{item.detail}</p>
+              </>
+            </div>
+            <span class="preview-step">0{index + 1}</span>
+          </>
+        </div>
+      ))
+    }
+  </div>
+  {
+    mobile && (
+      <div class="preview-dock" aria-hidden="true">
+        <>
+          <Icon name="discover" />
+          <Icon name="enquiries" />
+          <span>
+            <Icon name="sell" />
+          </span>
+          <Icon name="messages" />
+          <Icon name="account" />
+        </>
+      </div>
+    )
+  }
+  <p class="preview-caption">
+    Feature illustration{
+      mobile ? " · App release coming soon" : " · Explore the tools below"
+    }
+  </p>
+</aside>
