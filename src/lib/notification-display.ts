@@ -62,7 +62,7 @@ export function notificationPresentation(notice: {
       notice.source_name ||
       (type === "new_message"
         ? "Conversation update"
-        : "Salam Sourcing Marketplace"),
+        : "Salam Sourcing B2B Marketplace"),
     preview:
       notice.preview ||
       (notice.body === "Open Salam to view the details."

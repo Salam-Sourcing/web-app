@@ -1,10 +1,10 @@
 export const audienceContent = {
   buyers: {
     name: "Buyers",
-    eyebrow: "Source with a clearer picture",
+    eyebrow: "B2B sourcing with a clearer picture",
     title: "Find the right supply. Keep the whole conversation together.",
     intro:
-      "Salam Sourcing Marketplace connects businesses looking for products and services with the companies that supply them. Explore the marketplace, explain your requirements and work through the details in one shared workspace.",
+      "Salam Sourcing B2B Marketplace connects businesses looking for products and services with the companies that supply them. Explore the marketplace, explain your requirements and work through the details in one shared workspace.",
     cta: "Start sourcing",
     other: "vendors",
     otherLabel: "See what vendors can do",
@@ -51,7 +51,7 @@ export const audienceContent = {
           {
             icon: "company",
             title: "Get to know the supplier",
-            body: "View company profiles, business information, supplier catalogues, company photos and ratings out of five. Verification marks explain what Salam Sourcing Marketplace has reviewed.",
+            body: "View company profiles, business information, supplier catalogues, company photos and ratings out of five. Verification marks explain what Salam Sourcing B2B Marketplace has reviewed.",
           },
           {
             icon: "heart",
@@ -107,10 +107,10 @@ export const audienceContent = {
   },
   vendors: {
     name: "Vendors",
-    eyebrow: "Give buyers a better way to find you",
+    eyebrow: "Reach business buyers",
     title: "Show what you supply. Build the next business relationship.",
     intro:
-      "Create a clear catalogue, respond to business enquiries and keep your quotes, conversations and deal updates connected. Salam Sourcing Marketplace gives your company a workspace for the work behind a sale.",
+      "Reach business customers with a clear supplier catalogue, respond to business enquiries and keep your quotes, conversations and deal updates connected. Salam Sourcing B2B Marketplace gives your company a workspace for the work behind a sale.",
     cta: "Start supplying",
     other: "buyers",
     otherLabel: "See what buyers can do",

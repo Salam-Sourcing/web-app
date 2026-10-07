@@ -1,4 +1,4 @@
-// Render the existing emblem and Inter wordmark with MARKETPLACE below the full lockup.
+// Render the existing emblem and Inter wordmark with B2B MARKETPLACE below the full lockup.
 // Usage: node scripts/generate-native-brand-icons.mjs --native /path/to/Flutter/repo
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -42,23 +42,35 @@ function wordWidth(text, size, weight, letterSpacing = 0) {
   );
 }
 const brandWidth = 240,
-  brandHeight = 132,
-  marketplaceSpacing = 0.8,
+  brandHeight = 126,
+  marketplaceLabel = "B2B MARKETPLACE",
+  marketplaceSpacing = 0.6,
   marketplaceSize =
-    (226 - ("MARKETPLACE".length - 1) * marketplaceSpacing) /
-    wordWidth("MARKETPLACE", 1, 650),
+    (226 - (marketplaceLabel.length - 1) * marketplaceSpacing) /
+    wordWidth(marketplaceLabel, 1, 650),
   marketplaceX =
     (brandWidth -
-      wordWidth("MARKETPLACE", marketplaceSize, 650, marketplaceSpacing)) /
+      wordWidth(marketplaceLabel, marketplaceSize, 650, marketplaceSpacing)) /
     2;
 const brand =
   `<image x="0" y="0" width="100" height="100" href="data:image/png;base64,${emblem}"/>` +
   word("Salam", 108, 48, 40, 750, "#37505c") +
   word("Sourcing", 108, 78, 28, 600, "#9c272e") +
   word(
-    "MARKETPLACE",
+    "B2B",
     marketplaceX,
-    127,
+    120,
+    marketplaceSize,
+    650,
+    "#9c272e",
+    marketplaceSpacing,
+  ) +
+  word(
+    "MARKETPLACE",
+    marketplaceX +
+      wordWidth("B2B ", marketplaceSize, 650, marketplaceSpacing) +
+      marketplaceSpacing,
+    120,
     marketplaceSize,
     650,
     "#37505c",

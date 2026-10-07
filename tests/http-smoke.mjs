@@ -49,7 +49,7 @@ for (const path of [
   const body = await response.text();
   check(body.includes("/fonts/Inter.ttf"), path + " loads Inter");
   check(
-    body.includes('aria-label="Salam Sourcing Marketplace mobile app"') &&
+    body.includes('aria-label="Salam Sourcing B2B Marketplace mobile app"') &&
       body.includes('href="/get-the-app"'),
     path + " keeps app availability visible",
   );
@@ -209,7 +209,7 @@ for (const [path, features] of [
   check(
     body.includes('href="/buyers"') &&
       body.includes('href="/vendors"') &&
-      body.includes("About Salam Sourcing Marketplace"),
+      body.includes("About Salam Sourcing B2B Marketplace"),
     path + " links both audiences and platform information",
   );
 }

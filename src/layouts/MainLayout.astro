@@ -11,14 +11,14 @@ interface Props {
 }
 const {
   title,
-  description = "Discover suppliers, request quotes and manage your business sourcing with Salam Sourcing Marketplace.",
+  description = "Discover suppliers, request quotes and manage your business sourcing with Salam Sourcing B2B Marketplace.",
   privatePage = false,
 } = Astro.props;
 const site = publicSite();
 const canonical = new URL(Astro.url.pathname, site.origin);
-const pageTitle = title.includes("Salam Sourcing Marketplace")
+const pageTitle = title.includes("Salam Sourcing B2B Marketplace")
   ? title
-  : `${title} | Salam Sourcing Marketplace`;
+  : `${title} | Salam Sourcing B2B Marketplace`;
 ---
 
 <!doctype html>

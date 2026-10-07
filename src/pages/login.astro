@@ -9,7 +9,7 @@ import Icon from "../components/Icon.astro";
     <div class="card auth-card">
       <span class="auth-emblem"><Icon name="lock" size={26} /></span>
       <p class="eyebrow">Welcome back</p><h1>Good to see you again.</h1><p>
-        Log in to your Salam Sourcing Marketplace account.
+        Log in to your Salam Sourcing B2B Marketplace account.
       </p>
       {
         Astro.url.searchParams.get("notice") === "logout-pending" && (
@@ -20,7 +20,7 @@ import Icon from "../components/Icon.astro";
         )
       }
       <AuthForm mode="login" /><p class="auth-foot">
-        New to Salam Sourcing Marketplace? <a
+        New to Salam Sourcing B2B Marketplace? <a
           class="text-link"
           href={"/signup?next=" +
             encodeURIComponent(

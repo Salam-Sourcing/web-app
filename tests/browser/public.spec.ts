@@ -27,7 +27,7 @@ test("public information and auth pages remain usable on narrow screens", async 
       .toBe(true);
     await expect(
       page
-        .getByRole("link", { name: "Salam Sourcing Marketplace home" })
+        .getByRole("link", { name: "Salam Sourcing B2B Marketplace home" })
         .first(),
     ).toBeVisible();
     const header = page.locator(".site-header");

@@ -1,4 +1,5 @@
 ---
+import BrandLogo from "./BrandLogo.astro";
 const links = [
   { href: "/", label: "Browse" },
   { href: "/buyers", label: "Buyers" },
@@ -10,18 +11,9 @@ const links = [
 
 <header class="site-header">
   <div class="container header-row">
-    <a class="brand" href="/" aria-label="Salam Sourcing Marketplace home"
-      ><img
-        src="/images/salam-sourcing.png"
-        alt=""
-        width="52"
-        height="52"
-      /><span class="brand-wordmark"
-        >Salam<small>Sourcing</small><span class="brand-marketplace"
-          >Marketplace</span
-        ></span
-      ></a
-    >
+    <a class="brand" href="/" aria-label="Salam Sourcing B2B Marketplace home">
+      <BrandLogo />
+    </a>
     <nav class="site-nav" aria-label="Main navigation">
       {
         links.map((link) => (
@@ -42,7 +34,7 @@ const links = [
     </div>
   </div>
   <details class="container mobile-menu">
-    <summary>Explore Salam Sourcing Marketplace</summary><nav
+    <summary>Explore the B2B marketplace</summary><nav
       aria-label="Mobile navigation"
     >
       {links.map((link) => <a href={link.href}>{link.label}</a>)}
