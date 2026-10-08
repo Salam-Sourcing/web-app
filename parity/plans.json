@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "status": "preview",
+  "currency": "CAD",
+  "commissionPercent": 0,
+  "notice": "Read-only preview. Paid plans, trials and these proposed feature allowances are not available to activate yet. Your current access is unchanged.",
+  "plans": [
+    {
+      "id": "starter",
+      "name": "Starter",
+      "description": "Explore suppliers and start a small catalogue.",
+      "monthly": 0,
+      "annual": 0,
+      "users": 1,
+      "listings": 3,
+      "enquiries": 5,
+      "savedSearches": 5,
+      "alerts": "Manual search",
+      "insights": "7-day view",
+      "support": "Standard"
+    },
+    {
+      "id": "growth",
+      "name": "Growth",
+      "description": "Build your catalogue and source more regularly.",
+      "monthly": 29,
+      "annual": 290,
+      "users": 3,
+      "listings": 25,
+      "enquiries": 30,
+      "savedSearches": 15,
+      "alerts": "Daily in-app alerts",
+      "insights": "30-day view",
+      "support": "Standard"
+    },
+    {
+      "id": "business",
+      "name": "Business",
+      "description": "Give your team room for a larger catalogue and more sourcing.",
+      "monthly": 79,
+      "annual": 790,
+      "users": 10,
+      "listings": 100,
+      "enquiries": 100,
+      "savedSearches": 25,
+      "alerts": "Daily or hourly in-app alerts",
+      "insights": "90-day view",
+      "support": "Priority during stated business hours"
+    }
+  ],
+  "sharedFeatures": [
+    "Discovery, filters and listing currency conversion",
+    "Company profiles and business verification after approval",
+    "Saved suppliers and listings",
+    "Messaging, attachments and responding to enquiries",
+    "Quotes, comparison and acceptance",
+    "Deal progress, private documents and PDF exports",
+    "Eligible transaction reviews and company responses",
+    "One account across web, iOS and Android, with account security and notification preferences"
+  ],
+  "notes": [
+    "Prices are in CAD and exclude applicable taxes. Annual subscriptions cost ten monthly payments, equivalent to two months free.",
+    "User allowances include the owner. User, non-archived listing and new-enquiry allowances apply per company; saved searches apply per user.",
+    "New enquiries include direct enquiries and public RFQs. Receiving or replying to enquiries, quoting, and continuing existing conversations do not consume the proposed new-enquiry allowance. Normal safety and usage controls still apply.",
+    "Business verification and transaction reviews are earned through their respective approval and completed-deal processes. A paid plan cannot purchase either badge."
+  ],
+  "trial": "Proposed trial: 30 days of Growth without a card, then Starter unless the company explicitly upgrades. This trial is not active yet.",
+  "downgrade": "Proposed downgrade policy: retain business records and conversations; restrict new activity above the lower plan allowance.",
+  "supportNote": "Priority support needs a staffed queue and stated business hours before it is offered. No guaranteed response time or 24/7 support is included."
+}

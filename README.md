@@ -81,6 +81,15 @@ distinguishes hostname/configuration failures from retryable verification failur
 
 For phone testing on this Mac, the server can be started with:
 
+Set `SITE_URL=http://karamullahs-mac-mini.local:4321` in `.env.local` first.
+Email confirmation, recovery and email changes must return to the same hostname
+and browser that initiated them. Add
+`http://karamullahs-mac-mini.local:4321/auth/callback**` to the project's Supabase
+Auth redirect URL allowlist alongside the existing production/mobile callbacks.
+HTTP callbacks on a configured `.local` hostname are accepted only in development;
+deployed sites require HTTPS. The origin, protocol and port must match `SITE_URL`
+exactly. Switching back to `localhost` requires updating `SITE_URL` accordingly.
+
 ```bash
 npm run dev -- --host 0.0.0.0 --port 4321 --allowed-hosts karamullahs-mac-mini.local
 ```

@@ -22,4 +22,4 @@ jobs:
       - run: npm run test:release
 
       - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run test:browser -- tests/browser/public.spec.ts tests/browser/currency.spec.ts
+      - run: npm run test:browser -- tests/browser/public.spec.ts tests/browser/currency.spec.ts tests/browser/plans.spec.ts

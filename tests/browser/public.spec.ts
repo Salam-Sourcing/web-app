@@ -5,6 +5,7 @@ test("public information and auth pages remain usable on narrow screens", async 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 320, height: 800 });
   for (const path of [
+    "/plans",
     "/platform",
     "/get-the-app",
     "/buyers",

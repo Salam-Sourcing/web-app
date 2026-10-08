@@ -1,6 +1,6 @@
 import { allowedBackend } from "../backend-config";
 import { getSecret } from "astro:env/server";
-import { AccessError } from "../security";
+import { authCallbackUrl } from "../auth-callback";
 const buildValues: Record<string, string | undefined> = {
   SUPABASE_URL: import.meta.env.SUPABASE_URL,
   SALAM_UI_TEST_BACKEND: import.meta.env.SALAM_UI_TEST_BACKEND,
@@ -36,21 +36,11 @@ export function callbackUrl(
   flow: "signup" | "recovery" | "email_change",
   state: string,
 ) {
-  const config = serverConfig();
-  const site = new URL(config.siteUrl);
-  if (
-    site.origin !== new URL(request.url).origin ||
-    (site.protocol !== "https:" &&
-      !["localhost", "127.0.0.1"].includes(site.hostname))
-  ) {
-    throw new AccessError(
-      503,
-      "origin_configuration",
-      "This website's sign-in configuration needs attention. Contact support.",
-    );
-  }
-  const url = new URL("/auth/callback", site.origin);
-  url.searchParams.set("flow", flow);
-  url.searchParams.set("state", state);
-  return url.href;
+  return authCallbackUrl(
+    request.url,
+    serverConfig().siteUrl,
+    flow,
+    state,
+    import.meta.env.DEV,
+  );
 }

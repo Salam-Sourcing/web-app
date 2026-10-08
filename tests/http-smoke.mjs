@@ -179,8 +179,21 @@ check(
 const plansHtml = await (await request("/plans")).text();
 check(
   (plansHtml.match(/class="card public-plan"/g) ?? []).length === 3,
-  "plans page renders exactly three placeholders",
+  "plans page renders exactly three read-only proposed plans",
 );
+for (const copy of [
+  "Starter",
+  "Growth",
+  "Business",
+  "$29 CAD",
+  "$79 CAD",
+  "$290 CAD",
+  "$790 CAD",
+  "Read-only preview",
+  "Your current access is unchanged",
+]) {
+  check(plansHtml.includes(copy), "plans page includes " + copy);
+}
 for (const [path, features] of [
   [
     "/buyers",

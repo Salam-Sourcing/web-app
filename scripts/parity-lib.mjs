@@ -40,6 +40,12 @@ export async function contracts(web, native) {
     throw Error(
       "The two parity contracts differ. Review and synchronize them before verification.",
     );
+  const webPlans = await readFile(path.join(web, "parity/plans.json"));
+  const nativePlans = await readFile(path.join(native, "parity/plans.json"));
+  if (!webPlans.equals(nativePlans))
+    throw Error(
+      "The read-only plan catalogues differ between web and Flutter.",
+    );
   const contract = JSON.parse(a);
   const screens = (await readdir(path.join(native, "lib/presentation/screens")))
     .filter((f) => f.endsWith("_screen.dart"))

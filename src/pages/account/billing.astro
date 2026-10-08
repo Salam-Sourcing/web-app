@@ -1,7 +1,7 @@
 ---
 import { statusLabel } from "../../lib/status-label";
 import AppLayout from "../../layouts/AppLayout.astro";
-import BillingPlan from "../../components/BillingPlan.astro";
+import PlanComparison from "../../components/PlanComparison.astro";
 import AccountForm from "../../components/AccountForm.astro";
 import { requireWorkspace } from "../../lib/server/access";
 import { billing } from "../../lib/server/account";
@@ -77,19 +77,7 @@ const money = (amount: number, currency: string) =>
       )
     }
   </section>
-  <div class="account-plan-grid mt-5">
-    {
-      data.plans.map((plan) => (
-        <BillingPlan
-          plan={plan}
-          company={c.id}
-          subscribed={Boolean(sub)}
-          current={plan.id === sub?.plan_id}
-          pending={Boolean(data.pending.length)}
-        />
-      ))
-    }
-  </div>
+  <div class="mt-5"><PlanComparison id="account-plan-comparison" /></div>
   <section class="card mt-5">
     <h2>Invoices</h2><p class="help-text">
       Your latest 50 invoices. Requests are reviewed by Salam Sourcing

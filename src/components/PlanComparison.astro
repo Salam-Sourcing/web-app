@@ -1,0 +1,122 @@
+---
+import Icon from "./Icon.astro";
+import catalogue from "../../parity/plans.json";
+const { id = "plan-comparison" } = Astro.props;
+---
+
+<section class="plan-comparison" aria-labelledby={id} data-plan-preview>
+  <div class="plan-preview-heading">
+    <div>
+      <p class="eyebrow">One company · Buying and selling</p><h2 id={id}>
+        Compare proposed plans
+      </h2>
+    </div>
+    <span class="plan-preview-label"
+      ><Icon name="eye" size={16} />Read-only preview</span
+    >
+  </div>
+  <div class="plan-preview-notice" role="note">
+    <Icon name="clock" size={22} /><p>{catalogue.notice}</p>
+  </div>
+  <div class="plans-grid">
+    {
+      catalogue.plans.map((plan) => (
+        <article class="card public-plan" data-plan={plan.id}>
+          <div class="plan-card-heading">
+            <span class="plan-symbol">
+              <Icon
+                name={
+                  plan.id === "starter"
+                    ? "company"
+                    : plan.id === "growth"
+                      ? "plant"
+                      : "team"
+                }
+                size={24}
+              />
+            </span>
+            {plan.id === "growth" && (
+              <span class="plan-preview-label">Recommended</span>
+            )}
+          </div>
+          <div>
+            <>
+              <h3>{plan.name}</h3>
+              <p>{plan.description}</p>
+            </>
+          </div>
+          <div class="plan-preview-price">
+            <strong>
+              {plan.monthly === 0 ? "Free" : `$${plan.monthly} CAD`}
+            </strong>
+            {plan.monthly > 0 && <span>per month</span>}
+            <p>
+              {plan.annual === 0
+                ? "No subscription charge"
+                : `$${plan.annual} CAD per year · Two months free`}
+            </p>
+          </div>
+          <dl class="plan-preview-benefits">
+            {[
+              ["Users, including owner", plan.users],
+              ["Non-archived listings", plan.listings],
+              ["New enquiries / month", plan.enquiries],
+              ["Saved searches / user", plan.savedSearches],
+              ["Matching alerts", plan.alerts],
+              ["Supplier insights", plan.insights],
+              ["Support", plan.support],
+            ].map(([label, value]) => (
+              <div>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p class="plan-preview-state">
+            <Icon name="eye" size={16} />
+            Preview only · No activation
+          </p>
+        </article>
+      ))
+    }
+  </div>
+  <section class="card plan-preview-shared" aria-labelledby={`${id}-shared`}>
+    <div class="plan-preview-heading">
+      <h2 id={`${id}-shared`}>Included in every proposed plan</h2><span
+        class="plan-preview-label">0% transaction commission</span
+      >
+    </div>
+    <ul>
+      {
+        catalogue.sharedFeatures.map((feature) => (
+          <li>
+            <>
+              <Icon name="check" size={18} />
+              <span>{feature}</span>
+            </>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+  <div class="plan-preview-details">
+    <section class="card">
+      <span class="plan-symbol"><Icon name="clock" size={24} /></span><h3>
+        A proposed 30-day Growth trial
+      </h3><p>{catalogue.trial}</p>
+    </section>
+    <section class="card">
+      <span class="plan-symbol"><Icon name="shield" size={24} /></span><h3>
+        Keep your business history
+      </h3><p>{catalogue.downgrade}</p>
+    </section>
+  </div>
+  <div class="plan-preview-notes">
+    <h3>How the proposed allowances work</h3>{
+      catalogue.notes.map((note) => <p>{note}</p>)
+    }<p>{catalogue.supportNote}</p><p>
+      Participating businesses manage their own payment, contract and delivery
+      arrangements. Public iOS and Android downloads are coming soon.
+    </p>
+  </div>
+</section>

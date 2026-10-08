@@ -1,10 +1,16 @@
 # Salam client parity and release acceptance
 
 The shared contract is `parity/contract.json` in **both** repositories. Keep the
-files byte-identical. It records the 37 native screens, all web pages, shared field
+files byte-identical. It records the 38 native screens, all web pages, shared field
 limits/numeric fixtures, and 18 acceptance scenarios. A new page or screen must
 update this inventory and its acceptance scenario. Inventory proves coverage of
 surface area; it does not prove an action works.
+
+`parity/plans.json` is the shared, read-only Starter/Growth/Business catalogue.
+Keep it byte-identical across clients; verification also checks these files.
+The commercial proposal and activation boundary are in
+[`documentation/plans.md`](../documentation/plans.md). Display keys in this
+catalogue are not database subscription IDs or current entitlements.
 
 ## What matches
 

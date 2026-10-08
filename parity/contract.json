@@ -19,7 +19,7 @@
     {
       "screen": "account_settings_screen.dart",
       "web": "`/account` and billing/preferences/security",
-      "note": "Settings and plan request counterparts; push deferred."
+      "note": "Settings, current membership/invoices and read-only proposed plan comparison; existing cancellation remains separate. Push deferred."
     },
     {
       "screen": "auth_screen.dart",
@@ -195,6 +195,11 @@
       "screen": "two_factor_screen.dart",
       "web": "`/auth/mfa`, `/account/password#two-factor` (legacy `/account/security` redirects)",
       "note": "Combined Security & password destination; enrollment, QR/manual key concealment/copy, verify/remove."
+    },
+    {
+      "screen": "proposed_plans_screen.dart",
+      "web": "`/plans` and `/account/billing`",
+      "note": "Read-only Starter/Growth/Business catalogue from parity/plans.json. No purchase, plan-change request, trial activation or entitlement mutation."
     }
   ],
   "boundaries": {
@@ -412,7 +417,7 @@
       "id": "profile",
       "title": "Profile and billing",
       "required": true,
-      "outcomes": "Names/contact/location/email confirmation, plans, request/cancel changes, billing history and seat limits. Personal profile photo uploads/replaces in both clients without requiring company membership, appears on Account and web header; private owner-only access, 5 MB image bounds, concurrent replacement protection and safe cleanup.",
+      "outcomes": "Names/contact/location/email confirmation, plans, request/cancel changes, billing history and seat limits. Personal profile photo uploads/replaces in both clients without requiring company membership, appears on Account and web header; private owner-only access, 5 MB image bounds, concurrent replacement protection and safe cleanup. Proposed Starter/Growth/Business prices and benefits match parity/plans.json on both clients. Preview cards cannot activate, pay, submit a plan request or change current access; existing membership/invoices remain distinct.",
       "clients": ["web", "flutter"],
       "evidence": {
         "web": "unverified",

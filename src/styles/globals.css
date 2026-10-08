@@ -5228,3 +5228,161 @@ input[type="file"]::file-selector-button:hover {
     animation: none;
   }
 }
+
+/* The proposed catalogue is informational, separate from current billing. */
+.plan-comparison {
+  container-type: inline-size;
+  display: grid;
+  gap: 24px;
+}
+.plan-preview-heading,
+.plan-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.plan-preview-heading h2 {
+  margin: 0;
+}
+.plan-preview-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #edf2f1;
+  color: #37505c;
+  font-size: 12px;
+  font-weight: 700;
+}
+.plan-preview-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid #d7e1e5;
+  background: #edf2f4;
+  border-radius: 16px;
+  color: #37505c;
+}
+.plan-preview-notice p {
+  margin: 0;
+  line-height: 1.7;
+}
+.plan-preview-notice svg,
+.plan-preview-shared li svg,
+.plan-preview-state svg {
+  flex-shrink: 0;
+}
+.public-plan[data-plan="growth"] {
+  border-color: #9c272e;
+  box-shadow: 0 4px 20px #9c272e0a;
+}
+.public-plan h3 {
+  font-size: 26px;
+  margin: 0 0 8px;
+}
+.public-plan > div > p {
+  margin: 0;
+}
+.plan-preview-price {
+  padding-block: 12px 18px;
+  border-bottom: 1px solid #d9dfe5;
+}
+.plan-preview-price strong {
+  display: block;
+  color: #9c272e;
+  font-size: 32px;
+  letter-spacing: -1px;
+}
+.plan-preview-price span,
+.plan-preview-price p {
+  font-size: 13px;
+  color: #60656f;
+  line-height: 1.8;
+}
+.plan-preview-benefits {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+.plan-preview-benefits dt {
+  font-size: 12px;
+  color: #60656f;
+  margin-bottom: 3px;
+}
+.plan-preview-benefits dd {
+  margin: 0;
+  color: #37505c;
+  font-weight: 700;
+  line-height: 1.55;
+}
+.public-plan .plan-preview-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: auto 0 0;
+  padding-top: 16px;
+  border-top: 1px solid #d9dfe5;
+  font-size: 12px;
+}
+.plan-preview-shared {
+  padding: 28px;
+}
+.plan-preview-shared ul {
+  padding: 0;
+  margin: 24px 0 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 32px;
+}
+.plan-preview-shared li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.7;
+}
+.plan-preview-shared li svg {
+  color: #9c272e;
+  margin-top: 4px;
+}
+.plan-preview-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.plan-preview-details .card {
+  display: grid;
+  gap: 16px;
+  padding: 28px;
+}
+.plan-preview-details h3,
+.plan-preview-details p {
+  margin: 0;
+}
+.plan-preview-details p,
+.plan-preview-notes p {
+  color: #60656f;
+  line-height: 1.8;
+}
+.plan-preview-notes {
+  max-width: 850px;
+}
+.plan-preview-notes p {
+  font-size: 13px;
+  margin-block: 12px;
+}
+@container (max-width: 820px) {
+  .plan-comparison .plans-grid,
+  .plan-preview-details,
+  .plan-preview-shared ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .plan-preview-shared,
+  .plan-preview-details .card {
+    padding: 22px;
+  }
+}
