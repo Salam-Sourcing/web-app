@@ -1,5 +1,6 @@
 ---
 import CompanyAvatar from "../../components/CompanyAvatar.astro";
+import CountryLabel from "../../components/CountryLabel.astro";
 import { companyPhoto } from "../../lib/server/company-photo";
 import VerifiedBadge from "../../components/VerifiedBadge.astro";
 import AppLayout from "../../layouts/AppLayout.astro";
@@ -65,9 +66,16 @@ try {
                   <h3>About this company</h3>
                 </>
                 <p class="help-text mt-3">
-                  {[profile.city, profile.province_state, profile.country]
-                    .filter(Boolean)
-                    .join(", ")}
+                  <CountryLabel
+                    country={profile.country}
+                    label={[
+                      profile.city,
+                      profile.province_state,
+                      profile.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  />
                 </p>
                 <p class="preserve-lines mt-4">
                   {profile.description ||

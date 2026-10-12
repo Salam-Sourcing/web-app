@@ -1,6 +1,7 @@
 ---
 import { statusLabel } from "../../lib/status-label";
 import CompanyAvatar from "../../components/CompanyAvatar.astro";
+import CountryLabel from "../../components/CountryLabel.astro";
 import { companyPhoto } from "../../lib/server/company-photo";
 import VerifiedBadge from "../../components/VerifiedBadge.astro";
 import AppLayout from "../../layouts/AppLayout.astro";
@@ -97,7 +98,9 @@ const editable =
             {company.data?.email ?? "Not provided"}
           </dd>
         </div><div class="info-row">
-          <dt>Country</dt><dd>{company.data?.country}</dd>
+          <dt>Country</dt><dd>
+            <CountryLabel country={company.data?.country} />
+          </dd>
         </div>
       </dl><p class="mt-5">{company.data?.description}</p><div class="actions">
         <a class="button secondary" href="/company/edit">Edit profile</a><a

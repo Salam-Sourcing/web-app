@@ -2659,6 +2659,10 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      get_unread_message_count: {
+        Args: { p_company_id: number };
+        Returns: number;
+      };
       get_unavailable_saved_listings: {
         Args: { p_offset?: number; p_limit?: number };
         Returns: { listing_id: number }[];

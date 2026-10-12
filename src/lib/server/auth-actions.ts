@@ -67,15 +67,24 @@ export async function handleAuthAction(
         "Request a verification code and enter it to update your password.",
       reauthentication_not_valid:
         "The verification code is invalid or expired.",
+      current_password_required:
+        "Enter your current password to change it. If you forgot it, use password recovery.",
+      current_password_mismatch:
+        "Your current password is incorrect. Try again or use password recovery.",
       same_password: "Choose a password different from your current password.",
-      weak_password: "Choose a stronger password.",
+      weak_password:
+        "Choose a stronger, unique password. This password may be too easy to guess or appear in a known password leak.",
       validation_failed: "Check your details and try again.",
     };
     throw new AccessError(
       error.status === 429 ? 429 : 400,
       error.code ?? "auth_failed",
       messages[error.code ?? ""] ??
-        "Unable to complete sign-in. Check your details and retry.",
+        (action === "password"
+          ? "Unable to update your password. Check your current password and verification code, then retry."
+          : action === "reauthenticate"
+            ? "Unable to send a verification code. Please retry."
+            : "Unable to complete sign-in. Check your details and retry."),
     );
   };
   const captcha = () =>
@@ -196,7 +205,30 @@ export async function handleAuthAction(
       typeof input.nonce === "string" && input.nonce.trim()
         ? textField(input, "nonce", 128)
         : undefined;
-    checked((await client.auth.updateUser({ password, nonce })).error);
+    // Supabase enforces the current-password requirement, with an exception
+    // for verified recovery sessions. Preserve exact bytes, including spaces.
+    const currentPassword = input.current_password;
+    if (currentPassword !== undefined && typeof currentPassword !== "string")
+      throw new AccessError(
+        400,
+        "invalid_input",
+        "Check the current password field.",
+      );
+    if (typeof currentPassword === "string" && currentPassword.length > 4096)
+      throw new AccessError(
+        400,
+        "invalid_input",
+        "Check the current password field.",
+      );
+    checked(
+      (
+        await client.auth.updateUser({
+          password,
+          nonce,
+          ...(currentPassword ? { current_password: currentPassword } : {}),
+        })
+      ).error,
+    );
     return json({
       redirect: "/account",
       message: "Your password was updated.",

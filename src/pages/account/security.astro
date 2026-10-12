@@ -1,5 +1,16 @@
 ---
+import AppLayout from "../../layouts/AppLayout.astro";
+import SecurityOptions from "../../components/SecurityOptions.astro";
 import { requireWorkspace } from "../../lib/server/access";
-await requireWorkspace(Astro);
-return Astro.redirect("/account/password#two-factor", 303);
+const state = await requireWorkspace(Astro);
 ---
+
+<AppLayout
+  title="Security & password"
+  description="Choose how you want to manage your account security."
+  active="account"
+  state={state}
+>
+  <a slot="actions" class="text-link" href="/account">Back to Account</a>
+  <SecurityOptions />
+</AppLayout>

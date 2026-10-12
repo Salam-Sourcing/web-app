@@ -1,0 +1,18 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import TwoFactorSettings from "../../components/TwoFactorSettings.astro";
+import { requireWorkspace } from "../../lib/server/access";
+const state = await requireWorkspace(Astro);
+---
+
+<AppLayout
+  title="Two-factor authentication"
+  description="Manage the authenticator that protects your account."
+  active="account"
+  state={state}
+>
+  <a slot="actions" class="text-link" href="/account/security"
+    >Back to Security & password</a
+  >
+  <div class="security-settings"><TwoFactorSettings state={state} /></div>
+</AppLayout>

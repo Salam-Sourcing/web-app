@@ -254,6 +254,9 @@ export function bindForms() {
           challenge = await freshCaptcha(form);
           if (challenge.token) data.captcha_token = challenge.token;
           const result = await post(form.getAttribute("action")!, data);
+          form.dispatchEvent(
+            new CustomEvent("salam-form-success", { detail: result }),
+          );
           const redirect = result.redirect
             ? new URL(result.redirect, location.origin)
             : null;

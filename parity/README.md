@@ -12,6 +12,11 @@ The commercial proposal and activation boundary are in
 [`documentation/plans.md`](../documentation/plans.md). Display keys in this
 catalogue are not database subscription IDs or current entitlements.
 
+`parity/countries.json` is the shared country-name/code/alias catalogue for
+company-profile flags. Keep it and the bundled `flag-icons` 7.5.0 SVG assets in
+sync across clients. Each flag directory retains the upstream MIT license.
+Unknown country text remains visible without a guessed flag.
+
 ## What matches
 
 Both clients must support the same business actions, values, ownership and

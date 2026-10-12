@@ -31,6 +31,7 @@ const config: AuthConfig = {
 };
 function fixture(
   options: {
+    passwordError?: { code: string; message: string; status: number };
     factors?: (typeof verified)[];
     aal?: string;
     session?: boolean;
@@ -65,7 +66,10 @@ function fixture(
       },
       resetPasswordForEmail: async (...args: unknown[]) =>
         record("reset", args),
-      updateUser: async (args: unknown) => record("password", args),
+      updateUser: async (args: unknown) => {
+        record("password", args);
+        return { data: {}, error: options.passwordError ?? null };
+      },
       reauthenticate: async () => record("reauthenticate"),
       mfa: {
         listFactors: async () => ({
@@ -539,4 +543,73 @@ test("login forwards existing long passwords unchanged while signup rejects new 
     AccessError,
   );
   assert.equal(f.calls.filter((c) => c.name === "signup").length, 0);
+});
+
+test("password updates forward the exact current password and trimmed email code", async () => {
+  const f = fixture();
+  const response = await f.action("password", {
+    current_password: " current secret ",
+    password: "new-password",
+    confirm_password: "new-password",
+    nonce: " 12345678 ",
+  });
+  assert.deepEqual(f.calls.find((c) => c.name === "password")?.args, {
+    current_password: " current secret ",
+    password: "new-password",
+    nonce: "12345678",
+  });
+  assert.equal((await response.json()).message, "Your password was updated.");
+});
+test("recovery can omit the current password; Supabase remains the authority", async () => {
+  const f = fixture();
+  await f.action("password", {
+    current_password: "",
+    password: "new-password",
+    confirm_password: "new-password",
+  });
+  assert.deepEqual(f.calls.find((c) => c.name === "password")?.args, {
+    password: "new-password",
+    nonce: undefined,
+  });
+  for (const current_password of [123, {}, "x".repeat(4097)]) {
+    await assert.rejects(
+      f.action("password", {
+        current_password,
+        password: "new-password",
+        confirm_password: "new-password",
+      }),
+      rejected("invalid_input"),
+    );
+  }
+  assert.equal(f.calls.filter((c) => c.name === "password").length, 1);
+});
+test("password failures explain current-password, email-code and strength requirements", async () => {
+  for (const [code, expected] of [
+    ["current_password_required", /Enter your current password/],
+    ["current_password_mismatch", /current password is incorrect/],
+    ["reauthentication_needed", /Request a verification code/],
+    ["reauthentication_not_valid", /invalid or expired/],
+    ["weak_password", /stronger, unique password/],
+    ["unknown_provider_error", /Unable to update your password/],
+  ] as const) {
+    const f = fixture({
+      passwordError: { code, status: 400, message: "internal provider detail" },
+    });
+    await assert.rejects(
+      f.action("password", {
+        password: "new-password",
+        confirm_password: "new-password",
+      }),
+      (error: unknown) => {
+        assert.ok(error instanceof AccessError);
+        assert.equal(error.code, code);
+        assert.match(error.message, expected);
+        assert.doesNotMatch(
+          error.message,
+          /internal provider detail|complete sign-in/,
+        );
+        return true;
+      },
+    );
+  }
 });

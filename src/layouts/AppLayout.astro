@@ -66,10 +66,19 @@ const destinations = [
                   <a
                     class:list={{ "nav-sell": key === "sell" }}
                     href={"/" + key}
+                    data-messages-link={key === "messages" ? "" : undefined}
                     aria-current={key === active ? "page" : undefined}
                   >
                     <span class="nav-icon">
                       <Icon name={key} />
+                      {key === "messages" && (
+                        <span
+                          class="message-nav-count"
+                          data-message-count
+                          aria-hidden="true"
+                          hidden
+                        />
+                      )}
                     </span>
                     {label}
                   </a>
@@ -186,11 +195,20 @@ const destinations = [
             <a
               class:list={{ "nav-sell": key === "sell" }}
               href={"/" + key}
+              data-messages-link={key === "messages" ? "" : undefined}
               aria-current={key === active ? "page" : undefined}
             >
               <>
                 <span class="nav-icon">
                   <Icon name={key} />
+                  {key === "messages" && (
+                    <span
+                      class="message-nav-count"
+                      data-message-count
+                      aria-hidden="true"
+                      hidden
+                    />
+                  )}
                 </span>
                 <span>{label}</span>
               </>

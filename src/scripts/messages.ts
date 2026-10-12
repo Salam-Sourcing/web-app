@@ -282,11 +282,13 @@ export function bindThread() {
     else if (atBottom) history.scrollTop = history.scrollHeight;
   };
   const markRead = async () => {
-    if (document.visibilityState === "visible" && navigator.onLine)
+    if (document.visibilityState === "visible" && navigator.onLine) {
       await post("/api/procurement/read", {
         conversation_id: id,
         company_id: company,
       });
+      window.dispatchEvent(new Event("salam-messages-changed"));
+    }
   };
   const refresh = async () => {
     if (
@@ -363,6 +365,7 @@ export function bindThread() {
       void refresh();
     });
     source.addEventListener("change", (event) => {
+      window.dispatchEvent(new Event("salam-messages-changed"));
       const data = JSON.parse((event as MessageEvent).data);
       if (data.id && ids.has(Number(data.id)))
         void get(new URLSearchParams({ message_id: String(data.id) }))
@@ -678,7 +681,10 @@ export function bindConversationActivity() {
       status.textContent = "";
       void update();
     });
-    source.addEventListener("change", changed);
+    source.addEventListener("change", () => {
+      window.dispatchEvent(new Event("salam-messages-changed"));
+      changed();
+    });
     const retry = () => {
       source?.close();
       status.textContent =

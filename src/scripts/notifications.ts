@@ -1,4 +1,5 @@
 import { bindForms } from "./forms";
+import { updateMessageBadges } from "../lib/message-badge";
 import {
   notificationPresentation,
   notificationIconPaths,
@@ -128,6 +129,7 @@ export function bindNotifications() {
   let pending: Notice[] | undefined;
   let controller: AbortController | undefined;
   let stopped = false;
+  let messagesChanged = false;
   let revision = list?.dataset.notificationRevision ?? "";
   const allowed = () =>
     !stopped &&
@@ -206,6 +208,8 @@ export function bindNotifications() {
         badge.hidden = data.unread === 0;
       }
       bell?.setAttribute("aria-label", `Notifications, ${data.unread} unread`);
+      // A read completed during this request: its snapshot can already be stale.
+      if (!messagesChanged) updateMessageBadges(content, data.unreadMessages);
       const description = content.querySelector<HTMLElement>(
         "[data-notification-summary]",
       );
@@ -253,6 +257,10 @@ export function bindNotifications() {
     } finally {
       clearTimeout(timeout);
       if (controller === request) controller = undefined;
+      if (messagesChanged) {
+        messagesChanged = false;
+        void refresh();
+      }
     }
   };
   banner?.addEventListener("click", render);
@@ -280,6 +288,10 @@ export function bindNotifications() {
     if (!allowed()) controller?.abort();
     else void refresh();
   };
+  const messageActivity = () => {
+    if (controller) messagesChanged = true;
+    else void refresh();
+  };
   const stop = () => {
     stopped = true;
     controller?.abort();
@@ -289,12 +301,15 @@ export function bindNotifications() {
     window.removeEventListener("focus", visibility);
     window.removeEventListener("online", visibility);
     document.removeEventListener("visibilitychange", visibility);
+    window.removeEventListener("salam-messages-changed", messageActivity);
+    updateMessageBadges(content, 0);
   };
   const observer = new MutationObserver(() => {
     if (content.hidden) {
       controller?.abort();
       pending = undefined;
       if (badge) badge.hidden = true;
+      updateMessageBadges(content, 0);
       if (banner) banner.hidden = true;
     }
   });
@@ -303,6 +318,7 @@ export function bindNotifications() {
   window.addEventListener("focus", visibility);
   window.addEventListener("online", visibility);
   document.addEventListener("visibilitychange", visibility);
+  window.addEventListener("salam-messages-changed", messageActivity);
   window.addEventListener("pagehide", stop, { once: true });
   window.addEventListener("salam-logout", stop, { once: true });
   void refresh();

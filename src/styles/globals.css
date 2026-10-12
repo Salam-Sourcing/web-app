@@ -3776,8 +3776,30 @@ img[hidden],
   background: #f7ecee;
 }
 .nav-icon {
+  position: relative;
   display: inline-grid;
   place-items: center;
+}
+.message-nav-count {
+  position: absolute;
+  inset-block-start: -9px;
+  inset-inline-end: -13px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 0 0 2px white;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  pointer-events: none;
+}
+.message-nav-count[hidden] {
+  display: none;
 }
 .nav-sell .nav-icon {
   border-radius: 50%;

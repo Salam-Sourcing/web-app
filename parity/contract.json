@@ -167,6 +167,11 @@
       "note": "Save/matches/delete/alerts; web also edits filter fields."
     },
     {
+      "screen": "security_settings_screen.dart",
+      "web": "`/account/security`, `/account/password`, `/account/two-factor`",
+      "note": "Security choices open separate password and authenticator settings; mobile choices and Back controls include haptics."
+    },
+    {
       "screen": "sell_screen.dart",
       "web": "`/sell`",
       "note": "Company summary, counted status filters, management and insights; one permission-aware floating Post an item button above navigation and safe areas."
@@ -193,8 +198,8 @@
     },
     {
       "screen": "two_factor_screen.dart",
-      "web": "`/auth/mfa`, `/account/password#two-factor` (legacy `/account/security` redirects)",
-      "note": "Combined Security & password destination; enrollment, QR/manual key concealment/copy, verify/remove."
+      "web": "`/auth/mfa`, `/account/two-factor`",
+      "note": "Separate authenticator settings; enrollment, QR/manual key concealment/copy, verify/remove; existing MFA gate remains."
     },
     {
       "screen": "proposed_plans_screen.dart",
@@ -285,7 +290,7 @@
       "id": "auth",
       "title": "Account access",
       "required": true,
-      "outcomes": "Sign up, email confirmation, login, recovery, email change, MFA, revoked/inactive sessions, logout clears private state. Web Account highlights Security & password, which includes password visibility controls, email reauthentication when required, and built-in authenticator settings; legacy security links redirect safely.",
+      "outcomes": "Sign up, email confirmation, login, recovery, email change, MFA, revoked/inactive sessions, logout clears private state. Security & password opens choices for separate password and authenticator settings. Password changes preserve current-password validation, visible email reauthentication, and direct recovery access; the existing MFA gate remains.",
       "clients": ["web", "flutter"],
       "evidence": {
         "web": "unverified",
@@ -462,7 +467,9 @@
       "title": "Web browser and layout",
       "required": true,
       "outcomes": "Desktop Chromium/Firefox/WebKit and phone emulation; narrow screens/text zoom, overflow, keyboard focus, dialogs, disabled empty Send, image viewer and attachment popups. Avatar beside Notifications opens an accessible account menu; signed-out Log in links directly to login without a dropdown; activity and image loaders preserve layout. Public and signed-in pages share a branded responsive footer. Category and primary navigation links have hover/keyboard focus feedback; saved navigation includes a heart, file selection uses a visible button, and Sell has a red circular icon in desktop/mobile navigation. Public Buyers and Vendors pages describe implemented capabilities. About Salam Sourcing and the audience pages are discoverable from navigation/footer and indexed public sitemap. Every layout has a sticky Get the app entry; iOS/Android are Coming Soon until public store URLs exist.",
-      "clients": ["web"],
+      "clients": [
+        "web"
+      ],
       "evidence": {
         "web": "unverified",
         "flutter": "unverified"
@@ -473,7 +480,9 @@
       "title": "Flutter devices",
       "required": true,
       "outcomes": "Android and iOS: keyboard/safe areas, haptics, file pickers/photos, CAPTCHA, MFA, PDF viewing and lifecycle/reconnect. Native home, guest and auth headers use the same two-line Salam wordmark; iOS launcher/store artwork and Android legacy/adaptive launcher icons use the existing emblem and wordmark. Verify installed icon masking and legibility on devices.",
-      "clients": ["flutter"],
+      "clients": [
+        "flutter"
+      ],
       "evidence": {
         "web": "unverified",
         "flutter": "unverified"
@@ -511,6 +520,7 @@
     "account/support.astro",
     "account/team.astro",
     "account/team/[id].astro",
+    "account/two-factor.astro",
     "auth/access.astro",
     "auth/callback.astro",
     "auth/mfa.astro",

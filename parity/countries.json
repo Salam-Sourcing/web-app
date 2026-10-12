@@ -1,0 +1,935 @@
+{
+  "source": "flag-icons 7.5.0 (MIT), https://github.com/lipis/flag-icons",
+  "countries": {
+    "ad": [
+      "Andorra"
+    ],
+    "ae": [
+      "United Arab Emirates",
+      "UAE",
+      "U.A.E."
+    ],
+    "af": [
+      "Afghanistan"
+    ],
+    "ag": [
+      "Antigua and Barbuda",
+      "Antigua & Barbuda"
+    ],
+    "ai": [
+      "Anguilla"
+    ],
+    "al": [
+      "Albania"
+    ],
+    "am": [
+      "Armenia"
+    ],
+    "ao": [
+      "Angola"
+    ],
+    "aq": [
+      "Antarctica"
+    ],
+    "ar": [
+      "Argentina"
+    ],
+    "as": [
+      "American Samoa"
+    ],
+    "at": [
+      "Austria"
+    ],
+    "au": [
+      "Australia",
+      "AUS"
+    ],
+    "aw": [
+      "Aruba"
+    ],
+    "ax": [
+      "Aland Islands",
+      "Åland Islands"
+    ],
+    "az": [
+      "Azerbaijan"
+    ],
+    "ba": [
+      "Bosnia and Herzegovina",
+      "Bosnia & Herzegovina"
+    ],
+    "bb": [
+      "Barbados"
+    ],
+    "bd": [
+      "Bangladesh",
+      "BGD"
+    ],
+    "be": [
+      "Belgium"
+    ],
+    "bf": [
+      "Burkina Faso"
+    ],
+    "bg": [
+      "Bulgaria"
+    ],
+    "bh": [
+      "Bahrain"
+    ],
+    "bi": [
+      "Burundi"
+    ],
+    "bj": [
+      "Benin"
+    ],
+    "bl": [
+      "Saint Barthélemy",
+      "St. Barthélemy"
+    ],
+    "bm": [
+      "Bermuda"
+    ],
+    "bn": [
+      "Brunei Darussalam",
+      "Brunei"
+    ],
+    "bo": [
+      "Bolivia",
+      "Bolivia, Plurinational State of"
+    ],
+    "bq": [
+      "Bonaire, Sint Eustatius and Saba",
+      "Caribbean Netherlands"
+    ],
+    "br": [
+      "Brazil"
+    ],
+    "bs": [
+      "Bahamas"
+    ],
+    "bt": [
+      "Bhutan"
+    ],
+    "bv": [
+      "Bouvet Island"
+    ],
+    "bw": [
+      "Botswana"
+    ],
+    "by": [
+      "Belarus"
+    ],
+    "bz": [
+      "Belize"
+    ],
+    "ca": [
+      "Canada",
+      "CAN"
+    ],
+    "cc": [
+      "Cocos (Keeling) Islands"
+    ],
+    "cd": [
+      "Democratic Republic of the Congo",
+      "Congo - Kinshasa",
+      "DR Congo",
+      "DRC"
+    ],
+    "cf": [
+      "Central African Republic"
+    ],
+    "cg": [
+      "Republic of the Congo",
+      "Congo - Brazzaville"
+    ],
+    "ch": [
+      "Switzerland"
+    ],
+    "ci": [
+      "Côte d'Ivoire",
+      "Côte d’Ivoire",
+      "Cote d'Ivoire",
+      "Ivory Coast"
+    ],
+    "ck": [
+      "Cook Islands"
+    ],
+    "cl": [
+      "Chile"
+    ],
+    "cm": [
+      "Cameroon"
+    ],
+    "cn": [
+      "China",
+      "CHN",
+      "People's Republic of China"
+    ],
+    "co": [
+      "Colombia"
+    ],
+    "cr": [
+      "Costa Rica"
+    ],
+    "cu": [
+      "Cuba"
+    ],
+    "cv": [
+      "Cabo Verde",
+      "Cape Verde"
+    ],
+    "cw": [
+      "Curaçao"
+    ],
+    "cx": [
+      "Christmas Island"
+    ],
+    "cy": [
+      "Cyprus"
+    ],
+    "cz": [
+      "Czech Republic",
+      "Czechia"
+    ],
+    "de": [
+      "Germany",
+      "DEU",
+      "Deutschland"
+    ],
+    "dj": [
+      "Djibouti"
+    ],
+    "dk": [
+      "Denmark"
+    ],
+    "dm": [
+      "Dominica"
+    ],
+    "do": [
+      "Dominican Republic"
+    ],
+    "dz": [
+      "Algeria"
+    ],
+    "ec": [
+      "Ecuador"
+    ],
+    "ee": [
+      "Estonia"
+    ],
+    "eg": [
+      "Egypt"
+    ],
+    "eh": [
+      "Western Sahara"
+    ],
+    "er": [
+      "Eritrea"
+    ],
+    "es": [
+      "Spain"
+    ],
+    "et": [
+      "Ethiopia"
+    ],
+    "fi": [
+      "Finland"
+    ],
+    "fj": [
+      "Fiji"
+    ],
+    "fk": [
+      "Falkland Islands"
+    ],
+    "fm": [
+      "Federated States of Micronesia",
+      "Micronesia"
+    ],
+    "fo": [
+      "Faroe Islands"
+    ],
+    "fr": [
+      "France",
+      "FRA"
+    ],
+    "ga": [
+      "Gabon"
+    ],
+    "gb": [
+      "United Kingdom",
+      "UK",
+      "U.K.",
+      "GBR",
+      "Great Britain",
+      "United Kingdom of Great Britain and Northern Ireland"
+    ],
+    "gd": [
+      "Grenada"
+    ],
+    "ge": [
+      "Georgia"
+    ],
+    "gf": [
+      "French Guiana"
+    ],
+    "gg": [
+      "Guernsey"
+    ],
+    "gh": [
+      "Ghana"
+    ],
+    "gi": [
+      "Gibraltar"
+    ],
+    "gl": [
+      "Greenland"
+    ],
+    "gm": [
+      "Gambia"
+    ],
+    "gn": [
+      "Guinea"
+    ],
+    "gp": [
+      "Guadeloupe"
+    ],
+    "gq": [
+      "Equatorial Guinea"
+    ],
+    "gr": [
+      "Greece"
+    ],
+    "gs": [
+      "South Georgia and the South Sandwich Islands",
+      "South Georgia & South Sandwich Islands"
+    ],
+    "gt": [
+      "Guatemala"
+    ],
+    "gu": [
+      "Guam"
+    ],
+    "gw": [
+      "Guinea-Bissau"
+    ],
+    "gy": [
+      "Guyana"
+    ],
+    "hk": [
+      "Hong Kong",
+      "Hong Kong SAR China"
+    ],
+    "hm": [
+      "Heard Island and McDonald Islands",
+      "Heard & McDonald Islands"
+    ],
+    "hn": [
+      "Honduras"
+    ],
+    "hr": [
+      "Croatia"
+    ],
+    "ht": [
+      "Haiti"
+    ],
+    "hu": [
+      "Hungary"
+    ],
+    "id": [
+      "Indonesia"
+    ],
+    "ie": [
+      "Ireland"
+    ],
+    "il": [
+      "Israel"
+    ],
+    "im": [
+      "Isle of Man"
+    ],
+    "in": [
+      "India",
+      "IND"
+    ],
+    "io": [
+      "British Indian Ocean Territory"
+    ],
+    "iq": [
+      "Iraq"
+    ],
+    "ir": [
+      "Iran",
+      "Iran, Islamic Republic of"
+    ],
+    "is": [
+      "Iceland"
+    ],
+    "it": [
+      "Italy"
+    ],
+    "je": [
+      "Jersey"
+    ],
+    "jm": [
+      "Jamaica"
+    ],
+    "jo": [
+      "Jordan"
+    ],
+    "jp": [
+      "Japan"
+    ],
+    "ke": [
+      "Kenya"
+    ],
+    "kg": [
+      "Kyrgyzstan"
+    ],
+    "kh": [
+      "Cambodia"
+    ],
+    "ki": [
+      "Kiribati"
+    ],
+    "km": [
+      "Comoros"
+    ],
+    "kn": [
+      "Saint Kitts and Nevis",
+      "St. Kitts & Nevis"
+    ],
+    "kp": [
+      "North Korea",
+      "Democratic People's Republic of Korea"
+    ],
+    "kr": [
+      "South Korea",
+      "Republic of Korea",
+      "Korea, Republic of"
+    ],
+    "kw": [
+      "Kuwait"
+    ],
+    "ky": [
+      "Cayman Islands"
+    ],
+    "kz": [
+      "Kazakhstan"
+    ],
+    "la": [
+      "Laos",
+      "Lao People's Democratic Republic"
+    ],
+    "lb": [
+      "Lebanon"
+    ],
+    "lc": [
+      "Saint Lucia",
+      "St. Lucia"
+    ],
+    "li": [
+      "Liechtenstein"
+    ],
+    "lk": [
+      "Sri Lanka"
+    ],
+    "lr": [
+      "Liberia"
+    ],
+    "ls": [
+      "Lesotho"
+    ],
+    "lt": [
+      "Lithuania"
+    ],
+    "lu": [
+      "Luxembourg"
+    ],
+    "lv": [
+      "Latvia"
+    ],
+    "ly": [
+      "Libya"
+    ],
+    "ma": [
+      "Morocco"
+    ],
+    "mc": [
+      "Monaco"
+    ],
+    "md": [
+      "Moldova",
+      "Republic of Moldova"
+    ],
+    "me": [
+      "Montenegro"
+    ],
+    "mf": [
+      "Saint Martin",
+      "St. Martin"
+    ],
+    "mg": [
+      "Madagascar"
+    ],
+    "mh": [
+      "Marshall Islands"
+    ],
+    "mk": [
+      "North Macedonia"
+    ],
+    "ml": [
+      "Mali"
+    ],
+    "mm": [
+      "Myanmar",
+      "Myanmar (Burma)"
+    ],
+    "mn": [
+      "Mongolia"
+    ],
+    "mo": [
+      "Macau",
+      "Macao SAR China"
+    ],
+    "mp": [
+      "Northern Mariana Islands"
+    ],
+    "mq": [
+      "Martinique"
+    ],
+    "mr": [
+      "Mauritania"
+    ],
+    "ms": [
+      "Montserrat"
+    ],
+    "mt": [
+      "Malta"
+    ],
+    "mu": [
+      "Mauritius"
+    ],
+    "mv": [
+      "Maldives"
+    ],
+    "mw": [
+      "Malawi"
+    ],
+    "mx": [
+      "Mexico"
+    ],
+    "my": [
+      "Malaysia"
+    ],
+    "mz": [
+      "Mozambique"
+    ],
+    "na": [
+      "Namibia"
+    ],
+    "nc": [
+      "New Caledonia"
+    ],
+    "ne": [
+      "Niger"
+    ],
+    "nf": [
+      "Norfolk Island"
+    ],
+    "ng": [
+      "Nigeria"
+    ],
+    "ni": [
+      "Nicaragua"
+    ],
+    "nl": [
+      "Netherlands"
+    ],
+    "no": [
+      "Norway"
+    ],
+    "np": [
+      "Nepal"
+    ],
+    "nr": [
+      "Nauru"
+    ],
+    "nu": [
+      "Niue"
+    ],
+    "nz": [
+      "New Zealand",
+      "NZL"
+    ],
+    "om": [
+      "Oman"
+    ],
+    "pa": [
+      "Panama"
+    ],
+    "pe": [
+      "Peru"
+    ],
+    "pf": [
+      "French Polynesia"
+    ],
+    "pg": [
+      "Papua New Guinea"
+    ],
+    "ph": [
+      "Philippines"
+    ],
+    "pk": [
+      "Pakistan",
+      "PAK"
+    ],
+    "pl": [
+      "Poland"
+    ],
+    "pm": [
+      "Saint Pierre and Miquelon",
+      "St. Pierre & Miquelon"
+    ],
+    "pn": [
+      "Pitcairn",
+      "Pitcairn Islands"
+    ],
+    "pr": [
+      "Puerto Rico"
+    ],
+    "ps": [
+      "State of Palestine",
+      "Palestinian Territories",
+      "Palestine"
+    ],
+    "pt": [
+      "Portugal"
+    ],
+    "pw": [
+      "Palau"
+    ],
+    "py": [
+      "Paraguay"
+    ],
+    "qa": [
+      "Qatar"
+    ],
+    "re": [
+      "Réunion"
+    ],
+    "ro": [
+      "Romania"
+    ],
+    "rs": [
+      "Serbia"
+    ],
+    "ru": [
+      "Russia",
+      "Russian Federation"
+    ],
+    "rw": [
+      "Rwanda"
+    ],
+    "sa": [
+      "Saudi Arabia",
+      "SAU",
+      "KSA"
+    ],
+    "sb": [
+      "Solomon Islands"
+    ],
+    "sc": [
+      "Seychelles"
+    ],
+    "sd": [
+      "Sudan"
+    ],
+    "se": [
+      "Sweden"
+    ],
+    "sg": [
+      "Singapore"
+    ],
+    "sh": [
+      "Saint Helena, Ascension and Tristan da Cunha",
+      "St. Helena"
+    ],
+    "si": [
+      "Slovenia"
+    ],
+    "sj": [
+      "Svalbard and Jan Mayen",
+      "Svalbard & Jan Mayen"
+    ],
+    "sk": [
+      "Slovakia"
+    ],
+    "sl": [
+      "Sierra Leone"
+    ],
+    "sm": [
+      "San Marino"
+    ],
+    "sn": [
+      "Senegal"
+    ],
+    "so": [
+      "Somalia"
+    ],
+    "sr": [
+      "Suriname"
+    ],
+    "ss": [
+      "South Sudan"
+    ],
+    "st": [
+      "Sao Tome and Principe",
+      "São Tomé & Príncipe"
+    ],
+    "sv": [
+      "El Salvador"
+    ],
+    "sx": [
+      "Sint Maarten"
+    ],
+    "sy": [
+      "Syria",
+      "Syrian Arab Republic"
+    ],
+    "sz": [
+      "Eswatini",
+      "Swaziland"
+    ],
+    "tc": [
+      "Turks and Caicos Islands",
+      "Turks & Caicos Islands"
+    ],
+    "td": [
+      "Chad"
+    ],
+    "tf": [
+      "French Southern Territories"
+    ],
+    "tg": [
+      "Togo"
+    ],
+    "th": [
+      "Thailand"
+    ],
+    "tj": [
+      "Tajikistan"
+    ],
+    "tk": [
+      "Tokelau"
+    ],
+    "tl": [
+      "Timor-Leste"
+    ],
+    "tm": [
+      "Turkmenistan"
+    ],
+    "tn": [
+      "Tunisia"
+    ],
+    "to": [
+      "Tonga"
+    ],
+    "tr": [
+      "Türkiye",
+      "Turkey"
+    ],
+    "tt": [
+      "Trinidad and Tobago",
+      "Trinidad & Tobago"
+    ],
+    "tv": [
+      "Tuvalu"
+    ],
+    "tw": [
+      "Taiwan",
+      "Taiwan, Province of China"
+    ],
+    "tz": [
+      "Tanzania",
+      "United Republic of Tanzania"
+    ],
+    "ua": [
+      "Ukraine"
+    ],
+    "ug": [
+      "Uganda"
+    ],
+    "um": [
+      "United States Minor Outlying Islands",
+      "U.S. Outlying Islands"
+    ],
+    "us": [
+      "United States of America",
+      "United States",
+      "USA",
+      "U.S.A.",
+      "US of A"
+    ],
+    "uy": [
+      "Uruguay"
+    ],
+    "uz": [
+      "Uzbekistan"
+    ],
+    "va": [
+      "Holy See",
+      "Vatican City"
+    ],
+    "vc": [
+      "Saint Vincent and the Grenadines",
+      "St. Vincent & Grenadines"
+    ],
+    "ve": [
+      "Venezuela",
+      "Venezuela, Bolivarian Republic of"
+    ],
+    "vg": [
+      "Virgin Islands (British)",
+      "British Virgin Islands"
+    ],
+    "vi": [
+      "Virgin Islands (U.S.)",
+      "U.S. Virgin Islands"
+    ],
+    "vn": [
+      "Vietnam",
+      "Viet Nam"
+    ],
+    "vu": [
+      "Vanuatu"
+    ],
+    "wf": [
+      "Wallis and Futuna",
+      "Wallis & Futuna"
+    ],
+    "ws": [
+      "Samoa"
+    ],
+    "xk": [
+      "Kosovo"
+    ],
+    "ye": [
+      "Yemen"
+    ],
+    "yt": [
+      "Mayotte"
+    ],
+    "za": [
+      "South Africa"
+    ],
+    "zm": [
+      "Zambia"
+    ],
+    "zw": [
+      "Zimbabwe"
+    ]
+  },
+  "fixtures": [
+    {
+      "input": "Canada",
+      "code": "ca"
+    },
+    {
+      "input": "  cAnAdA  ",
+      "code": "ca"
+    },
+    {
+      "input": "CA",
+      "code": "ca"
+    },
+    {
+      "input": "CAN",
+      "code": "ca"
+    },
+    {
+      "input": "United States",
+      "code": "us"
+    },
+    {
+      "input": "United States of America",
+      "code": "us"
+    },
+    {
+      "input": "U.S.A.",
+      "code": "us"
+    },
+    {
+      "input": "UK",
+      "code": "gb"
+    },
+    {
+      "input": "United Kingdom",
+      "code": "gb"
+    },
+    {
+      "input": "UAE",
+      "code": "ae"
+    },
+    {
+      "input": "Pakistan",
+      "code": "pk"
+    },
+    {
+      "input": "India",
+      "code": "in"
+    },
+    {
+      "input": "China",
+      "code": "cn"
+    },
+    {
+      "input": "Côte d’Ivoire",
+      "code": "ci"
+    },
+    {
+      "input": "Türkiye",
+      "code": "tr"
+    },
+    {
+      "input": "DR Congo",
+      "code": "cd"
+    },
+    {
+      "input": "Republic of the Congo",
+      "code": "cg"
+    },
+    {
+      "input": "Kosovo",
+      "code": "xk"
+    },
+    {
+      "input": "",
+      "code": null
+    },
+    {
+      "input": "Unknown region",
+      "code": null
+    },
+    {
+      "input": "ZZ",
+      "code": null
+    },
+    {
+      "input": "../ca",
+      "code": null
+    },
+    {
+      "input": "Canada City, Unknown region",
+      "code": null
+    },
+    {
+      "input": "North America",
+      "code": null
+    },
+    {
+      "input": "<img src=x>",
+      "code": null
+    }
+  ]
+}

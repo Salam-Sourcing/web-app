@@ -1,28 +1,53 @@
 export function bindPasswordSettings() {
   const form = document.querySelector<HTMLFormElement>("[data-password-form]");
-  const showVerification = () => {
-    document
-      .querySelectorAll<HTMLElement>("[data-password-verification]")
-      .forEach((node) => (node.hidden = false));
-    const code = form?.querySelector<HTMLInputElement>('[name="nonce"]');
+  if (!form || form.dataset.passwordBound) return;
+  form.dataset.passwordBound = "true";
+  const codeForm = document.querySelector<HTMLFormElement>(
+    "[data-password-code-form]",
+  );
+  const code = form.querySelector<HTMLInputElement>('[name="nonce"]');
+  const help = form.querySelector<HTMLElement>("[data-password-code-help]");
+  const requireCode = (sent: boolean) => {
     if (code) {
-      code.disabled = false;
       code.required = true;
+      code.setAttribute("aria-required", "true");
+      if (sent) code.value = "";
+      code.focus();
     }
-    form
-      ?.querySelector<HTMLElement>("[data-password-code-request]")
-      ?.setAttribute("hidden", "");
+    if (help)
+      help.textContent = sent
+        ? "Code sent. Enter the latest code from your email, then select Update password."
+        : "Verification code required. Select Send verification code above, then enter the latest code from your email.";
+    if (!sent)
+      codeForm?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   };
-  form
-    ?.querySelector("[data-password-code-request]")
-    ?.addEventListener("click", showVerification);
-  form?.addEventListener("salam-form-error", (event) => {
+  codeForm?.addEventListener("salam-form-success", () => {
+    requireCode(true);
+    const button = codeForm.querySelector<HTMLElement>(
+      "[data-password-send-code]",
+    );
+    if (button) button.textContent = "Send a new code";
+    const previousError = form.querySelector<HTMLElement>(
+      "[data-form-message]",
+    );
+    if (previousError) previousError.hidden = true;
+  });
+  form.addEventListener("salam-form-error", (event) => {
+    const errorCode = (event as CustomEvent).detail?.code;
     if (
       ["reauthentication_needed", "reauthentication_not_valid"].includes(
-        (event as CustomEvent).detail.code,
+        errorCode,
       )
     )
-      showVerification();
+      requireCode(false);
+    if (
+      ["current_password_required", "current_password_mismatch"].includes(
+        errorCode,
+      )
+    )
+      form
+        .querySelector<HTMLInputElement>('[name="current_password"]')
+        ?.focus();
   });
   window.addEventListener("pagehide", () => {
     form
