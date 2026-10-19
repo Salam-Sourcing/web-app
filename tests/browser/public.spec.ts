@@ -5,8 +5,13 @@ test("public information and auth pages remain usable on narrow screens", async 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 320, height: 800 });
   for (const path of [
+    "/",
+    "/categories",
+    "/trade-events",
     "/plans",
+    "/blogs",
     "/platform",
+    "/about",
     "/get-the-app",
     "/buyers",
     "/vendors",
@@ -33,10 +38,10 @@ test("public information and auth pages remain usable on narrow screens", async 
     ).toBeVisible();
     const header = page.locator(".site-header");
     await expect(
-      header.getByRole("link", { name: "Log in", exact: true }),
+      header.getByRole("link", { name: "Sign in", exact: true }),
     ).toBeVisible();
     await expect(
-      header.getByRole("link", { name: "Join free", exact: true }),
+      header.getByRole("link", { name: "Post RFQ", exact: true }),
     ).toBeVisible();
     if (path === "/platform" || path === "/get-the-app") {
       const faq = page.locator(".marketing-faq details").first();

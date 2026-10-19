@@ -728,12 +728,12 @@ button:disabled {
   .mobile-dock {
     position: fixed;
     bottom: calc(14px + env(safe-area-inset-bottom));
-    inset-inline: 16px;
-    max-width: 520px;
+    inset-inline: 10px;
+    max-width: 620px;
     margin-inline: auto;
     z-index: 20;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     padding: 8px 6px;
     border: 1px solid var(--border);
     border-radius: 24px;
@@ -741,6 +741,8 @@ button:disabled {
     box-shadow: 0 8px 35px #1a202817;
   }
   .mobile-dock a {
+    min-width: 0;
+    overflow-wrap: anywhere;
     display: grid;
     gap: 4px;
     place-items: center;

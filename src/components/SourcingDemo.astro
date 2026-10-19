@@ -1,0 +1,74 @@
+---
+import home from "../../parity/homepage.json";
+---
+
+<div class="sourcing-demo" data-sourcing-demo>
+  <div>
+    <p class="eyebrow">60-second guided overview</p><h3>
+      A requirement today.<br />A connection tomorrow.
+    </h3><p>
+      Follow the journey from your first account to a direct business
+      conversation.
+    </p><button
+      type="button"
+      class="button"
+      data-demo-toggle
+      aria-pressed="false">▶ Play overview</button>
+  </div>
+  <div class="demo-stage" aria-live="polite" aria-atomic="true">
+    <span data-demo-number>01 / 05</span><h3 data-demo-title>
+      {home.steps[0].name}
+    </h3><p data-demo-description>{home.steps[0].text}</p><div
+      class="demo-progress"
+      aria-hidden="true"
+    >
+      {home.steps.map((_, i) => <span class:list={{ active: i === 0 }} />)}
+    </div><small>Illustrated platform walkthrough</small>
+  </div>
+</div>
+<script>
+  import home from "../../parity/homepage.json";
+  for (const root of document.querySelectorAll<HTMLElement>(
+    "[data-sourcing-demo]",
+  )) {
+    const button = root.querySelector<HTMLButtonElement>("[data-demo-toggle]")!;
+    let step = 0,
+      timer: ReturnType<typeof setInterval> | undefined;
+    const stop = () => {
+      clearInterval(timer);
+      timer = undefined;
+      button.textContent = step === 4 ? "↻ Replay overview" : "▶ Play overview";
+      button.setAttribute("aria-pressed", "false");
+    };
+    const render = () => {
+      root.querySelector("[data-demo-number]")!.textContent =
+        `0${step + 1} / 05`;
+      root.querySelector("[data-demo-title]")!.textContent =
+        home.steps[step].name;
+      root.querySelector("[data-demo-description]")!.textContent =
+        home.steps[step].text;
+      root
+        .querySelectorAll(".demo-progress span")
+        .forEach((el, i) => el.classList.toggle("active", i === step));
+    };
+    button.addEventListener("click", () => {
+      if (timer) {
+        stop();
+        return;
+      }
+      if (step === 4) step = 0;
+      render();
+      button.textContent = "Ⅱ Pause overview";
+      button.setAttribute("aria-pressed", "true");
+      timer = setInterval(() => {
+        if (step === 4) {
+          stop();
+          return;
+        }
+        step++;
+        render();
+      }, 12000);
+    });
+    window.addEventListener("pagehide", stop, { once: true });
+  }
+</script>

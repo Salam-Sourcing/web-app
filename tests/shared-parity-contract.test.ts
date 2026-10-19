@@ -38,7 +38,7 @@ test("release checklist has unique acceptance IDs and explicitly defers only bro
     contract.policy.deferred.map((s: any) => s.id),
     ["browser-push"],
   );
-  assert.equal(contract.screens.length, 39);
+  assert.equal(contract.screens.length, 40);
 });
 
 test("new web pages require a shared acceptance inventory update", () => {

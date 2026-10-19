@@ -8,11 +8,13 @@ interface Props {
   title: string;
   description?: string;
   privatePage?: boolean;
+  signedIn?: boolean;
 }
 const {
   title,
   description = "Discover suppliers, request quotes and manage your business sourcing with Salam Sourcing B2B Marketplace.",
   privatePage = false,
+  signedIn = false,
 } = Astro.props;
 const site = publicSite();
 const canonical = new URL(Astro.url.pathname, site.origin);
@@ -64,7 +66,7 @@ const pageTitle = title.includes("Salam Sourcing B2B Marketplace")
     </title>
   </head><body class="flex min-h-screen flex-col"
     ><a href="#main" class="skip-link">Skip to content</a><AppDownloadBanner
-    /><Header /><main id="main" class="flex-1">
+    /><Header signedIn={signedIn} /><main id="main" class="flex-1">
       <slot />
     </main><Footer /></body
   >

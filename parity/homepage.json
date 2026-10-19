@@ -1,0 +1,135 @@
+{
+  "sectors": [
+    {
+      "id": "agriculture",
+      "name": "Agriculture & Agri-Food",
+      "icon": "plant",
+      "description": "Grains, pulses, food ingredients and farm inputs.",
+      "topics": [
+        "Grains & Pulses",
+        "Food Ingredients",
+        "Fresh & Frozen Food",
+        "Farm Inputs"
+      ]
+    },
+    {
+      "id": "energy",
+      "name": "Energy & Clean Tech",
+      "icon": "energy",
+      "description": "Renewables, energy services and low-carbon solutions.",
+      "topics": [
+        "Renewable Energy",
+        "Energy Services",
+        "Solar Equipment",
+        "Clean Technology"
+      ]
+    },
+    {
+      "id": "machinery",
+      "name": "Industrial Machinery",
+      "icon": "tool",
+      "description": "Equipment, automation, parts and components.",
+      "topics": [
+        "Industrial Machinery",
+        "Automation",
+        "Tools & Components",
+        "Pumps & Valves"
+      ]
+    },
+    {
+      "id": "manufacturing",
+      "name": "Manufacturing",
+      "icon": "machine",
+      "description": "OEM, components and contract manufacturing.",
+      "topics": [
+        "Contract Manufacturing",
+        "OEM Components",
+        "Metals & Alloys",
+        "Packaging"
+      ]
+    },
+    {
+      "id": "technology",
+      "name": "Technology & AI",
+      "icon": "chip",
+      "description": "SaaS, AI, cybersecurity and digital services.",
+      "topics": [
+        "Software",
+        "Artificial Intelligence",
+        "Cybersecurity",
+        "Digital Services"
+      ]
+    },
+    {
+      "id": "construction",
+      "name": "Construction Materials",
+      "icon": "building",
+      "description": "Building products and infrastructure supplies.",
+      "topics": [
+        "Building Materials",
+        "Electrical & Plumbing",
+        "Infrastructure",
+        "Fixtures"
+      ]
+    },
+    {
+      "id": "health",
+      "name": "Health & MedTech",
+      "icon": "health",
+      "description": "Devices, diagnostics and health technology.",
+      "topics": [
+        "Medical Devices",
+        "Diagnostics",
+        "Health Technology",
+        "Medical Supplies"
+      ]
+    },
+    {
+      "id": "logistics",
+      "name": "Logistics & Trade Services",
+      "icon": "truck",
+      "description": "Freight, customs support, finance and insurance.",
+      "topics": ["Logistics", "Freight", "Customs Support", "Trade Finance"]
+    }
+  ],
+  "regions": [
+    { "name": "Canada", "flag": "🇨🇦", "query": "Canada" },
+    { "name": "United States", "flag": "🇺🇸", "query": "United States" },
+    { "name": "Europe", "flag": "🇪🇺", "query": "Europe" },
+    { "name": "Middle East", "flag": "🌍", "query": "Middle East" },
+    { "name": "South Asia", "flag": "🌏", "query": "South Asia" },
+    { "name": "Southeast Asia", "flag": "🌏", "query": "Southeast Asia" },
+    { "name": "Africa", "flag": "🌍", "query": "Africa" },
+    { "name": "Australia / Oceania", "flag": "🌏", "query": "Oceania" }
+  ],
+  "steps": [
+    { "name": "Register", "text": "Create your business account." },
+    { "name": "Verify", "text": "Submit your business details for review." },
+    { "name": "Post", "text": "Publish your RFQ or product catalogue." },
+    { "name": "Match", "text": "Explore suitable suppliers and requirements." },
+    {
+      "name": "Meet & Trade",
+      "text": "Start a conversation and negotiate directly."
+    }
+  ],
+  "events": [
+    {
+      "label": "CANADA · PLANNED",
+      "name": "Western Canada Buyer–Supplier Exchange",
+      "text": "Focused buyer meetings, supplier showcases and procurement sessions.",
+      "action": "Register interest"
+    },
+    {
+      "label": "USA · FUTURE",
+      "name": "Cross-Border B2B Mission",
+      "text": "Targeted Canada–USA supplier and buyer introductions.",
+      "action": "Recommend a city"
+    },
+    {
+      "label": "GLOBAL · MEMBER-LED",
+      "name": "International Trade Mission",
+      "text": "Location and sector shaped by member demand and recommendations.",
+      "action": "Suggest a market"
+    }
+  ]
+}

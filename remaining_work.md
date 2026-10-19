@@ -15,9 +15,22 @@ push is prepared but disabled and deferred at the user’s request.
 Complete and verify one phase before starting the next; an implemented screen
 alone does not satisfy its completion gate.
 
+## Homepage update — 2026-10-19
+
+- [x] PDF-inspired website root and native signed-in/guest home implemented.
+- [x] Eight sectors and 32 topic searches linked; real marketplace categories,
+      buyer/supplier actions, planned events and membership links connected.
+- [x] Phone layouts, large text, haptics, guest handoff and browser journeys
+      verified; actual iPhone simulator scrolling video recorded.
+- [ ] Deploy the website and distribute an updated iPhone build.
+- [ ] Verify on physical devices and complete the paired release acceptance gate.
+
+Details and limits: [homepage implementation](documentation/homepage_2026-10-19.md).
+Earlier launch/operations items below remain open; this update does not close them.
+
 ## Repeatable parity and release gates — 2026-10-06
 
-- [x] Shared [machine-readable contract](parity/contract.json): 37 native screens,
+- [x] Shared [machine-readable contract](parity/contract.json): 40 native screens,
       web route inventory, common field/numeric fixtures and 18 acceptance scenarios.
 - [x] Both client suites verify the shared boundaries and require inventory updates
       for new screens/pages. The paired runner requires identical contracts.

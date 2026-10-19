@@ -1,238 +1,630 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
-import PreviewCard from "../components/PreviewCard.astro";
 import LoginPrompt from "../components/LoginPrompt.astro";
+import { requireWorkspace, type Workspace } from "../lib/server/access";
+import { search, availableCategories } from "../lib/server/catalog";
+import PreviewCard from "../components/PreviewCard.astro";
 import Icon from "../components/Icon.astro";
+import SourcingDemo from "../components/SourcingDemo.astro";
 import { marketplacePreview } from "../lib/server/public-catalog";
-import { requireWorkspace } from "../lib/server/access";
+import home from "../../parity/homepage.json";
+import "../styles/homepage.css";
+let preview: Awaited<ReturnType<typeof marketplacePreview>> = {
+  listings: [],
+  categories: [],
+};
+let catalogError = false;
+let signedIn = false;
+let workspace: Workspace | undefined;
 if (Astro.request.headers.get("cookie")?.includes("ss-auth")) {
   Astro.locals.authHeaders.set("Cache-Control", "private, no-store");
+  Astro.locals.authHeaders.set("Cloudflare-CDN-Cache-Control", "no-store");
   try {
-    await requireWorkspace(Astro);
-    return Astro.redirect("/discover", 303);
+    workspace = await requireWorkspace(Astro);
+    signedIn = true;
   } catch {}
 }
-let preview: Awaited<ReturnType<typeof marketplacePreview>> = {
-    listings: [],
-    categories: [],
-  },
-  error = false;
 try {
-  preview = await marketplacePreview();
+  if (workspace) {
+    const [catalog, categories] = await Promise.all([
+      search(workspace, new URLSearchParams()),
+      availableCategories(workspace),
+    ]);
+    preview = {
+      categories,
+      listings: catalog.rows.map(
+        ({
+          id,
+          company_id,
+          name,
+          category,
+          vendor_name,
+          location,
+          has_image,
+        }) => ({
+          id,
+          company_id,
+          name,
+          category,
+          vendor_name,
+          location,
+          has_image,
+          listing_type: "",
+        }),
+      ),
+    };
+  } else preview = await marketplacePreview();
 } catch {
-  error = true;
+  catalogError = true;
 }
+const suppliers = [
+  ...new Map(preview.listings.map((l) => [l.company_id, l])).values(),
+].slice(0, 3);
 ---
 
 <MainLayout
-  title="B2B products, services and business suppliers"
-  description="Explore products and services from businesses on Salam Sourcing B2B Marketplace. Find your next supplier, compare opportunities and connect with the right company."
+  signedIn={signedIn}
+  title="Connect. Source. Trade. Globally."
+  description="Salam Sourcing is a Canada-based global B2B marketplace connecting buyers, suppliers, manufacturers and business partners worldwide."
 >
-  <div data-public-browse>
-    <section class="browse-hero">
-      <div class="container">
-        <div class="browse-intro">
-          <div>
-            <p class="eyebrow">A B2B marketplace for buyers and suppliers</p>
-            <h1>
-              Find the right supply.<br /><span
-                >Build your next connection.</span
-              >
-            </h1>
-            <p class="browse-lead">
-              Source products and services for your company. Connect with
-              business suppliers, compare opportunities and build your next
-              business relationship.
-            </p>
-          </div>
-          <a class="browse-platform-link" href="/platform"
-            >Get to know Salam Sourcing B2B Marketplace <Icon
-              name="arrow"
-              size={18}
-            /></a
+  <div
+    class="sourcing-home"
+    data-public-browse
+    data-signed-in={String(signedIn)}
+  >
+    <section class="home-hero">
+      <div class="container home-hero-grid">
+        <div class="home-hero-copy">
+          <p class="home-kicker">
+            <span></span> Founding global business network
+          </p>
+          <h1>Connect. Source.<br /><em>Trade.</em> Globally.</h1>
+          <p class="home-lead">
+            Your next business connection starts here. A Canada-based global B2B
+            marketplace bringing buyers, suppliers and trusted opportunities
+            together.
+          </p>
+          <form
+            class="home-search"
+            action="/discover"
+            method="get"
+            data-public-search
           >
-        </div>
-        <form
-          class="browse-search card"
-          action="/discover"
-          method="get"
-          data-public-search
-        >
-          <div class="browse-search-row">
-            <label class="field browse-query"
-              >What are you sourcing?
-              <span class="browse-input"
-                ><Icon name="discover" /><input
-                  type="search"
-                  name="query"
-                  maxlength="200"
-                  placeholder="Search products, services or suppliers"
-                /></span
-              >
-            </label>
-            <label class="field"
-              >Category<select name="category"
-                ><option value="">All</option>{
-                  preview.categories.map((category) => (
-                    <option value={category}>{category}</option>
-                  ))
-                }</select
-              ></label
+            <label for="home-query" class="sr-only"
+              >Search products, services or suppliers</label
             >
-            <button class="button" type="submit"
-              ><Icon name="discover" size={18} />Search</button
+            <Icon name="discover" size={22} /><input
+              id="home-query"
+              name="query"
+              type="search"
+              maxlength="200"
+              placeholder="What are you sourcing?"
+            />
+            <button class="button home-search-button" type="submit"
+              >Search <Icon name="arrow" size={17} /></button
             >
-          </div>
-          <details class="browse-filter-details">
-            <summary><Icon name="layers" size={17} />Refine your search</summary
-            >
-            <div class="browse-filter-grid">
-              <label class="field"
-                >Location<input
-                  name="location"
-                  maxlength="200"
-                  placeholder="City, province or country"
-                /></label
+            <details class="home-refine">
+              <summary>Refine your search</summary><div
+                class="home-refine-grid"
               >
-              <label class="field"
-                >Currency<input
-                  name="currency"
-                  maxlength="3"
-                  pattern="[A-Za-z]{3}"
-                  placeholder="e.g. CAD"
-                /></label
-              >
-              <label class="field"
-                >Minimum price<input
-                  type="number"
-                  name="min_price"
-                  min="0"
-                  step="any"
-                  placeholder="Any"
-                /></label
-              >
-              <label class="field"
-                >Maximum price<input
-                  type="number"
-                  name="max_price"
-                  min="0"
-                  step="any"
-                  placeholder="Any"
-                /></label
-              >
-              <label class="field"
-                >Minimum order: at most<input
-                  type="number"
-                  name="max_moq"
-                  min="0"
-                  step="any"
-                  placeholder="Any"
-                /></label
-              >
-              <label class="field"
-                >Lead time (days)<input
-                  type="number"
-                  name="max_lead_days"
-                  min="0"
-                  step="1"
-                  placeholder="Any"
-                /></label
-              >
-              <label class="field"
-                >Sort by<select name="sort"
-                  ><option value="newest">Newest</option><option
-                    value="price_low">Price: low to high</option
-                  ><option value="price_high">Price: high to low</option><option
-                    value="lead_time">Shortest lead time</option
-                  ></select
-                ></label
-              >
-              <label class="checkbox-field"
-                ><input type="checkbox" name="verified" value="true" />Verified
-                suppliers only</label
-              >
-            </div>
-            <div class="browse-filter-actions">
-              <p class="help-text">
-                Sign in to apply your search and filters.
-              </p><button class="button secondary" type="submit"
+                <label class="field"
+                  >Category<select name="category"
+                    ><option value="">All categories</option>{
+                      preview.categories.map((c) => (
+                        <option value={c}>{c}</option>
+                      ))
+                    }</select
+                  ></label
+                >
+                <label class="field"
+                  >Location<input
+                    name="location"
+                    maxlength="200"
+                    placeholder="City or country"
+                  /></label
+                >
+                <label class="field"
+                  >Currency<input
+                    name="currency"
+                    maxlength="3"
+                    pattern="[A-Za-z]{3}"
+                    placeholder="e.g. CAD"
+                  /></label
+                >
+                <label class="field"
+                  >Minimum price<input
+                    name="min_price"
+                    type="number"
+                    min="0"
+                    step="any"
+                  /></label
+                >
+                <label class="field"
+                  >Maximum price<input
+                    name="max_price"
+                    type="number"
+                    min="0"
+                    step="any"
+                  /></label
+                >
+                <label class="field"
+                  >Maximum minimum order<input
+                    name="max_moq"
+                    type="number"
+                    min="0"
+                    step="any"
+                  /></label
+                >
+                <label class="field"
+                  >Lead time (days)<input
+                    name="max_lead_days"
+                    type="number"
+                    min="0"
+                    step="1"
+                  /></label
+                >
+                <label class="field"
+                  >Sort<select name="sort"
+                    ><option value="newest">Newest</option><option
+                      value="price_low">Price: low to high</option
+                    ><option value="price_high">Price: high to low</option
+                    ><option value="lead_time">Shortest lead time</option
+                    ></select
+                  ></label
+                >
+                <label class="checkbox-field"
+                  ><input
+                    type="checkbox"
+                    name="verified"
+                    value="true"
+                  />Verified suppliers only</label
+                >
+              </div><button class="button secondary" type="submit"
                 >Apply filters</button
               >
-            </div>
-          </details>
-        </form>
-        <div class="browse-benefits" aria-label="Marketplace features">
-          <span class="browse-benefits-label"
-            >On Salam Sourcing B2B Marketplace:</span
+            </details>
+          </form>
+          <div class="home-hero-actions">
+            <a class="button" href="/enquiries/new"
+              >Post a buy requirement <Icon name="plus" size={17} /></a
+            ><a class="home-link" href="/sell"
+              >Join as supplier <Icon name="arrow" size={17} /></a
+            >
+          </div>
+          <a class="home-watch" href="#how-it-works"
+            ><span>▶</span> See how it works <small
+              >From an RFQ to a conversation</small
+            ></a
           >
-          <span><Icon name="box" size={17} />Products &amp; services</span><span
-            ><Icon name="messages" size={17} />Direct business conversations</span
-          ><span
-            ><Icon name="enquiries" size={17} />Clear enquiries &amp; quotes</span
+        </div>
+        <div
+          class="home-network"
+          aria-label="Illustration of global business connections"
+        >
+          <div class="network-orbit orbit-one"></div><div
+            class="network-orbit orbit-two"
+          >
+          </div>
+          <svg
+            class="network-globe"
+            viewBox="0 0 400 400"
+            fill="none"
+            aria-hidden="true"
+            ><circle cx="200" cy="200" r="152"></circle><ellipse
+              cx="200"
+              cy="200"
+              rx="75"
+              ry="152"></ellipse><ellipse cx="200" cy="200" rx="152" ry="58"
+            ></ellipse><path
+              d="M48 200h304M200 48v304M75 112c75 42 175 42 250 0M75 288c75-42 175-42 250 0"
+            ></path></svg
+          >
+          <div class="network-centre">
+            <img
+              src="/images/salam-sourcing.png"
+              alt=""
+              width="62"
+              height="62"
+            /><strong>Business without<br />boundaries.</strong>
+          </div>
+          <div class="network-note note-canada">
+            <span>🇨🇦</span><div>
+              <strong>Rooted in Canada</strong><small
+                >Connected to the world</small
+              >
+            </div>
+          </div>
+          <div class="network-note note-source">
+            <span><Icon name="box" size={23} /></span><div>
+              <strong>Source with purpose</strong><small
+                >Products · Services · Partners</small
+              >
+            </div>
+          </div>
+          <div class="network-note note-connect">
+            <span><Icon name="messages" size={23} /></span><div>
+              <strong>Start a conversation</strong><small
+                >Your next opportunity awaits</small
+              >
+            </div>
+          </div>
+          <span class="network-caption"
+            >A global outlook. A personal connection.</span
           >
         </div>
       </div>
     </section>
-    <section class="container browse-catalog">
-      <div class="browse-section-heading">
+    <div class="home-trust container">
+      {
+        [
+          ["flag", "Canada-based", "Global reach"],
+          ["shield", "Business verification", "Transparent profiles"],
+          ["enquiries", "RFQ matching", "Focused sourcing"],
+          ["team", "B2B connections", "Direct communication"],
+          ["calendar", "Trade events", "Planned · Member-led"],
+        ].map(([icon, title, text]) => (
+          <div>
+            <>
+              <Icon name={icon} />
+              <span>
+                <>
+                  <strong>{title}</strong>
+                  <small>{text}</small>
+                </>
+              </span>
+            </>
+          </div>
+        ))
+      }
+    </div>
+    <section class="home-section container" id="buy">
+      <div class="home-section-heading">
         <div>
-          <p class="eyebrow">Explore the marketplace</p><h2>
-            Discover your next opportunity
+          <p class="eyebrow">Two paths. One global marketplace.</p><h2>
+            What brings you here?
           </h2>
-        </div><p class="help-text">
-          Sign in for full details and tailored results.
+        </div><p>
+          Source what your business needs.<br />Or find the buyers who need you.
         </p>
       </div>
+      <div class="home-paths">
+        <article class="home-path buyer-path">
+          <span class="home-icon"><Icon name="enquiries" size={28} /></span><p
+            class="eyebrow"
+          >
+            Buyer hub
+          </p><h3>Looking to buy?</h3><p>
+            Tell us what your business needs and connect with suitable suppliers
+            worldwide.
+          </p><ul>
+            <li>Post buying requirements and RFQs</li><li>
+              Find products and business suppliers
+            </li><li>Receive and compare quotations</li><li>
+              Connect directly with potential partners
+            </li>
+          </ul><a class="button" href="/enquiries/new"
+            >Post your requirement <Icon name="arrow" size={18} /></a
+          >
+        </article>
+        <article class="home-path supplier-path" id="sell">
+          <span class="home-icon"><Icon name="sell" size={28} /></span><p
+            class="eyebrow"
+          >
+            Supplier hub
+          </p><h3>Ready to reach global buyers?</h3><p>
+            Build your business profile, showcase your products and explore
+            procurement opportunities.
+          </p><ul>
+            <li>Company storefront and product catalogue</li><li>
+              Access buyer RFQs
+            </li><li>Apply for business verification</li><li>
+              Manage enquiries and quotations
+            </li>
+          </ul><a class="button home-navy" href="/sell"
+            >Join as supplier <Icon name="arrow" size={18} /></a
+          >
+        </article>
+      </div>
+    </section>
+    <section class="home-band" id="categories">
+      <div class="container home-section">
+        <div class="home-section-heading">
+          <div>
+            <p class="eyebrow">Find your sector</p><h2>
+              A world of business.<br />Organised around yours.
+            </h2>
+          </div><a class="home-link" href="/categories"
+            >All categories <Icon name="arrow" size={18} /></a
+          >
+        </div><div class="home-sector-grid">
+          {
+            home.sectors.map((s, index) => (
+              <a href={"/categories?sector=" + s.id} class="home-sector">
+                <>
+                  <span class={"home-icon sector-tone-" + (index % 4)}>
+                    <Icon name={s.icon} size={26} />
+                  </span>
+                  <h3>{s.name}</h3>
+                  <p>{s.description}</p>
+                  <span class="sector-explore">
+                    Explore sector <Icon name="arrow" size={16} />
+                  </span>
+                </>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+    <section class="home-section container" id="rfqs">
+      <div class="home-section-heading">
+        <div>
+          <p class="eyebrow">Real requirements. Relevant conversations.</p><h2>
+            Meet your next opportunity.
+          </h2>
+        </div><a class="home-link" href="/enquiries"
+          >Explore buyer RFQs <Icon name="arrow" size={18} /></a
+        >
+      </div><div class="home-rfq-callout">
+        <span class="home-icon"><Icon name="enquiries" size={30} /></span><div>
+          <h3>What does your business need?</h3><p>
+            Publish a sourcing requirement, review quotations and connect with
+            suppliers. Sign in to explore current buyer requirements.
+          </p>
+        </div><a class="button" href="/enquiries/new"
+          >Post an RFQ <Icon name="plus" size={17} /></a
+        >
+      </div>
+      <div class="home-section-heading home-catalog-heading">
+        <h3>Products &amp; services from the marketplace</h3><a
+          class="home-link"
+          href="/discover">Browse marketplace <Icon name="arrow" size={18} /></a
+        >
+      </div>
       {
-        error ? (
-          <div class="card browse-empty">
+        catalogError ? (
+          <div class="home-empty">
             <>
-              <Icon name="box" size={36} />
-              <h3>We couldn’t load the marketplace</h3>
-              <p>Please try again in a moment.</p>
-              <a class="button secondary" href="/">
-                Retry
+              <h3>The marketplace is temporarily unavailable.</h3>
+              <p>Please try again shortly.</p>
+              <a href="/" class="home-link">
+                Retry marketplace
               </a>
             </>
           </div>
         ) : preview.listings.length ? (
           <div class="catalog-grid">
-            {preview.listings.map((listing) => (
-              <PreviewCard listing={listing} />
+            {preview.listings.slice(0, 6).map((l) => (
+              <PreviewCard listing={l} signedIn={signedIn} />
             ))}
           </div>
         ) : (
-          <div class="card browse-empty">
+          <div class="home-empty">
             <>
-              <Icon name="box" size={36} />
-              <h3>New opportunities are on their way</h3>
+              <h3>Your next opportunity is taking shape.</h3>
               <p>
-                Listings appear here once they’re approved for the marketplace.
+                Approved products and services will appear here as the network
+                grows.
               </p>
-              <a class="button" href="/signup">
-                Join Salam Sourcing B2B Marketplace
+              <a class="home-link" href="/sell">
+                Become a founding supplier <Icon name="arrow" size={18} />
               </a>
             </>
           </div>
         )
       }
     </section>
-    <section class="container browse-bottom">
-      <div>
-        <h2>Better sourcing starts with a conversation.</h2><p>
-          Discover how Salam Sourcing B2B Marketplace helps your business buy,
-          sell and work together.
-        </p>
-      </div><div class="actions">
-        <a class="button secondary" href="/about">How it works</a><a
-          class="text-link"
-          href="/plans">Explore our plans <Icon name="arrow" size={17} /></a
+    <section class="home-section container home-suppliers" id="suppliers">
+      <div class="home-section-heading">
+        <div>
+          <p class="eyebrow">Get to know the business behind the listing</p><h2>
+            Discover business suppliers.
+          </h2>
+        </div><a class="home-link" href="/discover?verified=true"
+          >Find verified suppliers <Icon name="arrow" size={18} /></a
         >
+      </div><p class="home-muted">
+        Review company profiles and their verification status before starting a
+        conversation.
+      </p><div class="home-three-grid">
+        {
+          suppliers.map((s) => (
+            <article class="home-simple-card">
+              <>
+                <span class="supplier-initials">
+                  {s.vendor_name
+                    .split(" ")
+                    .map((w) => w[0])
+                    .join("")
+                    .slice(0, 2)}
+                </span>
+                <h3>{s.vendor_name}</h3>
+                <p>{s.location || "Global business"}</p>
+                <small>{s.category}</small>
+                <a class="home-link" href={"/suppliers/" + s.company_id}>
+                  View company profile <Icon name="arrow" size={17} />
+                </a>
+              </>
+            </article>
+          ))
+        }
+      </div>{
+        !suppliers.length && (
+          <div class="home-empty">
+            <>
+              <p>
+                Supplier profiles will appear here alongside approved
+                marketplace listings.
+              </p>
+              <a class="button secondary" href="/discover">
+                Find suppliers
+              </a>
+            </>
+          </div>
+        )
+      }
+    </section>
+    <section class="home-band" id="how-it-works">
+      <div class="container home-section">
+        <p class="eyebrow">From introduction to opportunity</p><h2>
+          How Salam Sourcing works.
+        </h2><div class="home-steps">
+          {
+            home.steps.map((s, i) => (
+              <article>
+                <>
+                  <span>{String(i + 1).padStart(2, "0")}</span>
+                  <h3>{s.name}</h3>
+                  <p>{s.text}</p>
+                </>
+              </article>
+            ))
+          }
+        </div><SourcingDemo />
       </div>
+    </section>
+    <section class="home-section container">
+      <div class="home-section-heading">
+        <div>
+          <p class="eyebrow">Local knowledge. Global possibility.</p><h2>
+            Source by region.
+          </h2>
+        </div><p>
+          Explore regional connections.<br />Then narrow your search by country.
+        </p>
+      </div><div class="home-regions">
+        {
+          home.regions.map((r) => (
+            <a href={"/categories?region=" + encodeURIComponent(r.query)}>
+              <span>{r.flag}</span>
+              {r.name}
+              <Icon name="arrow" size={16} />
+            </a>
+          ))
+        }
+      </div>
+    </section>
+    <section class="home-why">
+      <div class="container home-section">
+        <p class="eyebrow">Built around better connections</p><h2>
+          Global trade.<br />With a human perspective.
+        </h2><div class="home-four-grid">
+          {
+            [
+              [
+                "flag",
+                "Canada-based",
+                "An international sourcing outlook, rooted in Canada.",
+              ],
+              [
+                "shield",
+                "Trust comes first",
+                "Business identity and transparent verification status.",
+              ],
+              [
+                "team",
+                "Meaningful connections",
+                "Tools for focused sourcing and direct business conversations.",
+              ],
+              [
+                "globe",
+                "Beyond the screen",
+                "Plans for trade missions, expos and meetings shaped by members.",
+              ],
+            ].map(([icon, title, text]) => (
+              <article>
+                <>
+                  <Icon name={icon} size={28} />
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+    <section class="home-section container" id="events">
+      <div class="home-section-heading">
+        <div>
+          <p class="eyebrow">Help shape what comes next</p><h2>
+            Trade events &amp; B2B meetings.
+          </h2>
+        </div><a class="home-link" href="/trade-events"
+          >Explore planned events <Icon name="arrow" size={18} /></a
+        >
+      </div><p class="home-muted">
+        Future events depend on member demand. Dates and venues have not been
+        confirmed.
+      </p><div class="home-three-grid">
+        {
+          home.events.map((e, i) => (
+            <article class="home-simple-card event-card">
+              <>
+                <span class="event-number">0{i + 1}</span>
+                <p class="eyebrow">{e.label}</p>
+                <h3>{e.name}</h3>
+                <p>{e.text}</p>
+                <a class="home-link" href={"/trade-events#event-" + i}>
+                  {e.action} <Icon name="arrow" size={17} />
+                </a>
+              </>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+    <section class="home-band" id="membership">
+      <div class="container home-section">
+        <div class="home-section-heading">
+          <div>
+            <p class="eyebrow">Grow with the network</p><h2>
+              Your business. Your next chapter.
+            </h2>
+          </div><a class="home-link" href="/plans"
+            >Compare proposed plans <Icon name="arrow" size={18} /></a
+          >
+        </div><div class="home-three-grid">
+          <article class="home-simple-card">
+            <p class="eyebrow">For buyers</p><h3>
+              Start your sourcing journey.
+            </h3><p>
+              Create a business account, find suppliers and manage your
+              requirements.
+            </p><a class="button home-navy" href="/signup">Join as buyer</a>
+          </article><article class="home-simple-card membership-featured">
+            <p class="eyebrow">For suppliers</p><h3>
+              Put your business on the map.
+            </h3><p>
+              Build your company profile, publish products and apply for
+              verification.
+            </p><a class="button" href="/sell">Become a supplier</a>
+          </article><article class="home-simple-card">
+            <p class="eyebrow">Membership</p><h3>Room to grow, together.</h3><p>
+              Explore our proposed company plans. Paid upgrades are not
+              available to activate yet.
+            </p><a class="button secondary" href="/plans">Explore membership</a>
+          </article>
+        </div>
+      </div>
+    </section>
+    <section class="container home-section home-closing">
+      <p class="eyebrow">Salam Sourcing</p><h2>
+        Connecting global business<br />with trusted opportunities.
+      </h2><p>
+        Start with a requirement. Build a connection. Grow a relationship.
+      </p><div class="home-hero-actions">
+        <a class="button" href="/signup"
+          >Join the network <Icon name="arrow" size={18} /></a
+        ><a class="home-link" href="/platform">Our story</a>
+      </div><a class="home-alerts" href="/account/preferences"
+        ><Icon name="bell" size={19} /> Manage RFQ &amp; trade alert preferences</a
+      >
     </section>
     <LoginPrompt />
   </div>
 </MainLayout>
+
 <script>
   import { bindPublicBrowse } from "../scripts/public-browse";
   bindPublicBrowse();

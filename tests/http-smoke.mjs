@@ -15,6 +15,7 @@ for (const path of [
   "/vendors",
   "/get-the-app",
   "/plans",
+  "/blogs",
   "/verification",
   "/help",
   "/terms",

@@ -1,0 +1,55 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import home from "../../parity/homepage.json";
+import "../styles/homepage.css";
+const email = (topic: string) =>
+  "mailto:support@salamsourcing.com?" +
+  new URLSearchParams({
+    subject: "Trade event interest: " + topic,
+    body:
+      "Hello Salam Sourcing,\n\nI am interested in " +
+      topic +
+      ".\n\nCompany: \nCountry / preferred city: \nBusiness sector: \nRecommendations: \n",
+  });
+---
+
+<MainLayout
+  title="Trade events & B2B meetings"
+  description="Help shape future Salam Sourcing expos, trade missions and buyer–supplier meetings in Canada, the USA and international markets."
+  ><div class="sourcing-home container home-section">
+    <p class="eyebrow">Beyond the digital marketplace</p><h1
+      class="home-page-title"
+    >
+      Good business starts<br />with a connection.
+    </h1><p class="home-lead">
+      Help shape future B2B expos, trade missions and business networking events
+      in Canada, the USA and other international markets.
+    </p><div class="home-empty">
+      <strong>Planning stage · No confirmed dates or venues</strong><p>
+        These are proposed event concepts. Expressing interest sends an email to
+        our team; it does not reserve a place or create a booking.
+      </p>
+    </div><div class="home-three-grid">
+      {
+        home.events.map((e, i) => (
+          <article id={"event-" + i} class="home-simple-card">
+            <>
+              <p class="eyebrow">{e.label}</p>
+              <h2>{e.name}</h2>
+              <p>{e.text}</p>
+              <a class="button" href={email(e.name)}>
+                {e.action} by email
+              </a>
+            </>
+          </article>
+        ))
+      }
+    </div><section class="home-category-section">
+      <h2>Recommend a sector or destination.</h2><p>
+        Tell us where your business sees an opportunity. Member demand and
+        recommendations will guide future event planning.
+      </p><a class="button secondary" href={email("Member recommendation")}
+        >Send a recommendation</a>
+    </section>
+  </div></MainLayout
+>

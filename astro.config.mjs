@@ -7,6 +7,7 @@ export default defineConfig({
   site: "https://test.salamsourcing.com",
   output: "server",
   session: false,
+  devToolbar: { enabled: false },
   markdown: { syntaxHighlight: false },
   integrations: [react()],
   adapter: cloudflare(),

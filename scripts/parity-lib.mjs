@@ -46,6 +46,12 @@ export async function contracts(web, native) {
     throw Error(
       "The read-only plan catalogues differ between web and Flutter.",
     );
+  const webHome = await readFile(path.join(web, "parity/homepage.json"));
+  const nativeHome = await readFile(path.join(native, "parity/homepage.json"));
+  if (!webHome.equals(nativeHome))
+    throw Error(
+      "The homepage sectors and topics differ between web and Flutter.",
+    );
   const contract = JSON.parse(a);
   const screens = (await readdir(path.join(native, "lib/presentation/screens")))
     .filter((f) => f.endsWith("_screen.dart"))

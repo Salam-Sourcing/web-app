@@ -2,7 +2,10 @@
 import MediaImage from "./MediaImage.astro";
 import Icon from "./Icon.astro";
 import type { PreviewCard } from "../lib/server/public-catalog";
-const { listing: l } = Astro.props as { listing: PreviewCard };
+const { listing: l, signedIn = false } = Astro.props as {
+  listing: PreviewCard;
+  signedIn?: boolean;
+};
 ---
 
 <article class="listing-card guest-listing-card">
@@ -12,7 +15,7 @@ const { listing: l } = Astro.props as { listing: PreviewCard };
       {
         l.has_image && (
           <MediaImage
-            src={"/api/preview/" + l.id}
+            src={(signedIn ? "/api/media/listing/" : "/api/preview/") + l.id}
             alt={l.name}
             loading="lazy"
             decoding="async"
@@ -31,9 +34,13 @@ const { listing: l } = Astro.props as { listing: PreviewCard };
     <h2><a href={"/listings/" + l.id} data-login-gate>{l.name}</a></h2>
     {l.category && <p class="help-text">{l.category}</p>}
     <div class="listing-facts">
-      <p class="guest-price-note">Sign in for pricing &amp; order details</p>{
-        l.location && <p>{l.location}</p>
-      }
+      <p class="guest-price-note">
+        {
+          signedIn
+            ? "View pricing & order details"
+            : "Sign in for pricing & order details"
+        }
+      </p>{l.location && <p>{l.location}</p>}
     </div>
     <a
       class="button secondary guest-details"

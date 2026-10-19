@@ -1,5 +1,6 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
+import AboutStatement from "../components/AboutStatement.astro";
 import Icon from "../components/Icon.astro";
 import MarketplacePreview from "../components/MarketplacePreview.astro";
 const features = [
@@ -92,17 +93,18 @@ const questions = [
   title="About Salam Sourcing B2B Marketplace"
   description="A connected B2B workspace for discovering supply, comparing quotes, managing company catalogues and following deals. Explore what Salam Sourcing B2B Marketplace offers buyers and vendors."
 >
+  <AboutStatement primary />
   <section class="marketing-hero">
     <div class="container marketing-hero-grid">
       <div class="marketing-enter">
         <p class="marketing-kicker">
           <Icon name="briefcase" size={17} />Built for business-to-business
           connections
-        </p><h1>
+        </p><h2 class="platform-workspace-heading">
           Find the right supply.<br /><span
             >Keep the whole journey together.</span
           >
-        </h1><p class="lead">
+        </h2><p class="lead">
           Salam Sourcing B2B Marketplace is a business-to-business marketplace
           connecting companies that need products and services with the
           businesses that supply them. Products, enquiries, quotes and
@@ -286,3 +288,15 @@ const questions = [
     </div>
   </section>
 </MainLayout>
+
+<style>
+  .platform-workspace-heading {
+    font-size: clamp(32px, 4vw, 52px);
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+    margin-block: 18px;
+  }
+  .platform-workspace-heading span {
+    color: var(--primary);
+  }
+</style>

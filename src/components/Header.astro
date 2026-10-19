@@ -1,43 +1,146 @@
 ---
 import BrandLogo from "./BrandLogo.astro";
+const { signedIn = false } = Astro.props;
 const links = [
-  { href: "/", label: "Browse" },
-  { href: "/buyers", label: "Buyers" },
-  { href: "/vendors", label: "Vendors" },
+  { href: "/#buy", label: "Buy" },
+  { href: "/#sell", label: "Sell" },
+  { href: "/categories", label: "Categories" },
+  { href: "/enquiries", label: "RFQs" },
+  { href: "/#suppliers", label: "Suppliers" },
+  { href: "/trade-events", label: "Trade Events" },
+  { href: "/plans", label: "Membership" },
   { href: "/platform", label: "About" },
-  { href: "/plans", label: "Plans" },
+  { href: "/blogs", label: "Blogs" },
 ];
 ---
 
-<header class="site-header">
+<div class="home-topbar">
+  <div class="container">
+    <span>🇨🇦 Canada-based · Serving global buyers &amp; suppliers</span><a
+      href="/help">Help &amp; support <span aria-hidden="true">↗</span></a
+    >
+  </div>
+</div>
+<header class="site-header sourcing-header">
   <div class="container header-row">
-    <a class="brand" href="/" aria-label="Salam Sourcing B2B Marketplace home">
-      <BrandLogo />
-    </a>
-    <nav class="site-nav" aria-label="Main navigation">
+    <a class="brand" href="/" aria-label="Salam Sourcing B2B Marketplace home"
+      ><BrandLogo /></a
+    ><nav class="site-nav" aria-label="Main navigation">
       {
-        links.map((link) => (
+        links.map((l) => (
           <a
-            href={link.href}
-            aria-current={Astro.url.pathname === link.href ? "page" : undefined}
+            href={l.href}
+            aria-current={Astro.url.pathname === l.href ? "page" : undefined}
           >
-            {link.label}
+            {l.label}
           </a>
         ))
       }
-    </nav>
-    <div class="header-actions">
-      <a class="button secondary" href="/login">Log in</a>
-      <a class="button" href="/signup" aria-label="Join free"
-        >Join<span class="join-extra"> free</span></a
-      >
+    </nav><div class="header-actions">
+      <a class="home-signin" href={signedIn ? "/account" : "/login"}
+        >{signedIn ? "My account" : "Sign in"}</a
+      ><a class="button" href="/enquiries/new">Post RFQ</a>
     </div>
-  </div>
-  <details class="container mobile-menu">
+  </div><details class="container mobile-menu">
     <summary>Explore the B2B marketplace</summary><nav
       aria-label="Mobile navigation"
     >
-      {links.map((link) => <a href={link.href}>{link.label}</a>)}
+      {links.map((l) => <a href={l.href}>{l.label}</a>)}
     </nav>
   </details>
 </header>
+<style is:global>
+  .home-topbar {
+    background: #10294b;
+    color: #e4eaf3;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+  .home-topbar .container {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 9px;
+  }
+  .home-topbar a {
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .sourcing-header .header-row {
+    gap: 16px;
+    min-height: 88px;
+    max-width: 1440px;
+  }
+  .sourcing-header .site-nav {
+    gap: 19px;
+  }
+  .sourcing-header .site-nav a {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .sourcing-header .header-actions {
+    gap: 16px;
+  }
+  .home-signin {
+    font-size: 13px;
+    text-decoration: none;
+    color: #10294b;
+    white-space: nowrap;
+  }
+  .sourcing-header .button {
+    min-height: 42px;
+    padding: 9px 15px;
+    font-size: 12px;
+  }
+  .sourcing-header .brand-lockup {
+    width: 116px;
+  }
+  @media (max-width: 1180px) {
+    .sourcing-header .site-nav {
+      display: none;
+    }
+    .sourcing-header .mobile-menu {
+      display: block;
+      border-top: 1px solid #edf0f4;
+    }
+    .sourcing-header .mobile-menu summary {
+      padding: 12px 0;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .sourcing-header .mobile-menu nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 22px;
+      padding-bottom: 16px;
+    }
+    .sourcing-header .mobile-menu nav a {
+      padding-block: 8px;
+      font-size: 14px;
+    }
+  }
+  @media (max-width: 480px) {
+    .home-topbar {
+      font-size: 10px;
+    }
+    .home-topbar .container {
+      padding-inline: 16px;
+    }
+    .home-topbar a {
+      font-size: 0;
+    }
+    .home-topbar a span {
+      font-size: 14px;
+    }
+    .sourcing-header .header-row {
+      gap: 10px;
+    }
+    .sourcing-header .header-actions {
+      gap: 10px;
+    }
+    .sourcing-header .home-signin {
+      font-size: 12px;
+    }
+  }
+</style>

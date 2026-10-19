@@ -12,6 +12,11 @@
   },
   "screens": [
     {
+      "screen": "about_screen.dart",
+      "web": "`/platform`, `/about`",
+      "note": "Shared company statement, mission, planned global events and tagline. Colourful readable panels; mobile Account and guest navigation include haptics."
+    },
+    {
       "screen": "accept_company_invitation_screen.dart",
       "web": "`/invitations/[id]`",
       "note": "Preview, confirmation, acceptance and role/seat enforcement."
@@ -68,8 +73,8 @@
     },
     {
       "screen": "discovery_home_screen.dart",
-      "web": "`/discover`",
-      "note": "Search/sort/filter/category/paging; both clients support public guest browse with sign-in before product access or submitted search/filter."
+      "web": "`/`, `/discover`, `/categories`, `/trade-events`",
+      "note": "PDF-inspired shared homepage; eight sector/topic navigation, real catalog, RFQ/supplier routes, region shortcuts, planned events and proposed membership. Native taps have haptics; existing search and permissions retained."
     },
     {
       "screen": "enquiries_screen.dart",
@@ -323,7 +328,7 @@
       "id": "discovery",
       "title": "Discovery and supplier catalogue",
       "required": true,
-      "outcomes": "Guest browse in both clients permits draft query/category and prompts sign-in before product access or submitted search/filter, preserving intent after protected authentication; private prices/details stay protected. Supplier photo and actual five-star rating on product detail; related visible products exclude current product. Search, available categories, filters, sort, pagination, saved listing/supplier; complete results at low API caps; unavailable records. Web save feedback disappears without shifting page layout. Search activity and photo decoding show loaders without temporary broken-image placeholders.",
+      "outcomes": "Guest browse in both clients permits draft query/category and prompts sign-in before product access or submitted search/filter, preserving intent after protected authentication; private prices/details stay protected. Supplier photo and actual five-star rating on product detail; related visible products exclude current product. Search, available categories, filters, sort, pagination, saved listing/supplier; complete results at low API caps; unavailable records. Web save feedback disappears without shifting page layout. Search activity and photo decoding show loaders without temporary broken-image placeholders. About opens from web navigation and mobile Account or guest browsing with the full company statement and clearly planned events. Web Blogs opens from primary navigation. Mobile Discover and guest browse include a haptic Blogs link that opens the same public /blogs page in the in-app browser; no separate native article catalogue. PDF-inspired home on both clients; eight sector/topic routes, published catalog categories, planned event links, direct RFQ and supplier navigation, guest destination handoff, 320px large-text layouts and guided overview.",
       "clients": ["web", "flutter"],
       "evidence": {
         "web": "unverified",
@@ -467,9 +472,7 @@
       "title": "Web browser and layout",
       "required": true,
       "outcomes": "Desktop Chromium/Firefox/WebKit and phone emulation; narrow screens/text zoom, overflow, keyboard focus, dialogs, disabled empty Send, image viewer and attachment popups. Avatar beside Notifications opens an accessible account menu; signed-out Log in links directly to login without a dropdown; activity and image loaders preserve layout. Public and signed-in pages share a branded responsive footer. Category and primary navigation links have hover/keyboard focus feedback; saved navigation includes a heart, file selection uses a visible button, and Sell has a red circular icon in desktop/mobile navigation. Public Buyers and Vendors pages describe implemented capabilities. About Salam Sourcing and the audience pages are discoverable from navigation/footer and indexed public sitemap. Every layout has a sticky Get the app entry; iOS/Android are Coming Soon until public store URLs exist.",
-      "clients": [
-        "web"
-      ],
+      "clients": ["web"],
       "evidence": {
         "web": "unverified",
         "flutter": "unverified"
@@ -480,9 +483,7 @@
       "title": "Flutter devices",
       "required": true,
       "outcomes": "Android and iOS: keyboard/safe areas, haptics, file pickers/photos, CAPTCHA, MFA, PDF viewing and lifecycle/reconnect. Native home, guest and auth headers use the same two-line Salam wordmark; iOS launcher/store artwork and Android legacy/adaptive launcher icons use the existing emblem and wordmark. Verify installed icon masking and legibility on devices.",
-      "clients": [
-        "flutter"
-      ],
+      "clients": ["flutter"],
       "evidence": {
         "web": "unverified",
         "flutter": "unverified"
@@ -524,7 +525,9 @@
     "auth/access.astro",
     "auth/callback.astro",
     "auth/mfa.astro",
+    "blogs.astro",
     "buyers.astro",
+    "categories.astro",
     "company/edit.astro",
     "company/index.astro",
     "company/new.astro",
@@ -562,6 +565,7 @@
     "suppliers/[id].astro",
     "suppliers/[id]/reviews.astro",
     "terms.astro",
+    "trade-events.astro",
     "vendors.astro",
     "verification.astro",
     "verify-email.astro"

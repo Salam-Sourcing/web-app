@@ -23,6 +23,10 @@ export function bindPublicBrowse() {
     const params = new URLSearchParams();
     for (const [key, value] of new FormData(form))
       if (typeof value === "string" && value.trim()) params.set(key, value);
+    if (root.dataset.signedIn === "true") {
+      location.assign("/discover?" + params);
+      return;
+    }
     prompt(
       "/discover?" + params,
       "Sign in to search and apply your selected filters. We’ll keep your choices ready for you.",
@@ -42,7 +46,7 @@ export function bindPublicBrowse() {
       event.target instanceof Element
         ? event.target.closest<HTMLAnchorElement>("[data-login-gate]")
         : null;
-    if (!link) return;
+    if (!link || root.dataset.signedIn === "true") return;
     event.preventDefault();
     prompt(
       new URL(link.href).pathname,

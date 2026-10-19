@@ -1,0 +1,105 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import Icon from "../components/Icon.astro";
+import home from "../../parity/homepage.json";
+import { marketplacePreview } from "../lib/server/public-catalog";
+import "../styles/homepage.css";
+const selected = home.sectors.find(
+  (s) => s.id === Astro.url.searchParams.get("sector"),
+);
+const region = home.regions.find(
+  (r) => r.query === Astro.url.searchParams.get("region"),
+);
+const sectors = selected ? [selected] : home.sectors;
+let categories: string[] = [];
+let unavailable = false;
+try {
+  categories = (await marketplacePreview()).categories;
+} catch {
+  unavailable = true;
+}
+const search = (query: string, category = "") =>
+  "/discover?" +
+  new URLSearchParams({
+    ...(category ? { category } : { query }),
+    ...(region ? { location: region.query } : {}),
+  });
+---
+
+<MainLayout
+  title={selected ? selected.name : "Business categories"}
+  description="Explore global business sectors and marketplace categories on Salam Sourcing."
+  ><div class="sourcing-home container home-section">
+    <p class="eyebrow">Global business categories</p><h1
+      class="home-page-title"
+    >
+      {selected?.name || "Find your next business connection."}
+    </h1><p class="home-lead">
+      {
+        region
+          ? `Exploring ${region.name}. Regional searches match the location text entered by suppliers; refine by a specific country for best results.`
+          : "Explore every sector, then search its products, services and business suppliers."
+      }
+    </p><nav class="home-category-nav" aria-label="Business sectors">
+      <a href="/categories" aria-current={!selected ? "page" : undefined}
+        >All sectors</a
+      >{
+        home.sectors.map((s) => (
+          <a
+            href={"/categories?sector=" + s.id}
+            aria-current={selected?.id === s.id ? "page" : undefined}
+          >
+            {s.name}
+          </a>
+        ))
+      }
+    </nav>
+    {
+      sectors.map((s) => (
+        <section class="home-category-section">
+          <>
+            <span class="home-icon">
+              <Icon name={s.icon} size={28} />
+            </span>
+            <h2>{s.name}</h2>
+            <p>{s.description}</p>
+            <div class="home-regions">
+              {s.topics.map((topic) => (
+                <a href={search(topic)}>
+                  {topic}
+                  <Icon name="arrow" size={17} />
+                </a>
+              ))}
+            </div>
+          </>
+        </section>
+      ))
+    }
+    <section class="home-category-section">
+      <p class="eyebrow">Published marketplace categories</p><h2>
+        Browse current listings by category.
+      </h2><p>
+        These categories come from the live marketplace. Sector topics above are
+        search shortcuts; availability depends on published listings.
+      </p><div class="home-regions">
+        {
+          categories.map((c) => (
+            <a href={search("", c)}>
+              {c}
+              <Icon name="arrow" size={17} />
+            </a>
+          ))
+        }
+      </div>{
+        !categories.length && (
+          <p>
+            {unavailable
+              ? "Current categories could not be loaded. Please retry."
+              : "Categories will appear as listings are published."}
+          </p>
+        )
+      }<a class="button" href={search("")}
+        >Search all products &amp; services</a>
+    </section>
+  </div></MainLayout
+>

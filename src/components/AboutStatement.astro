@@ -1,0 +1,234 @@
+---
+import Icon from "./Icon.astro";
+interface Props {
+  primary?: boolean;
+}
+const Heading = Astro.props.primary ? "h1" : "h2";
+---
+
+<section class="container about-statement" aria-label="About Salam Sourcing">
+  <div class="about-intro">
+    <svg
+      class="about-globe"
+      viewBox="0 0 160 160"
+      fill="none"
+      aria-hidden="true"
+      ><circle cx="80" cy="80" r="72"></circle><ellipse
+        cx="80"
+        cy="80"
+        rx="34"
+        ry="72"></ellipse><path d="M8 80h144 M21 40h118 M21 120h118"
+      ></path></svg
+    >
+    <p class="about-eyebrow">
+      <span></span>Based in Canada · Connected worldwide
+    </p>
+    <Heading class="about-title"
+      >Rooted in Canada.<br />Connected to the world.</Heading
+    >
+    <p class="about-introduction">
+      <strong
+        >Salam Sourcing is a Canada-based global B2B marketplace connecting
+        trusted buyers, verified suppliers, manufacturers, exporters, importers,
+        distributors, and business partners worldwide.</strong
+      >
+    </p>
+  </div>
+  <div class="about-values">
+    <article class="about-mission">
+      <span class="about-icon"><Icon name="shield" size={24} /></span>
+      <h3>Our mission</h3>
+      <p>
+        Our mission is to make global sourcing <strong
+          >simpler, safer, and more productive</strong
+        > through verified business profiles, buyer–seller matchmaking, sourcing opportunities,
+        direct communication, and sector-focused trade connections.
+      </p>
+    </article>
+    <article class="about-connections">
+      <span class="about-icon"><Icon name="team" size={24} /></span>
+      <h3>Connections beyond the screen</h3>
+      <p>
+        Beyond the digital marketplace, Salam Sourcing plans to bring members
+        together through <strong
+          >B2B expos, trade missions, buyer–seller meetings, and business
+          networking events in Canada, the USA, and other international markets</strong
+        >, based on member demand and recommendations.
+      </p>
+    </article>
+  </div>
+  <div class="about-signature">
+    <span class="about-signature-line" aria-hidden="true"></span>
+    <p>
+      <strong
+        >Salam Sourcing — Connecting Global Business with Trusted Opportunities.</strong
+      >
+    </p>
+  </div>
+</section>
+
+<style>
+  .about-statement {
+    margin-block: 32px 64px;
+  }
+  .about-intro {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: clamp(28px, 5vw, 60px);
+    border-radius: 30px;
+    border: 1px solid #ead3d6;
+    background:
+      radial-gradient(ellipse at 96% 8%, #dcefeb 0%, transparent 52%),
+      radial-gradient(ellipse at 4% 100%, #ffe9d8 0%, transparent 60%),
+      linear-gradient(120deg, #faecef, #fffaf4);
+  }
+  .about-globe {
+    position: absolute;
+    z-index: -1;
+    right: -32px;
+    top: -28px;
+    width: clamp(180px, 25vw, 290px);
+    color: #37505c;
+    opacity: 0.08;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+  .about-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #812027;
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 0 0 20px;
+  }
+  .about-eyebrow span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #9c272e;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 5px #9c272e12;
+  }
+  .about-title {
+    font-size: clamp(28px, 4vw, 46px);
+    line-height: 1.18;
+    letter-spacing: -0.035em;
+    color: #37505c;
+    margin: 0 0 24px;
+    max-width: 22ch;
+  }
+  .about-introduction {
+    max-width: 70ch;
+    color: #283e49;
+    font-size: clamp(17px, 1.7vw, 21px);
+    line-height: 1.75;
+    margin: 0;
+  }
+  .about-introduction strong {
+    font-weight: 650;
+  }
+  .about-values {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-block: 20px;
+  }
+  article {
+    padding: clamp(26px, 3.5vw, 40px);
+    border: 1px solid;
+    border-radius: 26px;
+  }
+  .about-mission {
+    background: linear-gradient(135deg, #eaf6f2, #f6fbfa);
+    border-color: #cce3dc;
+  }
+  .about-connections {
+    background: linear-gradient(135deg, #fff7e5, #fbece3);
+    border-color: #eedcc2;
+  }
+  .about-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
+    background: #ffffffb3;
+    color: #246257;
+    margin-bottom: 20px;
+  }
+  .about-connections .about-icon {
+    color: #855527;
+  }
+  h3 {
+    font-size: 23px;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+    color: #243e39;
+    margin: 0 0 14px;
+  }
+  .about-connections h3 {
+    color: #684424;
+  }
+  article p {
+    color: #344a49;
+    font-size: 16px;
+    line-height: 1.9;
+    margin: 0;
+  }
+  .about-connections p {
+    color: #59483d;
+  }
+  article strong {
+    font-weight: 750;
+  }
+  .about-signature {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    border-radius: 26px;
+    background: linear-gradient(115deg, #9c272e, #693447 48%, #37505c);
+    padding: clamp(28px, 4vw, 44px);
+    color: white;
+  }
+  .about-signature-line {
+    width: 4px;
+    align-self: stretch;
+    border-radius: 4px;
+    background: #f3c3a6;
+    flex-shrink: 0;
+  }
+  .about-signature p {
+    color: #fff;
+    max-width: 46ch;
+    font-size: clamp(19px, 2.4vw, 27px);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .about-signature strong {
+    color: inherit;
+    font-weight: 650;
+  }
+  @media (max-width: 760px) {
+    .about-values {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+      margin-block: 16px;
+    }
+    .about-statement {
+      margin-block: 24px 44px;
+    }
+    .about-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.07em;
+      line-height: 1.7;
+    }
+    .about-signature {
+      gap: 16px;
+    }
+  }
+</style>

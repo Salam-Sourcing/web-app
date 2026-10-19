@@ -1,7 +1,7 @@
 # Salam client parity and release acceptance
 
 The shared contract is `parity/contract.json` in **both** repositories. Keep the
-files byte-identical. It records the 38 native screens, all web pages, shared field
+files byte-identical. It records the 40 native screens, all web pages, shared field
 limits/numeric fixtures, and 18 acceptance scenarios. A new page or screen must
 update this inventory and its acceptance scenario. Inventory proves coverage of
 surface area; it does not prove an action works.
@@ -16,6 +16,10 @@ catalogue are not database subscription IDs or current entitlements.
 company-profile flags. Keep it and the bundled `flag-icons` 7.5.0 SVG assets in
 sync across clients. Each flag directory retains the upstream MIT license.
 Unknown country text remains visible without a guessed flag.
+
+`parity/homepage.json` is the shared homepage sector/topic, region, process and
+planned-event content. Keep it byte-identical across clients; the parity checker
+enforces this. Sector topics are query shortcuts, not new database categories.
 
 ## What matches
 
