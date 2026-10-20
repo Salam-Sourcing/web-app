@@ -54,7 +54,7 @@ const destinations = [
         <div class="container header-row">
           <a
             class="brand"
-            href="/"
+            href="/discover"
             aria-label="Salam Sourcing B2B Marketplace Discover"
           >
             <BrandLogo />
@@ -189,7 +189,7 @@ const destinations = [
           }
         </div><slot />
       </main>
-      <Footer />
+      <Footer signedIn={true} />
       <nav class="mobile-dock" aria-label="Marketplace mobile navigation">
         {
           destinations.map(([key, label]) => (

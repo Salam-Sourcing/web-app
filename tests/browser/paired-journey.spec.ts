@@ -19,6 +19,16 @@ async function login(page: Page) {
     .fill(config.UI_TEST_BUYER_PASSWORD);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
   await expect(page).toHaveURL(/\/discover/);
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/discover$/);
+  await expect(page.locator(".sourcing-home")).toHaveCount(0);
+  await page.goto("/account");
+  await expect(page.locator(".workspace-header .brand")).toHaveAttribute(
+    "href",
+    "/discover",
+  );
+  await page.locator(".workspace-header .brand").click();
+  await expect(page).toHaveURL(/\/discover$/);
 }
 test("web enquiry → Flutter quote and message → web acceptance and export", async ({
   page,
@@ -137,13 +147,11 @@ test("web enquiry → Flutter quote and message → web acceptance and export", 
       .click();
     const attachment = page.getByRole("dialog", { name: "Send an attachment" });
     await expect(attachment).toBeVisible();
-    await attachment
-      .locator('input[type="file"]')
-      .setInputFiles({
-        name: "web-fixture.png",
-        mimeType: "image/png",
-        buffer: photo,
-      });
+    await attachment.locator('input[type="file"]').setInputFiles({
+      name: "web-fixture.png",
+      mimeType: "image/png",
+      buffer: photo,
+    });
     await attachment.locator('textarea[name="caption"]').fill("Photo from web");
     await attachment
       .getByRole("button", { name: "Send attachment", exact: true })

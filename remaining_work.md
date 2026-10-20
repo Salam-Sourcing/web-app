@@ -17,6 +17,9 @@ alone does not satisfy its completion gate.
 
 ## Homepage update — 2026-10-19
 
+- [x] Signed-in entry and logo navigation corrected on web/mobile (2026-10-20);
+      guest home remains signed-out only. [Details](documentation/signed_in_navigation_2026-10-20.md).
+
 - [x] PDF-inspired website root and native signed-in/guest home implemented.
 - [x] Eight sectors and 32 topic searches linked; real marketplace categories,
       buyer/supplier actions, planned events and membership links connected.

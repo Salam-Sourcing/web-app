@@ -23,8 +23,10 @@ const links = [
 </div>
 <header class="site-header sourcing-header">
   <div class="container header-row">
-    <a class="brand" href="/" aria-label="Salam Sourcing B2B Marketplace home"
-      ><BrandLogo /></a
+    <a
+      class="brand"
+      href={signedIn ? "/discover" : "/"}
+      aria-label="Salam Sourcing B2B Marketplace home"><BrandLogo /></a
     ><nav class="site-nav" aria-label="Main navigation">
       {
         links.map((l) => (

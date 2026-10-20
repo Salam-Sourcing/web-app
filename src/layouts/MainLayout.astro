@@ -2,6 +2,7 @@
 import AppDownloadBanner from "../components/AppDownloadBanner.astro";
 import { publicSite } from "../lib/server/seo";
 import Header from "../components/Header.astro";
+import { publicWorkspace } from "../lib/server/public-session";
 import Footer from "../components/Footer.astro";
 import "../styles/globals.css";
 interface Props {
@@ -14,8 +15,10 @@ const {
   title,
   description = "Discover suppliers, request quotes and manage your business sourcing with Salam Sourcing B2B Marketplace.",
   privatePage = false,
-  signedIn = false,
+  signedIn: providedSignedIn = false,
 } = Astro.props;
+const signedIn =
+  providedSignedIn || Boolean(await publicWorkspace(Astro).catch(() => null));
 const site = publicSite();
 const canonical = new URL(Astro.url.pathname, site.origin);
 const pageTitle = title.includes("Salam Sourcing B2B Marketplace")
@@ -68,7 +71,7 @@ const pageTitle = title.includes("Salam Sourcing B2B Marketplace")
     ><a href="#main" class="skip-link">Skip to content</a><AppDownloadBanner
     /><Header signedIn={signedIn} /><main id="main" class="flex-1">
       <slot />
-    </main><Footer /></body
+    </main><Footer signedIn={signedIn} /></body
   >
 </html>
 

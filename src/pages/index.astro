@@ -1,59 +1,22 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
 import LoginPrompt from "../components/LoginPrompt.astro";
-import { requireWorkspace, type Workspace } from "../lib/server/access";
-import { search, availableCategories } from "../lib/server/catalog";
+import { signedInHomeRedirect } from "../lib/server/public-session";
 import PreviewCard from "../components/PreviewCard.astro";
 import Icon from "../components/Icon.astro";
 import SourcingDemo from "../components/SourcingDemo.astro";
 import { marketplacePreview } from "../lib/server/public-catalog";
 import home from "../../parity/homepage.json";
 import "../styles/homepage.css";
+const signedInRedirect = await signedInHomeRedirect(Astro);
+if (signedInRedirect) return signedInRedirect;
 let preview: Awaited<ReturnType<typeof marketplacePreview>> = {
   listings: [],
   categories: [],
 };
 let catalogError = false;
-let signedIn = false;
-let workspace: Workspace | undefined;
-if (Astro.request.headers.get("cookie")?.includes("ss-auth")) {
-  Astro.locals.authHeaders.set("Cache-Control", "private, no-store");
-  Astro.locals.authHeaders.set("Cloudflare-CDN-Cache-Control", "no-store");
-  try {
-    workspace = await requireWorkspace(Astro);
-    signedIn = true;
-  } catch {}
-}
 try {
-  if (workspace) {
-    const [catalog, categories] = await Promise.all([
-      search(workspace, new URLSearchParams()),
-      availableCategories(workspace),
-    ]);
-    preview = {
-      categories,
-      listings: catalog.rows.map(
-        ({
-          id,
-          company_id,
-          name,
-          category,
-          vendor_name,
-          location,
-          has_image,
-        }) => ({
-          id,
-          company_id,
-          name,
-          category,
-          vendor_name,
-          location,
-          has_image,
-          listing_type: "",
-        }),
-      ),
-    };
-  } else preview = await marketplacePreview();
+  preview = await marketplacePreview();
 } catch {
   catalogError = true;
 }
@@ -63,15 +26,10 @@ const suppliers = [
 ---
 
 <MainLayout
-  signedIn={signedIn}
   title="Connect. Source. Trade. Globally."
   description="Salam Sourcing is a Canada-based global B2B marketplace connecting buyers, suppliers, manufacturers and business partners worldwide."
 >
-  <div
-    class="sourcing-home"
-    data-public-browse
-    data-signed-in={String(signedIn)}
-  >
+  <div class="sourcing-home" data-public-browse data-signed-in="false">
     <section class="home-hero">
       <div class="container home-hero-grid">
         <div class="home-hero-copy">
@@ -395,7 +353,7 @@ const suppliers = [
         ) : preview.listings.length ? (
           <div class="catalog-grid">
             {preview.listings.slice(0, 6).map((l) => (
-              <PreviewCard listing={l} signedIn={signedIn} />
+              <PreviewCard listing={l} />
             ))}
           </div>
         ) : (

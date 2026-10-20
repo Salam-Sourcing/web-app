@@ -1,5 +1,6 @@
 ---
 import BrandLogo from "./BrandLogo.astro";
+const { signedIn = false } = Astro.props;
 ---
 
 <footer class="site-footer">
@@ -7,7 +8,7 @@ import BrandLogo from "./BrandLogo.astro";
     <div class="footer-brand">
       <a
         class="brand"
-        href="/"
+        href={signedIn ? "/discover" : "/"}
         aria-label="Salam Sourcing B2B Marketplace home"
       >
         <BrandLogo />
@@ -23,7 +24,7 @@ import BrandLogo from "./BrandLogo.astro";
       aria-label="Explore Salam Sourcing B2B Marketplace"
     >
       <h2>Explore</h2>
-      <a href="/">Browse the marketplace</a>
+      <a href={signedIn ? "/discover" : "/"}>Browse the marketplace</a>
       <a href="/buyers">For Buyers</a><a href="/vendors">For Vendors</a><a
         href="/get-the-app">Get the app</a
       ><a href="/platform">About Salam Sourcing B2B Marketplace</a>
